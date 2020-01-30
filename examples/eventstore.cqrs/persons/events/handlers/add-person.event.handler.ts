@@ -18,7 +18,7 @@ export class AddPersonEventHandler implements IEventHandler<PersonAddedEvent> {
       this.logger.error(`Failed to create person of id ${_id}`);
       this.logger.log(error.message);
       this.logger.debug(error.stack);
-      event.nack()
+      event.nack();
     }
   }
 }

@@ -5,7 +5,8 @@ import {
   createEventData,
   EventStorePersistentSubscription,
   ResolvedEvent,
-  EventStoreCatchUpSubscription, PersistentSubscriptionNakEventAction,
+  EventStoreCatchUpSubscription,
+  PersistentSubscriptionNakEventAction,
 } from 'node-eventstore-client';
 import { v4 } from 'uuid';
 import { Logger } from '@nestjs/common';
@@ -32,25 +33,22 @@ interface ExtendedPersistentSubscription
 
 // Todo Define
 export class EventStoreEvent implements IEvent {
-  constructor(data, meta, eventId, eventStreamId, created, eventNumber) {
-
-  }
+  constructor(data, meta, eventId, eventStreamId, created, eventNumber) {}
 }
 
 export class AcknowledgableEventstoreEvent extends EventStoreEvent {
-  private subscription:EventStorePersistentSubscription;
-  private event:ResolvedEvent;
-  setSubscription(sub:EventStorePersistentSubscription, event:ResolvedEvent) {
-    this.subscription =sub;
+  private subscription: EventStorePersistentSubscription;
+  private event: ResolvedEvent;
+  setSubscription(sub: EventStorePersistentSubscription, event: ResolvedEvent) {
+    this.subscription = sub;
     this.event = event;
   }
   ack() {
     this.subscription.acknowledge(this.event);
   }
-  nack(action:PersistentSubscriptionNakEventAction, reason:string) {
+  nack(action: PersistentSubscriptionNakEventAction, reason: string) {
     this.subscription.fail(this.event, action, reason);
   }
-
 }
 
 export class EventStoreBus {
@@ -69,11 +67,11 @@ export class EventStoreBus {
   ) {
     this.addEventHandlers(config.eventInstantiators);
 
-    const catchupSubscriptions = config.subscriptions.filter((sub) => {
+    const catchupSubscriptions = config.subscriptions.filter(sub => {
       return sub.type === EventStoreSubscriptionType.CatchUp;
     });
 
-    const persistentSubscriptions = config.subscriptions.filter((sub) => {
+    const persistentSubscriptions = config.subscriptions.filter(sub => {
       return sub.type === EventStoreSubscriptionType.Persistent;
     });
 
@@ -91,7 +89,7 @@ export class EventStoreBus {
   ) {
     this.persistentSubscriptionsCount = subscriptions.length;
     this.persistentSubscriptions = await Promise.all(
-      subscriptions.map(async (subscription) => {
+      subscriptions.map(async subscription => {
         return await this.subscribeToPersistentSubscription(
           subscription.stream,
           subscription.persistentSubscriptionName,
@@ -102,7 +100,7 @@ export class EventStoreBus {
 
   subscribeToCatchUpSubscriptions(subscriptions: ESCatchUpSubscription[]) {
     this.catchupSubscriptionsCount = subscriptions.length;
-    this.catchupSubscriptions = subscriptions.map((subscription) => {
+    this.catchupSubscriptions = subscriptions.map(subscription => {
       return this.subscribeToCatchupSubscription(subscription.stream);
     });
   }
@@ -112,7 +110,7 @@ export class EventStoreBus {
       this.catchupSubscriptions.length === this.catchupSubscriptionsCount;
     return (
       initialized &&
-      this.catchupSubscriptions.every((subscription) => {
+      this.catchupSubscriptions.every(subscription => {
         return !!subscription && subscription.isLive;
       })
     );
@@ -123,7 +121,7 @@ export class EventStoreBus {
       this.persistentSubscriptions.length === this.persistentSubscriptionsCount;
     return (
       initialized &&
-      this.persistentSubscriptions.every((subscription) => {
+      this.persistentSubscriptions.every(subscription => {
         return !!subscription && subscription.isLive;
       })
     );
@@ -194,12 +192,7 @@ export class EventStoreBus {
     }
   }
 
-  async onEvent(
-    _subscription:
-      | EventStorePersistentSubscription
-      | EventStoreCatchUpSubscription,
-    payload: ResolvedEvent,
-  ) {
+  async onEvent(_subscription, payload: ResolvedEvent) {
     const { event } = payload;
     if (!payload.isResolved || !event || !event.isJson) {
       this.logger.error('Received event that could not be resolved!');
@@ -224,11 +217,18 @@ export class EventStoreBus {
     //const builtEvent = this.eventFactory.build(event.eventType, event);
 
     const builtEvent = eventConstructor(
-      data, metadata, event.eventId, event.eventStreamId, event.eventNumber,
-      new Date(event.created),
+      data,
+      metadata,
+      event.eventId,
+      event.eventStreamId,
+      event.eventNumber,
+      new Date(event.createdEpoch),
     );
-    if(builtEvent instanceof AcknowledgableEventstoreEvent) {
-      builtEvent.setSubscription(_subscription, event);
+    if (builtEvent instanceof AcknowledgableEventstoreEvent) {
+      builtEvent.setSubscription(
+        _subscription,
+        _subscription.ResolvedEvent(event),
+      );
     }
     this.subject$.next(builtEvent);
   }
@@ -248,6 +248,9 @@ export class EventStoreBus {
   }
 
   addEventHandlers(eventHandlers: IEventConstructors) {
-    this.eventConstructors = { ...this.eventConstructors, ...eventHandlers };
+    this.eventConstructors = {
+      ...this.eventConstructors,
+      ...eventHandlers,
+    };
   }
 }

@@ -33,13 +33,26 @@ interface ExtendedPersistentSubscription
 
 // Todo Define
 export class EventStoreEvent implements IEvent {
-  constructor(data, meta, eventId, eventStreamId, created, eventNumber) {}
+  data;
+  meta;
+  eventId;
+  eventStreamId;
+  created;
+  eventNumber;
+  constructor(data, meta, eventId, eventStreamId, created, eventNumber) {
+    this.data = data;
+    this.meta = meta;
+    this.eventId = eventId;
+    this.eventStreamId = eventStreamId;
+    this.created = created;
+    this.eventNumber = eventNumber;
+  }
 }
 
 export class AcknowledgableEventstoreEvent extends EventStoreEvent {
   private subscription: EventStorePersistentSubscription;
   private event: ResolvedEvent;
-  setSubscription(sub: EventStorePersistentSubscription, event: ResolvedEvent) {
+  setSubscription(sub: EventStorePersistentSubscription, event) {
     this.subscription = sub;
     this.event = event;
   }
@@ -192,12 +205,13 @@ export class EventStoreBus {
     }
   }
 
-  async onEvent(_subscription, payload: ResolvedEvent) {
+  async onEvent(_subscription, payload) {
     const { event } = payload;
-    if (!payload.isResolved || !event || !event.isJson) {
+    if (/*!payload.isResolved ||*/ !event || !event.isJson) {
       this.logger.error('Received event that could not be resolved!');
       return;
     }
+
     // TODO use a factory to avoid manual declaration ?
     const eventConstructor = this.eventConstructors[event.eventType];
     if (!eventConstructor) {
@@ -206,7 +220,6 @@ export class EventStoreBus {
     }
     const data = JSON.parse(event.data.toString());
     const metadata = JSON.parse(event.metadata.toString());
-
     /*
     Two solutions :
     - send an observable on the subject to follow handling
@@ -215,7 +228,6 @@ export class EventStoreBus {
       drawback : the subscription pass on the events
      */
     //const builtEvent = this.eventFactory.build(event.eventType, event);
-
     const builtEvent = eventConstructor(
       data,
       metadata,
@@ -225,10 +237,7 @@ export class EventStoreBus {
       new Date(event.createdEpoch),
     );
     if (builtEvent instanceof AcknowledgableEventstoreEvent) {
-      builtEvent.setSubscription(
-        _subscription,
-        _subscription.ResolvedEvent(event),
-      );
+      builtEvent.setSubscription(_subscription, builtEvent);
     }
     this.subject$.next(builtEvent);
   }

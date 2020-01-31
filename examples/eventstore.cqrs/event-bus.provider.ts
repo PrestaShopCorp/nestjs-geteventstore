@@ -1,16 +1,23 @@
 import {
   AcknowledgableEventstoreEvent,
-  EventStoreBusConfig, EventStoreEvent,
+  EventStoreBusConfig,
+  EventStoreEvent,
   EventStoreSubscriptionType,
 } from '../../src/index';
 
-export class PersonAddedEvent extends AcknowledgableEventstoreEvent {
-
-}
+export class PersonAddedEvent extends AcknowledgableEventstoreEvent {}
 
 const PersonEventInstantiators = {
-  PersonAddedEvent: (event:EventStoreEvent) =>
-    new PersonAddedEvent(event.data, event.meta),
+  PersonAddedEvent: (event: EventStoreEvent) => {
+    return new PersonAddedEvent(
+      event.data,
+      event.meta,
+      event.eventId,
+      event.eventStreamId,
+      event.created,
+      event.eventNumber,
+    );
+  },
 };
 /*
 const eventBuilderFactory = (type, event) => {

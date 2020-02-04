@@ -237,6 +237,9 @@ export class EventStoreBus {
         (sub, payload) => this.onEvent(sub, payload),
         (sub, reason, error) =>
           this.onDropped(sub as ExtendedPersistentSubscription, reason, error),
+        undefined,
+        undefined,
+        false,
       )) as ExtendedPersistentSubscription;
 
       resolved.isLive = true;

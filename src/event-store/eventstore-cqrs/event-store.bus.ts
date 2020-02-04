@@ -40,7 +40,15 @@ export class EventStoreEvent implements IEvent {
   eventStreamId;
   created;
   eventNumber;
-  constructor(data, meta, eventStreamId, eventType, eventId, created, eventNumber) {
+  constructor(
+    data,
+    meta,
+    eventStreamId,
+    eventType,
+    eventId,
+    created,
+    eventNumber,
+  ) {
     this.data = data;
     this.meta = meta;
     this.eventId = eventId;
@@ -73,8 +81,15 @@ export class EventStoreEvent implements IEvent {
 export class AcknowledgableEventstoreEvent extends EventStoreEvent {
   private originalEvent;
   private subscription: EventStorePersistentSubscription;
-  private event: ResolvedEvent;
-  constructor(data, meta, eventStreamId, eventType, eventId, created, eventNumber) {
+  constructor(
+    data,
+    meta,
+    eventStreamId,
+    eventType,
+    eventId,
+    created,
+    eventNumber,
+  ) {
     super(data, meta, eventStreamId, eventType, eventId, created, eventNumber);
     this.originalEvent = {
       eventId,
@@ -84,10 +99,10 @@ export class AcknowledgableEventstoreEvent extends EventStoreEvent {
     this.subscription = sub;
   }
   ack() {
-    this.subscription.acknowledge(this);
+    this.subscription.acknowledge(this.originalEvent);
   }
   nack(action: PersistentSubscriptionNakEventAction, reason: string) {
-    this.subscription.fail(this, action, reason);
+    this.subscription.fail(this.originalEvent, action, reason);
   }
 }
 
@@ -264,7 +279,7 @@ export class EventStoreBus {
       new Date(event.createdEpoch),
     );
     if (builtEvent instanceof AcknowledgableEventstoreEvent) {
-      builtEvent.setSubscription(_subscription, builtEvent);
+      builtEvent.setSubscription(_subscription);
     }
     this.subject$.next(builtEvent);
   }

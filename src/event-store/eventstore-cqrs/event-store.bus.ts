@@ -44,10 +44,10 @@ export class EventStoreEvent implements IEvent {
     data,
     meta,
     eventStreamId,
-    eventType,
     eventId,
     created,
     eventNumber,
+    eventType,
   ) {
     this.data = data;
     this.meta = meta;
@@ -79,18 +79,18 @@ export class EventStoreEvent implements IEvent {
 }
 
 export class AcknowledgableEventstoreEvent extends EventStoreEvent {
-  private originalEvent;
+  originalEvent;
   private subscription: EventStorePersistentSubscription;
   constructor(
     data,
     meta,
     eventStreamId,
-    eventType,
     eventId,
     created,
     eventNumber,
+    eventType,
   ) {
-    super(data, meta, eventStreamId, eventType, eventId, created, eventNumber);
+    super(data, meta, eventStreamId, eventId, created, eventNumber, eventType);
     this.originalEvent = {
       eventId,
     };
@@ -279,6 +279,7 @@ export class EventStoreBus {
       event.eventId,
       event.eventStreamId,
       event.eventNumber,
+      event.eventType,
       new Date(event.createdEpoch),
     );
     if (builtEvent instanceof AcknowledgableEventstoreEvent) {

@@ -1,6 +1,6 @@
 {
   "name": "psx-nestjs-eventstore",
-  "version": "1.4.16",
+  "version": "1.4.17",
   "description": "Event Store connector for Nest js",
   "author": "Taimoor Alam <taimoor.alam@daypaio.com>",
   "license": "MIT",

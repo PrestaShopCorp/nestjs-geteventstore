@@ -36,31 +36,58 @@ export class EventStoreEvent implements IEvent {
   data;
   meta;
   eventId;
+  eventType;
   eventStreamId;
   created;
   eventNumber;
-  constructor(data, meta, eventId, eventStreamId, created, eventNumber) {
+  constructor(data, meta, eventStreamId, eventType, eventId, created, eventNumber) {
     this.data = data;
     this.meta = meta;
     this.eventId = eventId;
+    this.eventType = eventType;
     this.eventStreamId = eventStreamId;
     this.created = created;
     this.eventNumber = eventNumber;
   }
+  getEventId() {
+    return this.eventId;
+  }
+
+  getEventType() {
+    return this.eventType;
+  }
+
+  getStream() {
+    return this.eventStreamId;
+  }
+
+  getStreamCategory() {
+    return this.eventStreamId.split('-')[0];
+  }
+
+  getStreamId() {
+    return this.eventStreamId.replace(/^[^-]*-/, '');
+  }
 }
 
 export class AcknowledgableEventstoreEvent extends EventStoreEvent {
+  private originalEvent;
   private subscription: EventStorePersistentSubscription;
   private event: ResolvedEvent;
-  setSubscription(sub: EventStorePersistentSubscription, event) {
+  constructor(data, meta, eventStreamId, eventType, eventId, created, eventNumber) {
+    super(data, meta, eventStreamId, eventType, eventId, created, eventNumber);
+    this.originalEvent = {
+      eventId,
+    };
+  }
+  setSubscription(sub: EventStorePersistentSubscription) {
     this.subscription = sub;
-    this.event = event;
   }
   ack() {
-    this.subscription.acknowledge(this.event);
+    this.subscription.acknowledge(this);
   }
   nack(action: PersistentSubscriptionNakEventAction, reason: string) {
-    this.subscription.fail(this.event, action, reason);
+    this.subscription.fail(this, action, reason);
   }
 }
 

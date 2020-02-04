@@ -1,21 +1,21 @@
 import { IEvent } from '@nestjs/cqrs';
-import { BehaviorSubject, Observable, of, ReplaySubject, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import {
-  EventData,
   createEventData,
-  EventStorePersistentSubscription,
-  ResolvedEvent,
+  EventData,
   EventStoreCatchUpSubscription,
+  EventStorePersistentSubscription,
   PersistentSubscriptionNakEventAction,
+  ResolvedEvent,
 } from 'node-eventstore-client';
 import { v4 } from 'uuid';
 import { Logger } from '@nestjs/common';
 import { EventStore } from '../event-store.class';
 import {
   EventStoreBusConfig,
-  EventStoreSubscriptionType,
-  EventStorePersistentSubscription as ESPersistentSubscription,
   EventStoreCatchupSubscription as ESCatchUpSubscription,
+  EventStorePersistentSubscription as ESPersistentSubscription,
+  EventStoreSubscriptionType,
 } from './event-bus.provider';
 
 export interface IEventConstructors {
@@ -34,7 +34,7 @@ interface ExtendedPersistentSubscription
 // Todo Define
 export class EventStoreEvent implements IEvent {
   data;
-  meta;
+  metadata;
   eventId;
   eventType;
   eventStreamId;
@@ -42,7 +42,7 @@ export class EventStoreEvent implements IEvent {
   eventNumber;
   constructor(
     data,
-    meta,
+    metadata,
     eventStreamId,
     eventId,
     created,
@@ -50,7 +50,7 @@ export class EventStoreEvent implements IEvent {
     eventType,
   ) {
     this.data = data;
-    this.meta = meta;
+    this.metadata = metadata;
     this.eventId = eventId;
     this.eventType = eventType;
     this.eventStreamId = eventStreamId;
@@ -83,14 +83,14 @@ export class AcknowledgableEventstoreEvent extends EventStoreEvent {
   private subscription: EventStorePersistentSubscription;
   constructor(
     data,
-    meta,
+    metadata,
     eventStreamId,
     eventId,
-    created,
-    eventNumber,
-    eventType,
+    created = null,
+    eventNumber = null,
+    eventType = null,
   ) {
-    super(data, meta, eventStreamId, eventId, created, eventNumber, eventType);
+    super(data, metadata, eventStreamId, eventId, created, eventNumber, eventType);
     this.originalEvent = {
       eventId,
     };
@@ -99,10 +99,16 @@ export class AcknowledgableEventstoreEvent extends EventStoreEvent {
     this.subscription = sub;
   }
   ack() {
-    this.subscription.acknowledge(this.originalEvent);
+    const originalEvent = {
+      originalEvent: {
+        eventId: this.eventId,
+      },
+    } as ResolvedEvent;
+
+    return this.subscription.acknowledge([originalEvent]);
   }
   nack(action: PersistentSubscriptionNakEventAction, reason: string) {
-    this.subscription.fail(this.originalEvent, action, reason);
+    return this.subscription.fail(this.originalEvent, action, reason);
   }
 }
 
@@ -137,6 +143,7 @@ export class EventStoreBus {
     this.subscribeToPersistentSubscriptions(
       persistentSubscriptions as ESPersistentSubscription[],
     );
+
   }
 
   async subscribeToPersistentSubscriptions(
@@ -147,7 +154,12 @@ export class EventStoreBus {
       subscriptions.map(async subscription => {
         return await this.subscribeToPersistentSubscription(
           subscription.stream,
-          subscription.persistentSubscriptionName,
+          subscription.group,
+          subscription.autoAck,
+          subscription.bufferSize,
+          subscription.onSubscriptionDropped,
+          // TODO add auto ack, concurrency and other options
+          // TODO add on drop handler to see what to do
         );
       }),
     );
@@ -226,6 +238,9 @@ export class EventStoreBus {
   async subscribeToPersistentSubscription(
     stream: string,
     subscriptionName: string,
+    autoAck: boolean = false,
+    bufferSize: number = 10,
+    onSubscriptionDropped: (sub, reason, error) => void,
   ): Promise<ExtendedPersistentSubscription> {
     try {
       this.logger.log(`
@@ -234,12 +249,18 @@ export class EventStoreBus {
       const resolved = (await this.eventStore.connection.connectToPersistentSubscription(
         stream,
         subscriptionName,
-        (sub, payload) => this.onEvent(sub, payload),
-        (sub, reason, error) =>
-          this.onDropped(sub as ExtendedPersistentSubscription, reason, error),
+        (sub, payload) => {
+          this.onEvent(sub, payload);
+        },
+        (sub, reason, error) => {
+          this.onDropped(sub as ExtendedPersistentSubscription, reason, error);
+          if (onSubscriptionDropped) {
+            onSubscriptionDropped(sub, reason, error);
+          }
+        },
         undefined,
-        undefined,
-        false,
+        bufferSize,
+        autoAck,
       )) as ExtendedPersistentSubscription;
 
       resolved.isLive = true;
@@ -252,36 +273,58 @@ export class EventStoreBus {
 
   async onEvent(_subscription, payload) {
     const { event } = payload;
+
     if (/*!payload.isResolved ||*/ !event || !event.isJson) {
-      this.logger.error('Received event that could not be resolved!');
+      this.logger.error('Received event that could not be resolved! acknowledge');
+      if (!_subscription._autoAck) {
+        _subscription.acknowledge([payload]);
+      }
       return;
     }
 
     // TODO use a factory to avoid manual declaration ?
     const eventConstructor = this.eventConstructors[event.eventType];
     if (!eventConstructor) {
-      this.logger.error('Received event that could not be handled!');
+      this.logger.warn(`Received event of type ${event.eventType} that has no handler acknowledge`);
+      if (!_subscription._autoAck) {
+        _subscription.acknowledge([payload]);
+      }
       return;
     }
-    const data = JSON.parse(event.data.toString());
-    const metadata = JSON.parse(event.metadata.toString());
-    /*
-    Two solutions :
-    - send an observable on the subject to follow handling
-      drawback : it's not what nest is attending
-    - build acknowledgeable events, pass them the subscription and let the handler do the hack
-      drawback : the subscription pass on the events
-     */
-    //const builtEvent = this.eventFactory.build(event.eventType, event);
+    //console.log('onevent',event);
+    let data = {};
+    try {
+      data = JSON.parse(event.data.toString());
+    } catch (e) {
+      this.logger.warn(`Received event of type ${event.eventType} with shitty data acknowledge`);
+      if (!_subscription._autoAck) {
+        _subscription.acknowledge([payload]);
+      }
+      return;
+    }
+
+    let metadata = {};
+    if (event.metadata.toString()) {
+      metadata = JSON.parse(event.metadata.toString());
+    }
+    if (Object.keys(metadata).length == 0) {
+      this.logger.warn(`Received event of type ${event.eventType} with no metadata acknowledge`);
+      if (!_subscription._autoAck) {
+        _subscription.acknowledge([payload]);
+      }
+      return;
+    }
+
     const builtEvent = eventConstructor(
       data,
       metadata,
       event.eventId,
       event.eventStreamId,
-      event.eventNumber,
+      event.eventNumber.low,
+      new Date(event.created),
       event.eventType,
-      new Date(event.createdEpoch),
     );
+
     if (builtEvent instanceof AcknowledgableEventstoreEvent) {
       builtEvent.setSubscription(_subscription);
     }

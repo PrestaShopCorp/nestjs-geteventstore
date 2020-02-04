@@ -1,20 +1,10 @@
 import { Injectable, OnModuleDestroy, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { defer, Observable, Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { isFunction } from 'util';
-import {
-  IEventHandler,
-  IEvent,
-  ObservableBus,
-  CommandBus,
-  InvalidSagaException,
-  ISaga,
-} from '@nestjs/cqrs';
-import {
-  SAGA_METADATA,
-  EVENTS_HANDLER_METADATA,
-} from '@nestjs/cqrs/dist/decorators/constants';
+import { CommandBus, IEvent, IEventHandler, InvalidSagaException, ISaga, ObservableBus } from '@nestjs/cqrs';
+import { EVENTS_HANDLER_METADATA, SAGA_METADATA } from '@nestjs/cqrs/dist/decorators/constants';
 import { EventStoreBus, EventStoreEvent, IEventConstructors } from './event-store.bus';
 import { EventStore } from '../event-store.class';
 import { CqrsOptions } from '@nestjs/cqrs/dist/interfaces/cqrs-options.interface';
@@ -27,7 +17,10 @@ export enum EventStoreSubscriptionType {
 export type EventStorePersistentSubscription = {
   type: EventStoreSubscriptionType.Persistent;
   stream: string;
-  persistentSubscriptionName: string;
+  group: string;
+  autoAck?: boolean | undefined;
+  bufferSize?: number | undefined;
+  onSubscriptionDropped?: (sub: EventStorePersistentSubscription, reason: string, error: string) => void | undefined;
 };
 
 export type EventStoreCatchupSubscription = {
@@ -44,7 +37,9 @@ export type EventStoreSubscription =
   | EventStoreCatchupSubscription;
 
 export type EventStoreBusConfig = {
+  // TODO init with projections and subscriptions to build
   subscriptions: EventStoreSubscription[];
+  // TODO rename to mapper
   eventInstantiators: IEventConstructors;
 };
 

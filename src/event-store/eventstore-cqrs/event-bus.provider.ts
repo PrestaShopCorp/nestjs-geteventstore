@@ -5,9 +5,10 @@ import { filter } from 'rxjs/operators';
 import { isFunction } from 'util';
 import { CommandBus, IEvent, IEventHandler, InvalidSagaException, ISaga, ObservableBus } from '@nestjs/cqrs';
 import { EVENTS_HANDLER_METADATA, SAGA_METADATA } from '@nestjs/cqrs/dist/decorators/constants';
-import { EventStoreBus, EventStoreEvent, IEventConstructors } from './event-store.bus';
+import { EventStoreBus, IEventConstructors } from './event-store.bus';
 import { EventStore } from '../event-store.class';
 import { CqrsOptions } from '@nestjs/cqrs/dist/interfaces/cqrs-options.interface';
+import { ResolvedEvent } from 'node-eventstore-client';
 
 export enum EventStoreSubscriptionType {
   Persistent,
@@ -39,7 +40,8 @@ export type EventStoreSubscription =
 export type EventStoreBusConfig = {
   // TODO init with projections and subscriptions to build
   subscriptions: EventStoreSubscription[];
-  // TODO rename to mapper
+  // TODO use this to replace instanciator
+  mapper?: (event: ResolvedEvent) => IEvent,
   eventInstantiators: IEventConstructors;
 };
 
@@ -83,13 +85,11 @@ export class EventBusProvider extends ObservableBus<IEvent>
     (events || []).forEach(event => this._publisher.publish(event));
   }
 
-  // Todo
-  bind(handler: IEventHandler<EventStoreEvent>, name: string) {
+  bind(handler: IEventHandler<IEvent>, name: string) {
     const stream$ = name ? this.ofEventName(name) : this.subject$;
-
-    // TODO
     // Global stream for nestjs plumbing
-    const subscription = stream$.subscribe((event:EventStoreEvent) => {
+    const subscription = stream$.subscribe((event) => {
+      //console.log('onevent',event);
       handler.handle(event);
     });
     this.subscriptions.push(subscription);

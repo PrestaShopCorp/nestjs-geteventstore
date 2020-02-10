@@ -1,22 +1,20 @@
 import {
-  AcknowledgableEventstoreEvent,
+  AcknowledgeEventStoreEvent,
   EventStoreBusConfig,
   EventStoreEvent,
   EventStoreSubscriptionType,
 } from '../../src/index';
 
-export class PersonAddedEvent extends AcknowledgableEventstoreEvent {}
+export class PersonAddedEvent extends AcknowledgeEventStoreEvent {
+}
 
 const PersonEventInstantiators = {
   PersonAddedEvent: (event: EventStoreEvent) => {
-    return new PersonAddedEvent(
-      event.data,
-      event.meta,
-      event.eventId,
-      event.eventStreamId,
-      event.created,
-      event.eventNumber,
-    );
+    return new PersonAddedEvent({
+      data: event.data,
+      metadata: event.metadata,
+      eventStreamId: event.eventStreamId,
+    });
   },
 };
 /*
@@ -31,7 +29,7 @@ export const eventStoreBusConfig: EventStoreBusConfig = {
     {
       type: EventStoreSubscriptionType.Persistent,
       stream: '$ce-persons',
-      persistentSubscriptionName: 'contacts',
+      group: 'contacts',
     },
   ],
   // TODO use a factory that search the events automatically

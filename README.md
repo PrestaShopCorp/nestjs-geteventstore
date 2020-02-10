@@ -46,7 +46,9 @@ export const eventStoreBusConfig: EventStoreBusConfig = {
     { // persistanct subscription
       type: EventStoreSubscriptionType.Persistent,
       stream: '$ce-persons',
-      persistentSubscriptionName: 'contacts',
+      group: 'contacts',
+      autoAck: false,
+      bufferSize: 20,
     },
     { // Catchup subscription
       type: EventStoreSubscriptionType.CatchUp,

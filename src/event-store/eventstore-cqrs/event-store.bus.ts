@@ -60,7 +60,7 @@ export class EventStoreEvent implements IEvent {
     this.data = args.data;
     this.metadata = args.metadata;
     this.eventId = args.eventId;
-    this.eventType = args.eventType;
+    this.eventType = args.eventType ? args.eventType : this.constructor.name.substr(0, -5);
     this.eventStreamId = args.eventStreamId;
     this.created = args.created;
     this.eventNumber = args.eventNumber;
@@ -278,7 +278,7 @@ export class EventStoreBus {
 
 
     if (/*!payload.isResolved ||*/ !event || !event.isJson) {
-      this.logger.error('Received event that could not be resolved! acknowledge');
+      this.logger.error('Received event that could not be resolved! acknowledge ' + JSON.stringify(payload));
       if (!_subscription._autoAck) {
         _subscription.acknowledge([payload]);
       }

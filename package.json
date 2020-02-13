@@ -1,6 +1,6 @@
 {
   "name": "@prestashopCorp/nestjs-eventstore",
-  "version": "1.4.17",
+  "version": "1.5.0",
   "description": "Event Store connector for Nest js",
   "author": "Taimoor Alam <taimoor.alam@daypaio.com>",
   "license": "MIT",
@@ -19,6 +19,7 @@
     "lint:fix": "tslint -p tsconfig.json -c tslint.json --fix",
     "check-lite": "npm run lint:fix && npm run prepare",
     "test": "jest",
+    "semantic-release": "semantic-release",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:e2e": "jest --config ./test/jest-e2e.json"
@@ -43,14 +44,15 @@
     "rxjs": "^6.3.3"
   },
   "dependencies": {
-    "@nestjs/common": "^6.8.5",
-    "@nestjs/core": "^6.8.5",
+    "@nestjs/common": "^6.10.14",
+    "@nestjs/core": "^6.10.14",
     "@nestjs/cqrs": "^6.1.0",
     "node-eventstore-client": "^0.2.13",
     "reflect-metadata": "^0.1.12",
     "rxjs": "^6.3.3"
   },
   "devDependencies": {
+    "semantic-release": "17.0.3",
     "@nestjs/platform-express": "^6.8.5",
     "@nestjs/testing": "^6.8.5",
     "@types/express": "^4.17.1",

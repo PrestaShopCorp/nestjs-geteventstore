@@ -30,7 +30,7 @@
   ],
   "repository": "git@github.com:PrestaShopCorp/nestjs-eventstore.git",
   "publishConfig": {
-    "access": "public",
+    "access": "public"
   },
   "bugs": "https://github.com/prestashopCorp/nestjs-eventstore/issues",
   "peerDependencies": {

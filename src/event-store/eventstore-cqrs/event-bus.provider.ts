@@ -3,8 +3,18 @@ import { ModuleRef } from '@nestjs/core';
 import { Observable, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { isFunction } from 'util';
-import { CommandBus, IEvent, IEventHandler, InvalidSagaException, ISaga, ObservableBus } from '@nestjs/cqrs';
-import { EVENTS_HANDLER_METADATA, SAGA_METADATA } from '@nestjs/cqrs/dist/decorators/constants';
+import {
+  CommandBus,
+  IEvent,
+  IEventHandler,
+  InvalidSagaException,
+  ISaga,
+  ObservableBus,
+} from '@nestjs/cqrs';
+import {
+  EVENTS_HANDLER_METADATA,
+  SAGA_METADATA,
+} from '@nestjs/cqrs/dist/decorators/constants';
 import { EventStoreBus, IEventConstructors } from './event-store.bus';
 import { EventStore } from '../event-store.class';
 import { CqrsOptions } from '@nestjs/cqrs/dist/interfaces/cqrs-options.interface';
@@ -21,7 +31,11 @@ export type EventStorePersistentSubscription = {
   group: string;
   autoAck?: boolean | undefined;
   bufferSize?: number | undefined;
-  onSubscriptionDropped?: (sub: EventStorePersistentSubscription, reason: string, error: string) => void | undefined;
+  onSubscriptionDropped?: (
+    sub: EventStorePersistentSubscription,
+    reason: string,
+    error: string,
+  ) => void | undefined;
 };
 
 export type EventStoreCatchupSubscription = {
@@ -41,7 +55,7 @@ export type EventStoreBusConfig = {
   // TODO init with projections and subscriptions to build
   subscriptions: EventStoreSubscription[];
   // TODO use this to replace instanciator
-  mapper?: (event: ResolvedEvent) => IEvent,
+  mapper?: (event: ResolvedEvent) => IEvent;
   eventInstantiators: IEventConstructors;
 };
 
@@ -88,7 +102,7 @@ export class EventBusProvider extends ObservableBus<IEvent>
   bind(handler: IEventHandler<IEvent>, name: string) {
     const stream$ = name ? this.ofEventName(name) : this.subject$;
     // Global stream for nestjs plumbing
-    const subscription = stream$.subscribe((event) => {
+    const subscription = stream$.subscribe(event => {
       //console.log('onevent',event);
       handler.handle(event);
     });
@@ -97,7 +111,7 @@ export class EventBusProvider extends ObservableBus<IEvent>
 
   registerSagas(types: Type<any>[] = []) {
     const sagas = types
-      .map((target) => {
+      .map(target => {
         const metadata = Reflect.getMetadata(SAGA_METADATA, target) || [];
         const instance = this.moduleRef.get(target, { strict: false });
         if (!instance) {

@@ -1,8 +1,12 @@
 {
-  "name": "@prestashopCorp/nestjs-eventstore",
+  "name": "vinceve/nestjs-eventstore",
   "version": "1.5.0",
   "description": "Event Store connector for Nest js",
   "author": "Taimoor Alam <taimoor.alam@daypaio.com>",
+  "contributors": [
+    "vinceveve",
+    "mazdev"
+  ],
   "license": "MIT",
   "readmeFilename": "README.md",
   "main": "dist/index.js",
@@ -30,8 +34,7 @@
   ],
   "repository": "git@github.com:PrestaShopCorp/nestjs-eventstore.git",
   "publishConfig": {
-    "access": "public",
-    "registry": "https://npm.pkg.github.com/"
+    "access": "public"
   },
   "bugs": "https://github.com/prestashopCorp/nestjs-eventstore/issues",
   "peerDependencies": {

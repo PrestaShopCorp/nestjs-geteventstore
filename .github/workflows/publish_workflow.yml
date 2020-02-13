@@ -14,9 +14,6 @@ jobs:
         with:
           node-version: 12
           registry-url: 'https://npm.pkg.github.com'
-      - run: yarn
-      - run: yarn build
-      - run: yarn semantic-release
+      - run: npm publish
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CI: true
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

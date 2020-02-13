@@ -9,10 +9,12 @@ import {
   tap,
   toArray,
 } from 'rxjs/operators';
-import fp from 'lodash/fp';
+import * as fp from 'lodash/fp';
 import uuid from 'uuid';
 import { EventStore } from './event-store.class';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class EventStoreObserver {
   writeTimeout: number;
   retryInProgress: boolean;

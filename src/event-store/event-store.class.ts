@@ -8,8 +8,7 @@ import {
 import * as geteventstorePromise from 'geteventstore-promise';
 import { defer, from, throwError } from 'rxjs';
 import { Logger } from '@nestjs/common';
-import fp from 'lodash/fp';
-import uuid from 'uuid';
+import * as fp from 'lodash/fp';
 import { map, catchError, toArray, flatMap } from 'rxjs/operators';
 
 export class EventStore {
@@ -25,6 +24,8 @@ export class EventStore {
     private settings: ConnectionSettings,
     private endpoint: TcpEndPoint,
   ) {
+    console.log(settings);
+    console.log(endpoint);
     this.connect();
     this.expectedVersion = expectedVersion;
     this._addDefaultVersion = fp.merge({ meta: { version: 1 } });

@@ -1,5 +1,5 @@
 {
-  "name": "psx-nestjs-eventstore",
+  "name": "@prestashopCorp/nestjs-eventstore",
   "version": "1.4.17",
   "description": "Event Store connector for Nest js",
   "author": "Taimoor Alam <taimoor.alam@daypaio.com>",
@@ -24,16 +24,18 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "keywords": [
-    "nestjs"
+    "nestjs",
+    "eventstore"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/daypaio/nestjs-eventstore"
+    "url": "git@github.com:PrestaShopCorp/nestjs-eventstore.git"
   },
-  "bugs": "https://github.com/daypaio/nestjs-eventstore/issues",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "bugs": "https://github.com/prestashopCorp/nestjs-eventstore/issues",
   "peerDependencies": {
     "@nestjs/common": "^6.0.0",
     "@nestjs/core": "^6.0.0",

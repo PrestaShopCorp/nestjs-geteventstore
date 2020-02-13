@@ -3,21 +3,38 @@ import {
   EventStoreNodeConnection,
   ConnectionSettings,
   TcpEndPoint,
+  expectedVersion,
 } from 'node-eventstore-client';
+import * as geteventstorePromise from 'geteventstore-promise';
+import { defer, from, throwError } from 'rxjs';
 import { Logger } from '@nestjs/common';
+import fp from 'lodash/fp';
+import uuid from 'uuid';
+import { map, catchError, toArray, flatMap } from 'rxjs/operators';
 
 export class EventStore {
   connection: EventStoreNodeConnection;
-
+  expectedVersion: any;
   isConnected: boolean = false;
 
   private logger: Logger = new Logger(this.constructor.name);
+  _addDefaultVersion: any;
+  _toEventstoreEvent: (e: any) => any;
 
   constructor(
     private settings: ConnectionSettings,
     private endpoint: TcpEndPoint,
   ) {
     this.connect();
+    this.expectedVersion = expectedVersion;
+    this._addDefaultVersion = fp.merge({ meta: { version: 1 } });
+    this._toEventstoreEvent = e =>
+      new geteventstorePromise.EventFactory().newEvent(
+        e.type,
+        e.data,
+        e.meta,
+        e.id,
+      );
   }
 
   async connect() {
@@ -31,6 +48,33 @@ export class EventStore {
       this.logger.error('Connection to EventStore closed!');
       this.isConnected = false;
       this.connect();
+    });
+  }
+
+  writeEvents(stream, ...events) {
+    return defer(() => {
+      return from(events).pipe(
+        map(this._addDefaultVersion),
+        // tap(console.log),
+        map(this._toEventstoreEvent),
+        // If the event is invalid (if _toEventstoreEvent throw an exception), return a 400 error
+        catchError(err => {
+          return throwError({
+            message: `Unable to convert event to Eventstore event : ${err.message}`,
+            response: { status: 400 },
+          });
+        }),
+        toArray(),
+        flatMap(esEvents =>
+          from(
+            this.connection.appendToStream(
+              stream,
+              expectedVersion.any,
+              esEvents,
+            ),
+          ),
+        ),
+      );
     });
   }
 

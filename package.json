@@ -44,9 +44,12 @@
     "@nestjs/common": "^6.10.14",
     "@nestjs/core": "^6.10.14",
     "@nestjs/cqrs": "^6.1.0",
+    "geteventstore-promise": "^3.2.0",
+    "lodash": "^4.17.15",
     "node-eventstore-client": "^0.2.13",
     "reflect-metadata": "^0.1.12",
-    "rxjs": "^6.3.3"
+    "rxjs": "^6.5.4",
+    "uuid": "^3.4.0"
   },
   "devDependencies": {
     "semantic-release": "17.0.3",

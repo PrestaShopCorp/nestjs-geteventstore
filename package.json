@@ -28,10 +28,7 @@
     "nestjs",
     "eventstore"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:PrestaShopCorp/nestjs-eventstore.git"
-  },
+  "repository": "git@github.com:PrestaShopCorp/nestjs-eventstore.git",
   "publishConfig": {
     "access": "public",
     "registry": "https://npm.pkg.github.com/"

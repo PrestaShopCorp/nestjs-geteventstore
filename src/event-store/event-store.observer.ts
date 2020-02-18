@@ -48,7 +48,12 @@ export class EventStoreObserver {
     this.initAutoRetry();
   }
 
-  next(event) {}
+  next(event) {
+    if (!event || !event.stream) {
+      return;
+    }
+    this.writeEvent(event.stream, event);
+  }
 
   error(err) {
     if (!err || !err.stream) {
@@ -101,8 +106,6 @@ export class EventStoreObserver {
   }
 
   private retry() {
-    const totalEvents = this.retryBuffer.length;
-
     // This is not very atomic :astonished: :nuclear:
     this.retryInProgress = true;
     const buffer = fp.take(100)(this.retryBuffer);

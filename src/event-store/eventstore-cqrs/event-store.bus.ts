@@ -6,8 +6,6 @@ import {
   EventStoreCatchUpSubscription,
   EventStorePersistentSubscription,
   PersistentSubscriptionNakEventAction,
-  RecordedEvent,
-  ResolvedEvent,
 } from 'node-eventstore-client';
 import { v4 } from 'uuid';
 import { Logger } from '@nestjs/common';
@@ -43,6 +41,11 @@ export type TEventStoreEvent = {
   originalEventId?: string,
 };
 
+export interface TAcknowledgeEventStoreEvent extends TEventStoreEvent {
+  ack: () => {},
+  nack: (action: PersistentSubscriptionNakEventAction, reason: string) => {}
+}
+
 export class EventStoreEvent implements IEvent {
   data;
   metadata;
@@ -56,7 +59,7 @@ export class EventStoreEvent implements IEvent {
    */
   protected originalEventId;
 
-  constructor(args: TEventStoreEvent) {
+  constructor(args: TAcknowledgeEventStoreEvent) {
     this.data = args.data;
     this.metadata = args.metadata;
     this.eventId = args.eventId;
@@ -89,30 +92,13 @@ export class EventStoreEvent implements IEvent {
 }
 
 export class AcknowledgeEventStoreEvent extends EventStoreEvent {
-  private subscription: EventStorePersistentSubscription;
+  ack;
+  nack;
 
-  setSubscription(sub: EventStorePersistentSubscription) {
-    this.subscription = sub;
-  }
-
-  private getResolvedEvent() {
-    return {
-      originalEvent: {
-        eventId: this.originalEventId,
-      } as RecordedEvent,
-    } as ResolvedEvent;
-  }
-
-  ack(): void {
-    if (this.subscription) {
-      this.subscription.acknowledge([this.getResolvedEvent()]);
-    }
-  }
-
-  nack(action: PersistentSubscriptionNakEventAction, reason: string): void {
-    if (this.subscription) {
-      this.subscription.fail([this.getResolvedEvent()], action, reason);
-    }
+  constructor(args: TAcknowledgeEventStoreEvent) {
+    super(args);
+    this.ack = args.ack;
+    this.nack = args.nack;
   }
 }
 
@@ -316,6 +302,12 @@ export class EventStoreBus {
       }
       return;
     }
+    const ack = () => {
+      _subscription.acknowledge([payload]);
+    };
+    const nack = (action: PersistentSubscriptionNakEventAction, reason: string) => {
+      _subscription.fail([payload], action, reason);
+    };
 
     const builtEvent = eventConstructor({
       data,
@@ -326,6 +318,8 @@ export class EventStoreBus {
       eventNumber: event.eventNumber.low,
       eventType: event.eventType,
       originalEventId: payload.originalEvent.eventId ? payload.originalEvent.eventId : event.eventId,
+      ack: ack,
+      nack: nack,
     });
     if (!builtEvent) {
       this.logger.warn(`Received event of type ${event.eventType} with no declared handler acknowledge`);
@@ -334,11 +328,6 @@ export class EventStoreBus {
       }
       return;
     }
-    //console.log('onevent', payload);
-    if (builtEvent instanceof AcknowledgeEventStoreEvent) {
-      builtEvent.setSubscription(_subscription);
-    }
-
     this.subject$.next(builtEvent);
   }
 

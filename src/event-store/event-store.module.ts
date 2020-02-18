@@ -1,6 +1,7 @@
 import { Global, Module, DynamicModule } from '@nestjs/common';
 import { EventStore } from './event-store.class';
 import { ConnectionSettings, TcpEndPoint } from 'node-eventstore-client';
+import { EventStoreObserverModule } from './event-store-observer.module';
 
 export interface EventStoreModuleOptions {
   connectionSettings: ConnectionSettings;
@@ -50,6 +51,7 @@ export class EventStoreModule {
           },
           inject: options.inject,
         },
+        EventStoreObserverModule,
       ],
       exports: [EventStore],
     };

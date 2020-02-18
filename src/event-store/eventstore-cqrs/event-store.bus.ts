@@ -262,7 +262,6 @@ export class EventStoreBus {
   async onEvent(_subscription, payload) {
     const { event } = payload;
 
-
     if (/*!payload.isResolved ||*/ !event || !event.isJson) {
       this.logger.error('Received event that could not be resolved! acknowledge ' + JSON.stringify(payload));
       if (!_subscription._autoAck) {
@@ -293,10 +292,13 @@ export class EventStoreBus {
       }
       return;
     }
+    // TODO buffer one day ?
     const ack = () => {
+      this.logger.log(`Acknowledge event ${event.eventType} with id ${event.eventId}`);
       _subscription.acknowledge([payload]);
     };
     const nack = (action: PersistentSubscriptionNakEventAction, reason: string) => {
+      this.logger.log(`Fail for event ${event.eventType} with id ${event.eventId} for reason ${reason}`);
       _subscription.fail([payload], action, reason);
     };
 

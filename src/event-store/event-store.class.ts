@@ -24,8 +24,6 @@ export class EventStore {
     private settings: ConnectionSettings,
     private endpoint: TcpEndPoint,
   ) {
-    console.log(settings);
-    console.log(endpoint);
     this.connect();
     this.expectedVersion = expectedVersion;
     this._addDefaultVersion = fp.merge({ meta: { version: 1 } });

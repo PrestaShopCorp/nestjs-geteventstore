@@ -1,28 +1,21 @@
 import { Global, Module, DynamicModule } from '@nestjs/common';
+import { EventStoreModule } from './event-store.module';
 import { EventStore } from './event-store.class';
-import { ConnectionSettings, TcpEndPoint } from 'node-eventstore-client';
 import { EventStoreObserverModule } from './event-store-observer.module';
-import { EventStoreCoreModule } from './event-store-core.module';
-
-export interface EventStoreModuleOptions {
-  connectionSettings: ConnectionSettings;
-  endpoint: TcpEndPoint;
-}
 
 export interface EventStoreModuleAsyncOptions {
   useFactory: (...args: any[]) => Promise<any> | any;
   inject?: any[];
 }
 
-@Global()
 @Module({
-  providers: [EventStore],
-  exports: [EventStore],
+  providers: [EventStoreCoreModule],
+  exports: [EventStoreCoreModule],
 })
-export class EventStoreModule {
+export class EventStoreCoreModule {
   static forRootAsync(options: EventStoreModuleAsyncOptions): DynamicModule {
     return {
-      module: EventStoreModule,
+      module: EventStoreCoreModule,
       providers: [
         {
           provide: EventStore,
@@ -34,11 +27,9 @@ export class EventStoreModule {
           },
           inject: options.inject,
         },
-        EventStoreCoreModule,
-        EventStoreObserverModule,
+        EventStore,
       ],
-      exports: [EventStore, EventStoreObserverModule],
-      imports: [EventStoreObserverModule.forRootAsync(EventStore)],
+      exports: [EventStore],
     };
   }
 }

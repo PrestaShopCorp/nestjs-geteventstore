@@ -3,22 +3,11 @@ import { ModuleRef } from '@nestjs/core';
 import { Observable, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { isFunction } from 'util';
-import {
-  CommandBus,
-  IEvent,
-  IEventHandler,
-  InvalidSagaException,
-  ISaga,
-  ObservableBus,
-} from '@nestjs/cqrs';
-import {
-  EVENTS_HANDLER_METADATA,
-  SAGA_METADATA,
-} from '@nestjs/cqrs/dist/decorators/constants';
-import { EventStoreBus, IEventConstructors } from './event-store.bus';
+import { CommandBus, IEvent, IEventHandler, InvalidSagaException, ISaga, ObservableBus } from '@nestjs/cqrs';
+import { EVENTS_HANDLER_METADATA, SAGA_METADATA } from '@nestjs/cqrs/dist/decorators/constants';
+import { EventStoreBus, TAcknowledgeEventStoreEvent, TEventStoreEvent } from './event-store.bus';
 import { EventStore } from '../event-store.class';
 import { CqrsOptions } from '@nestjs/cqrs/dist/interfaces/cqrs-options.interface';
-import { ResolvedEvent } from 'node-eventstore-client';
 
 export enum EventStoreSubscriptionType {
   Persistent,
@@ -54,9 +43,7 @@ export type EventStoreSubscription =
 export type EventStoreBusConfig = {
   // TODO init with projections and subscriptions to build
   subscriptions: EventStoreSubscription[];
-  // TODO use this to replace instanciator
-  mapper?: (event: ResolvedEvent) => IEvent;
-  eventInstantiators: IEventConstructors;
+  eventMapper: (event: TEventStoreEvent | TAcknowledgeEventStoreEvent) => IEvent;
 };
 
 export type EventHandlerType = Type<IEventHandler<IEvent>>;

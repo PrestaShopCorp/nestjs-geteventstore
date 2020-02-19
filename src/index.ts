@@ -8,3 +8,5 @@ export * from './event-store/shared/aggregate-event.interface';
 export * from './event-store/event-store.observer';
 export * from './event-store/event-store-observer.module';
 export * from './event-store/event-store.interceptor';
+export * from './event-store/eventstore-cqrs/event-store.bus';
+export * from './event-store/eventstore-cqrs/event-bus.provider';

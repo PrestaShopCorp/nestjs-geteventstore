@@ -41,7 +41,7 @@ export type TEventStoreEvent = {
   originalEventId?: string,
 };
 
-export interface TAcknowledgeEventStoreEvent extends TEventStoreEvent {
+export type TAcknowledgeEventStoreEvent = TEventStoreEvent & {
   ack: () => {},
   nack: (action: PersistentSubscriptionNakEventAction, reason: string) => {}
 }
@@ -59,7 +59,7 @@ export class EventStoreEvent implements IEvent {
    */
   protected originalEventId;
 
-  constructor(args: TAcknowledgeEventStoreEvent) {
+  constructor(args: TEventStoreEvent) {
     this.data = args.data;
     this.metadata = args.metadata;
     this.eventId = args.eventId;
@@ -103,7 +103,7 @@ export class AcknowledgeEventStoreEvent extends EventStoreEvent {
 }
 
 export class EventStoreBus {
-  private eventConstructors: IEventConstructors;
+  private readonly eventMapper: (event: TEventStoreEvent | TAcknowledgeEventStoreEvent) => {};
   private logger = new Logger('EventStoreBus');
   private catchupSubscriptions: ExtendedCatchUpSubscription[] = [];
   private catchupSubscriptionsCount: number;
@@ -116,7 +116,7 @@ export class EventStoreBus {
     private subject$: Subject<IEvent>,
     config: EventStoreBusConfig,
   ) {
-    this.addEventHandlers(config.eventInstantiators);
+    this.eventMapper = config.eventMapper;
 
     const catchupSubscriptions = config.subscriptions.filter(sub => {
       return sub.type === EventStoreSubscriptionType.CatchUp;
@@ -262,7 +262,6 @@ export class EventStoreBus {
   async onEvent(_subscription, payload) {
     const { event } = payload;
 
-
     if (/*!payload.isResolved ||*/ !event || !event.isJson) {
       this.logger.error('Received event that could not be resolved! acknowledge ' + JSON.stringify(payload));
       if (!_subscription._autoAck) {
@@ -271,15 +270,6 @@ export class EventStoreBus {
       return;
     }
 
-    // TODO use a factory to avoid manual declaration ?
-    const eventConstructor = this.eventConstructors[event.eventType];
-    if (!eventConstructor) {
-      this.logger.warn(`Received event of type ${event.eventType} that has no handler acknowledge`);
-      if (!_subscription._autoAck) {
-        _subscription.acknowledge([payload]);
-      }
-      return;
-    }
     let data = {};
     try {
       data = JSON.parse(event.data.toString());
@@ -302,14 +292,17 @@ export class EventStoreBus {
       }
       return;
     }
+    // TODO buffer one day ?
     const ack = () => {
+      this.logger.log(`Acknowledge event ${event.eventType} with id ${event.eventId}`);
       _subscription.acknowledge([payload]);
     };
     const nack = (action: PersistentSubscriptionNakEventAction, reason: string) => {
+      this.logger.log(`Fail for event ${event.eventType} with id ${event.eventId} for reason ${reason}`);
       _subscription.fail([payload], action, reason);
     };
 
-    const builtEvent = eventConstructor({
+    const finalEvent = this.eventMapper({
       data,
       metadata,
       eventStreamId: event.eventStreamId,
@@ -320,15 +313,16 @@ export class EventStoreBus {
       originalEventId: payload.originalEvent.eventId ? payload.originalEvent.eventId : event.eventId,
       ack: ack,
       nack: nack,
-    });
-    if (!builtEvent) {
+    } as TAcknowledgeEventStoreEvent);
+
+    if (!finalEvent) {
       this.logger.warn(`Received event of type ${event.eventType} with no declared handler acknowledge`);
       if (!_subscription._autoAck) {
         _subscription.acknowledge([payload]);
       }
       return;
     }
-    this.subject$.next(builtEvent);
+    this.subject$.next(finalEvent);
   }
 
   onDropped(
@@ -343,12 +337,5 @@ export class EventStoreBus {
   onLiveProcessingStarted(subscription: ExtendedCatchUpSubscription) {
     subscription.isLive = true;
     this.logger.log('Live processing of EventStore events started!');
-  }
-
-  addEventHandlers(eventHandlers: IEventConstructors) {
-    this.eventConstructors = {
-      ...this.eventConstructors,
-      ...eventHandlers,
-    };
   }
 }

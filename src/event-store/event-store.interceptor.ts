@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { Observable, Subject } from 'rxjs';
 import { EventStoreObserver } from './event-store.observer';
-import { map, tap, share } from 'rxjs/operators';
 import { EVENT_STORE_OBSERVER_TOKEN } from './shared/constants';
 
 @Injectable()

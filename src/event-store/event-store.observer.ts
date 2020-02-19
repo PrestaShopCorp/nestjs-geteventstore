@@ -10,7 +10,7 @@ import {
   toArray,
 } from 'rxjs/operators';
 import * as fp from 'lodash/fp';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import { EventStore } from './event-store.class';
 import { Injectable } from '@nestjs/common';
 

@@ -6,15 +6,14 @@ import { EventStore } from './event-store.class';
 @Global()
 @Module({})
 export class EventStoreObserverModule {
-  public static forRootAsync(): DynamicModule {
+  public static forRootAsync(eventstore): DynamicModule {
     const provider: Provider = {
-      inject: [EventStore],
       provide: EVENT_STORE_OBSERVER_TOKEN,
-      useFactory: eventstoreConnector => {
-        return new EventStoreObserver(eventstoreConnector);
+      useFactory: eventstore => {
+        return new EventStoreObserver(eventstore);
       },
+      inject: [EventStore],
     };
-
     return {
       exports: [provider],
       module: EventStoreObserverModule,

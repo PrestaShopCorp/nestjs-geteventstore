@@ -27,12 +27,8 @@ export class EventStoreModule {
         {
           provide: EventStore,
           useFactory: async (...args) => {
-            const {
-              connectionSettings,
-              endpoint,
-              HTTPEndpoint,
-            } = await options.useFactory(...args);
-            return new EventStore(connectionSettings, endpoint, HTTPEndpoint);
+            const { settings, tcp, http } = await options.useFactory(...args);
+            return new EventStore(settings, tcp, http);
           },
           inject: options.inject,
         },

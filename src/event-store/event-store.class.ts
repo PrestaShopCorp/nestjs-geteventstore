@@ -22,8 +22,8 @@ export class EventStore {
   _toEventstoreEvent: (e: any) => any;
 
   constructor(
-    private settings,
-    private endpoint: TcpEndPoint,
+    private credentials,
+    private TCPEndpoint: TcpEndPoint,
     private HTTPEndpoint: any,
   ) {
     this.connect();
@@ -31,8 +31,8 @@ export class EventStore {
       hostname: this.HTTPEndpoint.host,
       port: this.HTTPEndpoint.port,
       credentials: {
-        username: this.settings.username,
-        password: this.settings.password,
+        username: this.credentials.username,
+        password: this.credentials.password,
       },
     });
     this.expectedVersion = expectedVersion;
@@ -48,8 +48,8 @@ export class EventStore {
 
   async connect() {
     this.connection = createConnection(
-      { defaultUserCredentials: this.settings },
-      this.endpoint,
+      { defaultUserCredentials: this.credentials },
+      this.TCPEndpoint,
     );
     this.connection.connect();
     this.connection.on('connected', () => {

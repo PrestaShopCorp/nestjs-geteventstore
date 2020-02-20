@@ -22,8 +22,10 @@ export class EventStoreModule {
         {
           provide: EventStore,
           useFactory: async (...args) => {
-            const { settings, tcp, http } = await options.useFactory(...args);
-            return new EventStore(settings, tcp, http);
+            const { credentials, tcp, http } = await options.useFactory(
+              ...args,
+            );
+            return new EventStore(credentials, tcp, http);
           },
           inject: options.inject,
         },

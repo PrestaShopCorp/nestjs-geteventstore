@@ -28,7 +28,7 @@ export class EventStore {
   ) {
     this.connect();
     this.HTTPClient = new geteventstorePromise.HTTPClient({
-      hostname: this.HTTPEndpoint.hostname,
+      hostname: this.HTTPEndpoint.host,
       port: this.HTTPEndpoint.port,
       credentials: {
         username: this.settings.defaultUserCredentials.username,

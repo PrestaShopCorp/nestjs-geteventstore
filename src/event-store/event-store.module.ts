@@ -4,11 +4,6 @@ import { ConnectionSettings, TcpEndPoint } from 'node-eventstore-client';
 import { EventStoreObserverModule } from './event-store-observer.module';
 import { EventStoreCoreModule } from './event-store-core.module';
 
-export interface EventStoreModuleOptions {
-  connectionSettings: ConnectionSettings;
-  endpoint: TcpEndPoint;
-}
-
 export interface EventStoreModuleAsyncOptions {
   useFactory: (...args: any[]) => Promise<any> | any;
   inject?: any[];

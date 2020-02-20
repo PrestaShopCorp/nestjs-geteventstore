@@ -15,6 +15,7 @@ export class EventStore {
   connection: EventStoreNodeConnection;
   expectedVersion: any;
   isConnected: boolean = false;
+  HTTPClient: any;
 
   private logger: Logger = new Logger(this.constructor.name);
   _addDefaultVersion: any;
@@ -23,8 +24,17 @@ export class EventStore {
   constructor(
     private settings: ConnectionSettings,
     private endpoint: TcpEndPoint,
+    private HTTPEndpoint: any,
   ) {
     this.connect();
+    this.HTTPClient = new geteventstorePromise.HTTPClient({
+      hostname: this.HTTPEndpoint.hostname,
+      port: this.HTTPEndpoint.port,
+      credentials: {
+        username: this.settings.defaultUserCredentials.username,
+        password: this.settings.defaultUserCredentials.password,
+      },
+    });
     this.expectedVersion = expectedVersion;
     this._addDefaultVersion = fp.merge({ meta: { version: 1 } });
     this._toEventstoreEvent = e =>
@@ -65,13 +75,7 @@ export class EventStore {
         }),
         toArray(),
         flatMap(esEvents =>
-          from(
-            this.connection.appendToStream(
-              stream,
-              expectedVersion.any,
-              esEvents,
-            ),
-          ),
+          from(this.HTTPClient.writeEvents(stream, esEvents)),
         ),
       );
     });

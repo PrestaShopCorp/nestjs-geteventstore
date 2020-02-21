@@ -27,3 +27,12 @@ export default registerAs(
     } as IEventStoreConfig),
 );
 ```
+
+To init the module as a writer:
+
+```typescript
+EventStoreModule.forRootAsync({
+      useFactory: async (config: ConfigService) => config.get('eventstore'),
+      inject: [ConfigService],
+    }),
+```

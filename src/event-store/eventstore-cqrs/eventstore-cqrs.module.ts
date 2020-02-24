@@ -1,15 +1,13 @@
 import { CommandBus, EventBus, QueryBus } from '@nestjs/cqrs';
 import { DynamicModule, Global, Module } from '@nestjs/common';
-import { EventBusProvider, EventStoreBusConfig } from './event-bus.provider';
+import { EventBusProvider } from './event-bus.provider';
 import { EventStore } from '../event-store.class';
 import { ExplorerService } from '@nestjs/cqrs/dist/services/explorer.service';
 import { ModuleRef } from '@nestjs/core';
-import {
-  EventStoreModule,
-  EventStoreModuleAsyncOptions,
-} from '../event-store.module';
+import { EventStoreModule, EventStoreModuleAsyncOptions } from '../event-store.module';
 import { EventPublisher } from './event-publisher';
 import { EventStoreObserver } from '../event-store.observer';
+import { EventStoreBusConfig } from '../../interfaces/EventStoreBusConfig';
 
 @Global()
 @Module({})

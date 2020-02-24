@@ -5,46 +5,11 @@ import { filter } from 'rxjs/operators';
 import { isFunction } from 'util';
 import { CommandBus, IEvent, IEventHandler, InvalidSagaException, ISaga, ObservableBus } from '@nestjs/cqrs';
 import { EVENTS_HANDLER_METADATA, SAGA_METADATA } from '@nestjs/cqrs/dist/decorators/constants';
-import { EventStoreBus, TAcknowledgeEventStoreEvent, TEventStoreEvent } from './event-store.bus';
 import { EventStore } from '../event-store.class';
 import { CqrsOptions } from '@nestjs/cqrs/dist/interfaces/cqrs-options.interface';
 
-export enum EventStoreSubscriptionType {
-  Persistent,
-  CatchUp,
-}
-
-export type EventStorePersistentSubscription = {
-  type: EventStoreSubscriptionType.Persistent;
-  stream: string;
-  group: string;
-  autoAck?: boolean | undefined;
-  bufferSize?: number | undefined;
-  onSubscriptionDropped?: (
-    sub: EventStorePersistentSubscription,
-    reason: string,
-    error: string,
-  ) => void | undefined;
-};
-
-export type EventStoreCatchupSubscription = {
-  type: EventStoreSubscriptionType.CatchUp;
-  stream: string;
-};
-
-export type EventStoreSubscriptionConfig = {
-  persistentSubscriptionName: string;
-};
-
-export type EventStoreSubscription =
-  | EventStorePersistentSubscription
-  | EventStoreCatchupSubscription;
-
-export type EventStoreBusConfig = {
-  // TODO init with projections and subscriptions to build
-  subscriptions: EventStoreSubscription[];
-  eventMapper: (event: TEventStoreEvent | TAcknowledgeEventStoreEvent) => IEvent;
-};
+import { EventStoreBus } from './event-store.bus';
+import { EventStoreBusConfig } from '../../interfaces/EventStoreBusConfig';
 
 export type EventHandlerType = Type<IEventHandler<IEvent>>;
 

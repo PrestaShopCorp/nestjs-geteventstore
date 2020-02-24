@@ -1,21 +1,16 @@
-import {
-  createConnection,
-  EventStoreNodeConnection,
-  ConnectionSettings,
-  TcpEndPoint,
-  expectedVersion,
-} from 'node-eventstore-client';
+import { createConnection, EventStoreNodeConnection, expectedVersion, TcpEndPoint } from 'node-eventstore-client';
 import * as geteventstorePromise from 'geteventstore-promise';
+import { HTTPClient } from 'geteventstore-promise';
 import { defer, from, throwError } from 'rxjs';
 import { Logger } from '@nestjs/common';
 import * as fp from 'lodash/fp';
-import { map, catchError, toArray, flatMap } from 'rxjs/operators';
+import { catchError, flatMap, map, toArray } from 'rxjs/operators';
 
 export class EventStore {
   connection: EventStoreNodeConnection;
   expectedVersion: any;
   isConnected: boolean = false;
-  HTTPClient: any;
+  HTTPClient: HTTPClient;
 
   private logger: Logger = new Logger(this.constructor.name);
   _addDefaultVersion: any;

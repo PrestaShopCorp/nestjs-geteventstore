@@ -11,3 +11,7 @@ export * from './event-store/event-store.interceptor';
 export * from './event-store/eventstore-cqrs/event-store.bus';
 export * from './event-store/eventstore-cqrs/event-bus.provider';
 export * from './interfaces/IEventStoreConfig';
+export * from './interfaces/EventStoreBusConfig';
+export * from './interfaces/EventTypes';
+export * from './interfaces/SubscriptionTypes';
+export * from './interfaces/EventStoreProjection';

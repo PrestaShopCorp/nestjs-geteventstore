@@ -4,13 +4,17 @@ import { createEventData, EventData, PersistentSubscriptionNakEventAction } from
 import { v4 } from 'uuid';
 import { Logger } from '@nestjs/common';
 import { EventStore } from '../event-store.class';
-import { EventStoreBusConfig } from '../../interfaces/EventStoreBusConfig';
 import {
+  EventStoreBusConfig,
   EventStoreCatchupSubscriptionConfig,
   EventStorePersistentSubscriptionConfig,
-} from '../../interfaces/SubscriptionTypes';
-import { TAcknowledgeEventStoreEvent, TEventStoreEvent } from '../../interfaces/EventTypes';
+  EventStoreProjection,
+  TAcknowledgeEventStoreEvent,
+  TEventStoreEvent,
+} from '../..';
 import { ExtendedCatchUpSubscription, ExtendedPersistentSubscription } from '../../interfaces/EventStoreLibExtension';
+
+const fs = require('fs');
 
 export class EventStoreBus {
   private readonly eventMapper: (event: TEventStoreEvent | TAcknowledgeEventStoreEvent) => {};
@@ -26,9 +30,33 @@ export class EventStoreBus {
     config: EventStoreBusConfig,
   ) {
     this.eventMapper = config.eventMapper;
+    this.assertProjections(config.projections || []);
     this.subscribeToCatchUpSubscriptions(config.subscriptions.catchup || []);
     this.subscribeToPersistentSubscriptions(config.subscriptions.persistent || []);
+  }
 
+  async assertProjections(projections: EventStoreProjection[]) {
+    await Promise.all(
+      projections.map(async projection => {
+        let content;
+        if (projection.content) {
+          this.logger.log(`Assert projection "${projection.name}" from content`);
+          content = projection.content;
+        } else if (projection.file) {
+          this.logger.log(`Assert projection "${projection.name}" from file ${projection.file}`);
+          content = fs.readFileSync(projection.file, 'utf8');
+        }
+        await this.eventStore.HTTPClient.projections.assert(
+          projection.name,
+          content,
+          projection.mode,
+          projection.enabled,
+          projection.checkPointsEnabled,
+          projection.emitEnabled,
+        );
+        this.logger.log(`Projection "${projection.name}" asserted !`);
+      }),
+    );
   }
 
   async subscribeToPersistentSubscriptions(

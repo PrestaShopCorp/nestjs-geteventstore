@@ -14,3 +14,4 @@ export * from './interfaces/IEventStoreConfig';
 export * from './interfaces/EventStoreBusConfig';
 export * from './interfaces/EventTypes';
 export * from './interfaces/SubscriptionTypes';
+export * from './interfaces/EventStoreProjection';

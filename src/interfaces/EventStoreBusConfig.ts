@@ -4,7 +4,7 @@ import { TAcknowledgeEventStoreEvent, TEventStoreEvent } from './EventTypes';
 import { EventStoreProjection } from './EventStoreProjection';
 
 export type EventStoreBusConfig = {
-  projections: EventStoreProjection[],
+  projections?: EventStoreProjection[],
   subscriptions: {
     catchup?: EventStoreCatchupSubscriptionConfig[],
     //volatile? : EventStoreVolatileSubscription[],

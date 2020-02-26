@@ -1,39 +1,26 @@
 import {
-  AcknowledgeEventStoreEvent,
+  AcknowledgeEventStoreEvent, defaultMapper,
   EventStoreBusConfig,
   EventStoreEvent,
-  EventStoreSubscriptionType,
+  TEventStoreEvent,
 } from '../../src/index';
+import { Logger } from '@nestjs/common';
+import { IEvent } from '@nestjs/cqrs';
 
-export class PersonAddedEvent extends AcknowledgeEventStoreEvent {
+const logger = new Logger('EventBus')
+
+export class PersonAddedEvent extends AcknowledgeEventStoreEvent implements IEvent{
+}
+const allEvents = {
+  ...PersonAddedEvent
 }
 
-const PersonEventInstantiators = {
-  PersonAddedEvent: (event: EventStoreEvent) => {
-    return new PersonAddedEvent({
-      data: event.data,
-      metadata: event.metadata,
-      eventStreamId: event.eventStreamId,
-    });
-  },
-};
-/*
-const eventBuilderFactory = (type, event) => {
-  const className = `${type}Event`;
-  return new className(event);
-};
-*/
-
 export const eventStoreBusConfig: EventStoreBusConfig = {
-  subscriptions: [
-    {
-      type: EventStoreSubscriptionType.Persistent,
+  subscriptions: {
+    persistent: [{
       stream: '$ce-persons',
       group: 'contacts',
-    },
-  ],
-  // TODO use a factory that search the events automatically
-  eventInstantiators: {
-    ...PersonEventInstantiators,
+    }]
   },
+  eventMapper: defaultMapper(allEvents)
 };

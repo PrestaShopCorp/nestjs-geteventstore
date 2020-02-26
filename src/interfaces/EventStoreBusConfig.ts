@@ -12,3 +12,15 @@ export type EventStoreBusConfig = {
   };
   eventMapper: (event: TEventStoreEvent | TAcknowledgeEventStoreEvent) => IEvent;
 };
+export type AllEvents = {
+  IEvent
+}
+export const defaultMapper = (allEvents: AllEvents) => {
+  return (event: TEventStoreEvent) => {
+    let className = `${event.eventType}Event`;
+    if (allEvents[className]) {
+      return new allEvents[className](event);
+    }
+    return false;
+  }
+};

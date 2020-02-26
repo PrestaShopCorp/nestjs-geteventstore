@@ -64,13 +64,21 @@ export class EventStoreBus {
   ) {
     await Promise.all(
       subscriptions.map(async subscription => {
-        this.logger.log(`Assert persistent subscription "${subscription.group}" on stream ${subscription.stream} exists ` + JSON.stringify(subscription.options));
-        await this.eventStore.HTTPClient.persistentSubscriptions.assert(
-          subscription.group,
-          subscription.stream,
-          subscription.options,
-        );
-        this.logger.log(`Persistent subscription "${subscription.group}" on stream ${subscription.stream} asserted !`);
+        try {
+          this.logger.log(`Check if persistent subscription "${subscription.group}" on stream ${subscription.stream} needs to be created `);
+          await this.eventStore.HTTPClient.persistentSubscriptions.getSubscriptionInfo(subscription.group, subscription.stream);
+        }
+        catch(e) {
+          if(e.response.status != 404) {
+            throw(e);
+          }
+          await this.eventStore.HTTPClient.persistentSubscriptions.assert(
+            subscription.group,
+            subscription.stream,
+            subscription.options,
+          );
+          this.logger.log(`Persistent subscription "${subscription.group}" on stream ${subscription.stream} created ! `+ JSON.stringify(subscription.options));
+        }
       }),
     );
     this.persistentSubscriptionsCount = subscriptions.length;

@@ -36,7 +36,7 @@ export class EventStoreObserver {
 
     this.retryInterval = retryInterval;
 
-    this._getStreamName = fp.get('stream');
+    this._getStreamName = fp.get('eventStreamId');
 
     this._incrementRetryCount = fp.update(
       ['metadata', 'writeEventRetry'],

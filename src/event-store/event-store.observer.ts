@@ -39,7 +39,7 @@ export class EventStoreObserver {
     this._getStreamName = fp.get('stream');
 
     this._incrementRetryCount = fp.update(
-      ['meta', 'writeEventRetry'],
+      ['metadata', 'writeEventRetry'],
       v => (v || 0) + 1,
     );
 

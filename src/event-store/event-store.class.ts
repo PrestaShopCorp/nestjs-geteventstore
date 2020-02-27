@@ -31,12 +31,12 @@ export class EventStore {
       },
     });
     this.expectedVersion = expectedVersion;
-    this._addDefaultVersion = fp.merge({ meta: { version: 1 } });
+    this._addDefaultVersion = fp.merge({ metadata: { version: 1 } });
     this._toEventstoreEvent = e =>
       new geteventstorePromise.EventFactory().newEvent(
         e.type,
         e.data,
-        e.meta,
+        e.metadata,
         e.id,
       );
   }

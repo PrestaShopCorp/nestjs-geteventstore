@@ -23,7 +23,7 @@ export class EventStore {
   ) {
     this.connect();
     this.HTTPClient = new geteventstorePromise.HTTPClient({
-      hostname: this.HTTPEndpoint.host,
+      hostname: this.HTTPEndpoint.host.replace(/^https?:\/\//, ''),
       port: this.HTTPEndpoint.port,
       credentials: {
         username: this.credentials.username,

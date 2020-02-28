@@ -142,7 +142,7 @@ export class EventStoreObserver {
                     `Unable to persist event to eventstore in stream ${stream} : ${JSON.stringify(
                       event,
                     )}`,
-                    err
+                    err,
                   );
                 },
                 null,

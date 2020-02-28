@@ -1,7 +1,5 @@
-import { Global, Module, DynamicModule } from '@nestjs/common';
-import { EventStoreModule } from './event-store.module';
+import { Module, DynamicModule } from '@nestjs/common';
 import { EventStore } from './event-store.class';
-import { EventStoreObserverModule } from './event-store-observer.module';
 
 export interface EventStoreModuleAsyncOptions {
   useFactory: (...args: any[]) => Promise<any> | any;

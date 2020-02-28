@@ -1,6 +1,5 @@
 import { Global, Module, DynamicModule } from '@nestjs/common';
 import { EventStore } from './event-store.class';
-import { ConnectionSettings, TcpEndPoint } from 'node-eventstore-client';
 import { EventStoreObserverModule } from './event-store-observer.module';
 import { EventStoreCoreModule } from './event-store-core.module';
 

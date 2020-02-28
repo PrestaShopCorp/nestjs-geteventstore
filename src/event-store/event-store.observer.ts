@@ -36,7 +36,7 @@ export class EventStoreObserver {
 
     this.retryInterval = retryInterval;
 
-    this._getStreamName = fp.get('stream');
+    this._getStreamName = fp.get('eventStreamId');
 
     this._incrementRetryCount = fp.update(
       ['metadata', 'writeEventRetry'],
@@ -49,18 +49,18 @@ export class EventStoreObserver {
   }
 
   next(event) {
-    if (!event || !event.stream) {
+    if (!event || !event.eventStreamId) {
       return;
     }
-    this.writeEvent(event.stream, event);
+    this.writeEvent(event.eventStreamId, event);
   }
 
   error(err) {
-    if (!err || !err.stream) {
+    if (!err || !err.eventStreamId) {
       return;
     }
     // console.error('EventstoreObserver:onError', err)
-    this.writeEvent(err.stream, err);
+    this.writeEvent(err.eventStreamId, err);
   }
 
   writeEvent(stream, event) {
@@ -81,7 +81,7 @@ export class EventStoreObserver {
     }
 
     this.eventstoreConnector
-      .writeEvents(eventWithId.stream, eventWithId)
+      .writeEvents(eventWithId.eventStreamId, eventWithId)
       .pipe(timeout(this.writeTimeout))
       .subscribe(
         null,
@@ -142,6 +142,7 @@ export class EventStoreObserver {
                     `Unable to persist event to eventstore in stream ${stream} : ${JSON.stringify(
                       event,
                     )}`,
+                    err,
                   );
                 },
                 null,

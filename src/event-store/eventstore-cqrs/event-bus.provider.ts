@@ -9,7 +9,7 @@ import { EventStore } from '../event-store.class';
 import { CqrsOptions } from '@nestjs/cqrs/dist/interfaces/cqrs-options.interface';
 
 import { EventStoreBus } from './event-store.bus';
-import { EventStoreBusConfig } from '../../interfaces/EventStoreBusConfig';
+import { EventStoreBusConfig } from '../..';
 
 export type EventHandlerType = Type<IEventHandler<IEvent>>;
 
@@ -52,6 +52,7 @@ export class EventBusProvider extends ObservableBus<IEvent>
   }
 
   bind(handler: IEventHandler<IEvent>, name: string) {
+    // Send to a dedicated observable
     const stream$ = name ? this.ofEventName(name) : this.subject$;
     // Global stream for nestjs plumbing
     const subscription = stream$.subscribe(event => {

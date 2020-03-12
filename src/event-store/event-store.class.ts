@@ -1,4 +1,9 @@
-import { createConnection, EventStoreNodeConnection, expectedVersion, TcpEndPoint } from 'node-eventstore-client';
+import {
+  createConnection,
+  EventStoreNodeConnection,
+  expectedVersion,
+  TcpEndPoint,
+} from 'node-eventstore-client';
 import * as geteventstorePromise from 'geteventstore-promise';
 import { HTTPClient } from 'geteventstore-promise';
 import { defer, from, throwError } from 'rxjs';
@@ -21,7 +26,6 @@ export class EventStore {
     private TCPEndpoint: TcpEndPoint,
     private HTTPEndpoint: any,
   ) {
-    this.connect();
     this.HTTPClient = new geteventstorePromise.HTTPClient({
       hostname: this.HTTPEndpoint.host.replace(/^https?:\/\//, ''),
       port: this.HTTPEndpoint.port,
@@ -41,7 +45,7 @@ export class EventStore {
       );
   }
 
-  async connect() {
+  connect() {
     this.connection = createConnection(
       { defaultUserCredentials: this.credentials },
       this.TCPEndpoint,

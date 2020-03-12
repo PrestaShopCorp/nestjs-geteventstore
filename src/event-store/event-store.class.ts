@@ -16,6 +16,7 @@ export class EventStore {
   expectedVersion: any;
   isConnected: boolean = false;
   HTTPClient: HTTPClient;
+  connectionCount: number = 0;
 
   private logger: Logger = new Logger(this.constructor.name);
   _addDefaultVersion: any;
@@ -56,6 +57,11 @@ export class EventStore {
       this.isConnected = true;
     });
     this.connection.on('closed', () => {
+      if (this.connectionCount <= 10) {
+        this.connectionCount += 1;
+      } else {
+        throw new Error('To many eventStore connect retrys');
+      }
       this.logger.error('Connection to EventStore closed!');
       this.isConnected = false;
       this.connect();

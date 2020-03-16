@@ -1,6 +1,10 @@
 import { IEvent } from '@nestjs/cqrs';
 import { Subject } from 'rxjs';
-import { createEventData, EventData, PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
+import {
+  createEventData,
+  EventData,
+  PersistentSubscriptionNakEventAction,
+} from 'node-eventstore-client';
 import { v4 } from 'uuid';
 import { Logger } from '@nestjs/common';
 import { EventStore } from '../event-store.class';
@@ -12,12 +16,17 @@ import {
   TAcknowledgeEventStoreEvent,
   TEventStoreEvent,
 } from '../..';
-import { ExtendedCatchUpSubscription, ExtendedPersistentSubscription } from '../../interfaces/EventStoreLibExtension';
+import {
+  ExtendedCatchUpSubscription,
+  ExtendedPersistentSubscription,
+} from '../../interfaces/EventStoreLibExtension';
 
 const fs = require('fs');
 
 export class EventStoreBus {
-  private readonly eventMapper: (event: TEventStoreEvent | TAcknowledgeEventStoreEvent) => {};
+  private readonly eventMapper: (
+    event: TEventStoreEvent | TAcknowledgeEventStoreEvent,
+  ) => {};
   private logger = new Logger('EventStoreBus');
   private catchupSubscriptions: ExtendedCatchUpSubscription[] = [];
   private catchupSubscriptionsCount: number;
@@ -29,10 +38,13 @@ export class EventStoreBus {
     private subject$: Subject<IEvent>,
     config: EventStoreBusConfig,
   ) {
+    this.eventStore.connect();
     this.eventMapper = config.eventMapper;
     this.assertProjections(config.projections || []);
     this.subscribeToCatchUpSubscriptions(config.subscriptions.catchup || []);
-    this.subscribeToPersistentSubscriptions(config.subscriptions.persistent || []);
+    this.subscribeToPersistentSubscriptions(
+      config.subscriptions.persistent || [],
+    );
   }
 
   async assertProjections(projections: EventStoreProjection[]) {
@@ -40,10 +52,14 @@ export class EventStoreBus {
       projections.map(async projection => {
         let content;
         if (projection.content) {
-          this.logger.log(`Assert projection "${projection.name}" from content`);
+          this.logger.log(
+            `Assert projection "${projection.name}" from content`,
+          );
           content = projection.content;
         } else if (projection.file) {
-          this.logger.log(`Assert projection "${projection.name}" from file ${projection.file}`);
+          this.logger.log(
+            `Assert projection "${projection.name}" from file ${projection.file}`,
+          );
           content = fs.readFileSync(projection.file, 'utf8');
         }
         await this.eventStore.HTTPClient.projections.assert(
@@ -65,26 +81,35 @@ export class EventStoreBus {
     await Promise.all(
       subscriptions.map(async subscription => {
         try {
-          this.logger.log(`Check if persistent subscription "${subscription.group}" on stream ${subscription.stream} needs to be created `);
-          await this.eventStore.HTTPClient.persistentSubscriptions.getSubscriptionInfo(subscription.group, subscription.stream);
-        }
-        catch(e) {
-          if(e.response.status != 404) {
-            throw(e);
+          this.logger.log(
+            `Check if persistent subscription "${subscription.group}" on stream ${subscription.stream} needs to be created `,
+          );
+          await this.eventStore.HTTPClient.persistentSubscriptions.getSubscriptionInfo(
+            subscription.group,
+            subscription.stream,
+          );
+        } catch (e) {
+          if (e.response.status != 404) {
+            throw e;
           }
           await this.eventStore.HTTPClient.persistentSubscriptions.assert(
             subscription.group,
             subscription.stream,
             subscription.options,
           );
-          this.logger.log(`Persistent subscription "${subscription.group}" on stream ${subscription.stream} created ! `+ JSON.stringify(subscription.options));
+          this.logger.log(
+            `Persistent subscription "${subscription.group}" on stream ${subscription.stream} created ! ` +
+              JSON.stringify(subscription.options),
+          );
         }
       }),
     );
     this.persistentSubscriptionsCount = subscriptions.length;
     this.persistentSubscriptions = await Promise.all(
       subscriptions.map(async subscription => {
-        this.logger.log(`Connecting to persistent subscription "${subscription.group}" on stream ${subscription.stream}`);
+        this.logger.log(
+          `Connecting to persistent subscription "${subscription.group}" on stream ${subscription.stream}`,
+        );
         return await this.subscribeToPersistentSubscription(
           subscription.stream,
           subscription.group,
@@ -96,7 +121,9 @@ export class EventStoreBus {
     );
   }
 
-  subscribeToCatchUpSubscriptions(subscriptions: EventStoreCatchupSubscriptionConfig[]) {
+  subscribeToCatchUpSubscriptions(
+    subscriptions: EventStoreCatchupSubscriptionConfig[],
+  ) {
     this.catchupSubscriptionsCount = subscriptions.length;
     this.catchupSubscriptions = subscriptions.map(subscription => {
       return this.subscribeToCatchupSubscription(subscription.stream);
@@ -174,7 +201,6 @@ export class EventStoreBus {
     onSubscriptionDropped: (sub, reason, error) => void = undefined,
   ): Promise<ExtendedPersistentSubscription> {
     try {
-
       const resolved = (await this.eventStore.connection.connectToPersistentSubscription(
         stream,
         subscriptionName,
@@ -190,10 +216,12 @@ export class EventStoreBus {
         undefined,
         bufferSize,
         autoAck,
-      ) as ExtendedPersistentSubscription);
+      )) as ExtendedPersistentSubscription;
 
       resolved.isLive = true;
-      this.logger.log(`Connected to persistent subscription ${subscriptionName} on stream ${stream}!`);
+      this.logger.log(
+        `Connected to persistent subscription ${subscriptionName} on stream ${stream}!`,
+      );
       return resolved;
     } catch (err) {
       this.logger.error(err.message);
@@ -204,7 +232,9 @@ export class EventStoreBus {
     const { event } = payload;
 
     if (/*!payload.isResolved ||*/ !event || !event.isJson) {
-      this.logger.error(`Received event that could not be resolved! stream ${event.eventStreamId} type ${event.eventType} id ${event.eventId} acknowledge `);
+      this.logger.error(
+        `Received event that could not be resolved! stream ${event.eventStreamId} type ${event.eventType} id ${event.eventId} acknowledge `,
+      );
       if (!_subscription._autoAck) {
         _subscription.acknowledge([payload]);
       }
@@ -215,7 +245,9 @@ export class EventStoreBus {
     try {
       data = JSON.parse(event.data.toString());
     } catch (e) {
-      this.logger.warn(`Received event of type ${event.eventType} with shitty data acknowledge`);
+      this.logger.warn(
+        `Received event of type ${event.eventType} with shitty data acknowledge`,
+      );
       if (!_subscription._autoAck) {
         _subscription.acknowledge([payload]);
       }
@@ -227,7 +259,9 @@ export class EventStoreBus {
       metadata = JSON.parse(event.metadata.toString());
     }
     if (Object.keys(metadata).length == 0) {
-      this.logger.warn(`Received event of type ${event.eventType} with no metadata acknowledge`);
+      this.logger.warn(
+        `Received event of type ${event.eventType} with no metadata acknowledge`,
+      );
       if (!_subscription._autoAck) {
         _subscription.acknowledge([payload]);
       }
@@ -236,11 +270,18 @@ export class EventStoreBus {
     // FIXME handle catchup that don't need ack/nack
     // TODO buffer one day ?
     const ack = () => {
-      this.logger.log(`Acknowledge event ${event.eventType} with id ${event.eventId}`);
+      this.logger.log(
+        `Acknowledge event ${event.eventType} with id ${event.eventId}`,
+      );
       _subscription.acknowledge([payload]);
     };
-    const nack = (action: PersistentSubscriptionNakEventAction, reason: string) => {
-      this.logger.log(`Fail for event ${event.eventType} with id ${event.eventId} for reason ${reason}`);
+    const nack = (
+      action: PersistentSubscriptionNakEventAction,
+      reason: string,
+    ) => {
+      this.logger.log(
+        `Fail for event ${event.eventType} with id ${event.eventId} for reason ${reason}`,
+      );
       _subscription.fail([payload], action, reason);
     };
 
@@ -252,13 +293,17 @@ export class EventStoreBus {
       created: new Date(event.created),
       eventNumber: event.eventNumber.low,
       eventType: event.eventType,
-      originalEventId: payload.originalEvent.eventId ? payload.originalEvent.eventId : event.eventId,
+      originalEventId: payload.originalEvent.eventId
+        ? payload.originalEvent.eventId
+        : event.eventId,
       ack: ack,
       nack: nack,
     } as TAcknowledgeEventStoreEvent);
 
     if (!finalEvent) {
-      this.logger.warn(`Received event of type ${event.eventType} with no declared handler acknowledge`);
+      this.logger.warn(
+        `Received event of type ${event.eventType} with no declared handler acknowledge`,
+      );
       if (!_subscription._autoAck) {
         _subscription.acknowledge([payload]);
       }

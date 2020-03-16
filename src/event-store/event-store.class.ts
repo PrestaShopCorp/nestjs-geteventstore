@@ -1,4 +1,9 @@
-import { createConnection, EventStoreNodeConnection, expectedVersion, TcpEndPoint } from 'node-eventstore-client';
+import {
+  createConnection,
+  EventStoreNodeConnection,
+  expectedVersion,
+  TcpEndPoint,
+} from 'node-eventstore-client';
 import * as geteventstorePromise from 'geteventstore-promise';
 import { HTTPClient } from 'geteventstore-promise';
 import { defer, from, throwError } from 'rxjs';
@@ -11,6 +16,7 @@ export class EventStore {
   expectedVersion: any;
   isConnected: boolean = false;
   HTTPClient: HTTPClient;
+  connectionCount: number = 0;
 
   private logger: Logger = new Logger(this.constructor.name);
   _addDefaultVersion: any;
@@ -21,7 +27,6 @@ export class EventStore {
     private TCPEndpoint: TcpEndPoint,
     private HTTPEndpoint: any,
   ) {
-    this.connect();
     this.HTTPClient = new geteventstorePromise.HTTPClient({
       hostname: this.HTTPEndpoint.host.replace(/^https?:\/\//, ''),
       port: this.HTTPEndpoint.port,
@@ -41,7 +46,7 @@ export class EventStore {
       );
   }
 
-  async connect() {
+  connect() {
     this.connection = createConnection(
       { defaultUserCredentials: this.credentials },
       this.TCPEndpoint,
@@ -52,6 +57,11 @@ export class EventStore {
       this.isConnected = true;
     });
     this.connection.on('closed', () => {
+      if (this.connectionCount <= 10) {
+        this.connectionCount += 1;
+      } else {
+        throw new Error('To many eventStore connect retrys');
+      }
       this.logger.error('Connection to EventStore closed!');
       this.isConnected = false;
       this.connect();

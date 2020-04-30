@@ -27,6 +27,7 @@ import { EventStoreBusConfig, EventStoreCqrsModule, IEventStoreConfig } from '..
               port: process.env.EVENTSTORE_HTTP_PORT || 22113,
             },
           } as IEventStoreConfig),
+
       },
       {
         eventMapper: (event) => {
@@ -39,7 +40,8 @@ import { EventStoreBusConfig, EventStoreCqrsModule, IEventStoreConfig } from '..
         subscriptions: {
           persistent: [
             {
-              stream: 'test',
+              // Event stream category (before the -)
+              stream: '$ce-hero',
               group: 'data',
               autoAck: true,
               bufferSize: 1,

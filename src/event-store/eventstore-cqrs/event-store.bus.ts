@@ -1,25 +1,20 @@
 import { IEvent } from '@nestjs/cqrs';
 import { Subject } from 'rxjs';
-import {
-  createEventData,
-  EventData,
-  PersistentSubscriptionNakEventAction,
-} from 'node-eventstore-client';
-import { v4 } from 'uuid';
+import { createEventData, EventData, PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
 import { Logger } from '@nestjs/common';
 import { EventStore } from '../event-store.class';
+import { v4 } from 'uuid';
 import {
   EventStoreBusConfig,
   EventStoreCatchupSubscriptionConfig,
   EventStorePersistentSubscriptionConfig,
   EventStoreProjection,
+  ExpectedVersion,
+  IAggregateEvent,
   TAcknowledgeEventStoreEvent,
   TEventStoreEvent,
 } from '../..';
-import {
-  ExtendedCatchUpSubscription,
-  ExtendedPersistentSubscription,
-} from '../../interfaces/EventStoreLibExtension';
+import { ExtendedCatchUpSubscription, ExtendedPersistentSubscription } from '../../interfaces/EventStoreLibExtension';
 
 const fs = require('fs');
 
@@ -164,19 +159,20 @@ export class EventStoreBus {
     );
   }
 
-  async publish(event: IEvent, stream?: string) {
-    console.log(event, stream);
+  async publish(event: IAggregateEvent, stream?: string) {
     const payload: EventData = createEventData(
-      v4(),
+      event.id || v4(),
       event.constructor.name,
       true,
-      Buffer.from(JSON.stringify(event)),
+      Buffer.from(JSON.stringify(event.data)),
+      Buffer.from(JSON.stringify(event.metadata)),
     );
+    const expectedVersion = event.expectedVersion || ExpectedVersion.Any;
 
     try {
-      await this.eventStore.connection.appendToStream(stream, -2, [payload]);
+      await this.eventStore.connection.appendToStream(stream, expectedVersion, [payload]);
     } catch (err) {
-      this.logger.error('error', err);
+      this.logger.error(`Got an error appending to stream ${event.constructor.name} ${err}`);
     }
   }
 

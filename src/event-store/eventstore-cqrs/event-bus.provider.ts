@@ -9,7 +9,7 @@ import { EventStore } from '../event-store.class';
 //import { CqrsOptions } from '@nestjs/cqrs/dist/interfaces/cqrs-options.interface';
 
 import { EventStoreBus } from './event-store.bus';
-import { EventStoreBusConfig } from '../..';
+import { EventStoreBusConfig, IAggregateEvent } from '../..';
 
 export type EventHandlerType = Type<IEventHandler<IEvent>>;
 
@@ -43,11 +43,11 @@ export class EventBusProvider extends ObservableBus<IEvent>
     this.subscriptions.forEach(subscription => subscription.unsubscribe());
   }
 
-  publish<T extends IEvent>(event: T, stream: string) {
-    this._publisher.publish(event, 'test');
+  publish<T extends IAggregateEvent>(event: T, stream: string) {
+    this._publisher.publish(event, stream);
   }
 
-  publishAll(events: IEvent[]) {
+  publishAll(events: IAggregateEvent[]) {
     (events || []).forEach(event => this._publisher.publish(event));
   }
 

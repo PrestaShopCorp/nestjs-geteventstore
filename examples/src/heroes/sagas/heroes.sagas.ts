@@ -18,7 +18,7 @@ export class HeroesGameSagas {
         delay(1000),
         map(event => {
           console.log(clc.redBright('Inside [HeroesGameSagas] Saga'));
-          return new DropAncientItemCommand(event.heroId, itemId);
+          return new DropAncientItemCommand(event.data.heroId, itemId);
         }),
       );
   }

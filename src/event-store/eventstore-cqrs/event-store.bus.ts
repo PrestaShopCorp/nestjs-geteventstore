@@ -38,13 +38,19 @@ export class EventStoreBus {
     private subject$: Subject<IEvent>,
     config: EventStoreBusConfig,
   ) {
-    this.eventStore.connect();
-    this.eventMapper = config.eventMapper;
-    this.assertProjections(config.projections || []);
-    this.subscribeToCatchUpSubscriptions(config.subscriptions.catchup || []);
-    this.subscribeToPersistentSubscriptions(
-      config.subscriptions.persistent || [],
-    );
+    this.connect();
+    if(config.subscriptions) {
+
+      this.eventMapper = config.eventMapper;
+      this.assertProjections(config.projections || []);
+      this.subscribeToCatchUpSubscriptions(config.subscriptions.catchup || []);
+      this.subscribeToPersistentSubscriptions(
+        config.subscriptions.persistent || [],
+      );
+    }
+  }
+  async connect() {
+    await this.eventStore.connect();
   }
 
   async assertProjections(projections: EventStoreProjection[]) {
@@ -159,6 +165,7 @@ export class EventStoreBus {
   }
 
   async publish(event: IEvent, stream?: string) {
+    console.log(event, stream);
     const payload: EventData = createEventData(
       v4(),
       event.constructor.name,
@@ -169,7 +176,7 @@ export class EventStoreBus {
     try {
       await this.eventStore.connection.appendToStream(stream, -2, [payload]);
     } catch (err) {
-      this.logger.error(err);
+      this.logger.error('error', err);
     }
   }
 
@@ -258,7 +265,7 @@ export class EventStoreBus {
     if (event.metadata.toString()) {
       metadata = JSON.parse(event.metadata.toString());
     }
-    if (Object.keys(metadata).length == 0) {
+    /*if (Object.keys(metadata).length == 0) {
       this.logger.warn(
         `Received event of type ${event.eventType} with no metadata acknowledge`,
       );
@@ -266,7 +273,7 @@ export class EventStoreBus {
         _subscription.acknowledge([payload]);
       }
       return;
-    }
+    }*/
     // FIXME handle catchup that don't need ack/nack
     // TODO buffer one day ?
     const ack = () => {

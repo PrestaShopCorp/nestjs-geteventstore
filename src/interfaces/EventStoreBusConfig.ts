@@ -5,12 +5,12 @@ import { EventStoreProjection } from './EventStoreProjection';
 
 export type EventStoreBusConfig = {
   projections?: EventStoreProjection[],
-  subscriptions: {
+  subscriptions?: {
     catchup?: EventStoreCatchupSubscriptionConfig[],
     //volatile? : EventStoreVolatileSubscription[],
     persistent?: EventStorePersistentSubscriptionConfig[]
   };
-  eventMapper: (event: TEventStoreEvent | TAcknowledgeEventStoreEvent) => IEvent;
+  eventMapper?: (event: TEventStoreEvent | TAcknowledgeEventStoreEvent) => IEvent;
 };
 export type AllEvents = {
   IEvent

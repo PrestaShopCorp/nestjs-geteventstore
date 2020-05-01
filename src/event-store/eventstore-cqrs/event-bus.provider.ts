@@ -6,10 +6,10 @@ import { isFunction } from 'util';
 import { CommandBus, IEvent, IEventHandler, InvalidSagaException, ISaga, ObservableBus } from '@nestjs/cqrs';
 import { EVENTS_HANDLER_METADATA, SAGA_METADATA } from '@nestjs/cqrs/dist/decorators/constants';
 import { EventStore } from '../event-store.class';
-import { CqrsOptions } from '@nestjs/cqrs/dist/interfaces/cqrs-options.interface';
+//import { CqrsOptions } from '@nestjs/cqrs/dist/interfaces/cqrs-options.interface';
 
 import { EventStoreBus } from './event-store.bus';
-import { EventStoreBusConfig } from '../..';
+import { EventStoreBusConfig, IAggregateEvent } from '../..';
 
 export type EventHandlerType = Type<IEventHandler<IEvent>>;
 
@@ -18,7 +18,7 @@ export class EventBusProvider extends ObservableBus<IEvent>
   implements OnModuleDestroy {
   private _publisher: EventStoreBus;
   private readonly subscriptions: Subscription[];
-  private readonly cqrsOptions: CqrsOptions;
+  //private readonly cqrsOptions: CqrsOptions;
 
   constructor(
     private readonly commandBus: CommandBus,
@@ -43,11 +43,11 @@ export class EventBusProvider extends ObservableBus<IEvent>
     this.subscriptions.forEach(subscription => subscription.unsubscribe());
   }
 
-  publish<T extends IEvent>(event: T, stream: string) {
+  publish<T extends IAggregateEvent>(event: T, stream: string) {
     this._publisher.publish(event, stream);
   }
 
-  publishAll(events: IEvent[]) {
+  publishAll(events: IAggregateEvent[]) {
     (events || []).forEach(event => this._publisher.publish(event));
   }
 
@@ -94,6 +94,7 @@ export class EventBusProvider extends ObservableBus<IEvent>
 
   protected ofEventName(name: string) {
     return this.subject$.pipe(
+      // @ts-ignore
       filter(event => this.getEventName(event) === name),
     );
   }
@@ -126,6 +127,7 @@ export class EventBusProvider extends ObservableBus<IEvent>
   private useDefaultPublisher() {
     const pubSub = new EventStoreBus(
       this.eventStore,
+      // @ts-ignore
       this.subject$,
       this.config,
     );

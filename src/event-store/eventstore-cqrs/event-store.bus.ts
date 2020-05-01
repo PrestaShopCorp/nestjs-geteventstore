@@ -1,25 +1,20 @@
 import { IEvent } from '@nestjs/cqrs';
 import { Subject } from 'rxjs';
-import {
-  createEventData,
-  EventData,
-  PersistentSubscriptionNakEventAction,
-} from 'node-eventstore-client';
-import { v4 } from 'uuid';
+import { createEventData, EventData, PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
 import { Logger } from '@nestjs/common';
 import { EventStore } from '../event-store.class';
+import { v4 } from 'uuid';
 import {
   EventStoreBusConfig,
   EventStoreCatchupSubscriptionConfig,
   EventStorePersistentSubscriptionConfig,
   EventStoreProjection,
+  ExpectedVersion,
+  IAggregateEvent,
   TAcknowledgeEventStoreEvent,
   TEventStoreEvent,
 } from '../..';
-import {
-  ExtendedCatchUpSubscription,
-  ExtendedPersistentSubscription,
-} from '../../interfaces/EventStoreLibExtension';
+import { ExtendedCatchUpSubscription, ExtendedPersistentSubscription } from '../../interfaces/EventStoreLibExtension';
 
 const fs = require('fs');
 
@@ -38,13 +33,19 @@ export class EventStoreBus {
     private subject$: Subject<IEvent>,
     config: EventStoreBusConfig,
   ) {
-    this.eventStore.connect();
-    this.eventMapper = config.eventMapper;
-    this.assertProjections(config.projections || []);
-    this.subscribeToCatchUpSubscriptions(config.subscriptions.catchup || []);
-    this.subscribeToPersistentSubscriptions(
-      config.subscriptions.persistent || [],
-    );
+    this.connect();
+    if(config.subscriptions) {
+
+      this.eventMapper = config.eventMapper;
+      this.assertProjections(config.projections || []);
+      this.subscribeToCatchUpSubscriptions(config.subscriptions.catchup || []);
+      this.subscribeToPersistentSubscriptions(
+        config.subscriptions.persistent || [],
+      );
+    }
+  }
+  async connect() {
+    await this.eventStore.connect();
   }
 
   async assertProjections(projections: EventStoreProjection[]) {
@@ -158,18 +159,20 @@ export class EventStoreBus {
     );
   }
 
-  async publish(event: IEvent, stream?: string) {
+  async publish(event: IAggregateEvent, stream?: string) {
     const payload: EventData = createEventData(
-      v4(),
+      event.id || v4(),
       event.constructor.name,
       true,
-      Buffer.from(JSON.stringify(event)),
+      Buffer.from(JSON.stringify(event.data || {})),
+      Buffer.from(JSON.stringify(event.metadata || {})),
     );
+    const expectedVersion = event.expectedVersion || ExpectedVersion.Any;
 
     try {
-      await this.eventStore.connection.appendToStream(stream, -2, [payload]);
+      await this.eventStore.connection.appendToStream(stream, expectedVersion, [payload]);
     } catch (err) {
-      this.logger.error(err);
+      this.logger.error(`Got an error appending to stream ${event.constructor.name} ${err}`);
     }
   }
 
@@ -258,7 +261,7 @@ export class EventStoreBus {
     if (event.metadata.toString()) {
       metadata = JSON.parse(event.metadata.toString());
     }
-    if (Object.keys(metadata).length == 0) {
+    /*if (Object.keys(metadata).length == 0) {
       this.logger.warn(
         `Received event of type ${event.eventType} with no metadata acknowledge`,
       );
@@ -266,7 +269,7 @@ export class EventStoreBus {
         _subscription.acknowledge([payload]);
       }
       return;
-    }
+    }*/
     // FIXME handle catchup that don't need ack/nack
     // TODO buffer one day ?
     const ack = () => {

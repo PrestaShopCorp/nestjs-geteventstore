@@ -20,5 +20,8 @@ export class DropAncientItemHandler
     );
     hero.addItem(itemId);
     hero.commit();
+
+    hero.dropItem(itemId);
+    hero.commit()
   }
 }

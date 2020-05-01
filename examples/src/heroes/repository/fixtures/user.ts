@@ -1,3 +1,3 @@
-import { Hero } from '../../models/hero.model';
+import { Hero } from '../../aggregates/hero.aggregate';
 
-export const userHero = new Hero('33w21');
+export const userHero = new Hero('greg');

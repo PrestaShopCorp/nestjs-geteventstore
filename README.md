@@ -58,6 +58,51 @@ just add on import
 export class ProjectionDataModule {}
 ```
 
+### Minimal event definitions
+
+```typescript 
+import { IAggregateEvent } from '../../../../../src';
+import { v4 } from 'uuid';
+
+export class HeroDropItemEvent implements IAggregateEvent {
+  // Set data and metadata on constructor
+  constructor(
+    // Put wath ever you want in this
+    public readonly data: {
+      heroId: string,
+      itemId: string
+    }) {
+  }
+  // Mandatory if none error will be thrown
+  // Eventstore split at first - to define category
+  // here category is 'hero' I can get all events with stream $ce-hero
+  get streamName() {
+    return `hero-${this.data.heroId}`;
+  }
+
+  // Optionnal but so usefull
+  get metadata() {
+    return {
+      version: 1,
+      created_at: new Date(),
+    };
+  }
+  // Optionnal default is uuid-v4
+  // if you build your own id, eventstore can manage idempotency
+  // caution if eventstore is rebooted, duplicate ID can exist
+  get id() {
+    return v4();
+  }
+  // Optionnal default is ignore version
+  // Best way to garanty idempotency even after eventsore reboot
+  // can be an integer or https://github.com/EventStore/documentation/blob/master/http-api/optional-http-headers/expected-version.md
+  get expectedVersion() {
+    return ExpectedVersion.NoStream;
+  }
+}
+
+```
+
 ### Handling events
 Events are sent to eventstore and then read from eventstore to do side effects and sagas.
 
@@ -207,4 +252,75 @@ export class MyQueue  {
     return await dispatcher$.toPromise();
   }
 }
+```
+
+## Next
+Can run at Controller or Processor level or Service 
+
+```typescript
+@EventStore({ 
+  // Prefix for streamName auto generate
+  domain: 'order', 
+  // Can be set also at app level
+  bufferWithTime: '10s',
+  bufferWithCount: 100,
+  // for this domain the projection
+  // name is source-target
+  projections: [
+    // Run inside eventstore to route, group, rename, ... events
+    'projection/order.js'
+  ] 
+})
+class OrderService {
+    @StoreEvents({
+      // Optional generated with domain_methodName-id  in payload || uuidv4
+      // accessible in projection with $ce-order_create 
+      streamName: 'string',
+      // Optional Default to false
+      transaction: true,
+      // Optional role access on eventstore
+      permissions: ['$admin'],
+      // Default any, in which state the stream should be when writing
+      expectedVersion: ExpectedVersion.NoStream,
+      // Optional Retention rules default keep for long time
+      maxAge: '3d',
+      maxKeep: 10000,
+    })
+    create(order) : Observable<IAggregateEvent> {
+      
+    }
+    @StoreEvents()
+    edit(order) : Observable<IAggregateEvent> {
+      
+    }
+}
+```
+
+```
+
+```
+
+```typescript
+import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
+
+@EventsHandler(DoneThisEvent)
+export class MyEventHandler implements IEventHandler<DoneThisEvent> {
+  constructor(private readonly myRepository: myRepository,) {}
+
+  async handle(event: DoneThisEvent) {
+    try {
+        const doneId = event.getStreamId();
+        const createdAt = new Date(event.metadata.created_at);
+        const currentId = await this.myRepository.getById(event.data.id);
+        if(doneId != currentId) {
+          throw new Error('!!');
+        }  
+        event.ack();
+    }
+    catch(e) {
+      event.nack(PersistentSubscriptionNakEventAction.Park, e.message);
+    }
+  }
+}
+
 ```

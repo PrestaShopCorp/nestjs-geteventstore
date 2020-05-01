@@ -164,8 +164,8 @@ export class EventStoreBus {
       event.id || v4(),
       event.constructor.name,
       true,
-      Buffer.from(JSON.stringify(event.data)),
-      Buffer.from(JSON.stringify(event.metadata)),
+      Buffer.from(JSON.stringify(event.data || {})),
+      Buffer.from(JSON.stringify(event.metadata || {})),
     );
     const expectedVersion = event.expectedVersion || ExpectedVersion.Any;
 

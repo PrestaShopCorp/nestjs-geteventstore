@@ -1,6 +1,6 @@
 {
   "name": "nestjs-geteventstore",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Event Store connector for Nest js",
   "author": "Taimoor Alam <taimoor.alam@daypaio.com>",
   "contributors": [

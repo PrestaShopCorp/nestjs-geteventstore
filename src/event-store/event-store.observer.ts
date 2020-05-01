@@ -193,6 +193,7 @@ export class EventStoreObserver {
       );
   }
   private isRetryable(err) {
+    // TODO handle tcp
     const errCode = fp.getOr(200, 'response.status', err);
     return errCode !== 400;
   }

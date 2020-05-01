@@ -15,9 +15,9 @@ export class HeroesGameSagas {
     return events$
       .pipe(
         ofType(HeroKilledDragonEvent),
-        delay(1000),
+        delay(4000),
         map(event => {
-          console.log(clc.redBright('Inside [HeroesGameSagas] Saga'));
+          console.log(clc.redBright('Inside [HeroesGameSagas] Saga after a little sleep'));
           return new DropAncientItemCommand(event.data.heroId, itemId);
         }),
       );

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Hero } from '../models/hero.model';
+import { Hero } from '../aggregates/hero.aggregate';
 import { userHero } from './fixtures/user';
 
 @Injectable()

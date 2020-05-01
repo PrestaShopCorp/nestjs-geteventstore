@@ -22,6 +22,9 @@ export class Hero extends AggregateRoot {
       heroId: this.id,
       itemId
     }));
+
+  }
+  dropItem(itemId: string) {
     this.apply(new HeroDropItemEvent({
       heroId: this.id,
       itemId

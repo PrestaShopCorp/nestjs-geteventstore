@@ -23,18 +23,47 @@ Call it multiple time to try idemptotency
 see events on http://localhost:2113/web/index.html#/streams/hero-greg (admin/changeit)
 
 ## What the code does
- - `heroes.controller` send to the bus a `kill-dragon.command` configured with http body
+ - `heroes.controller` send to the command bus `kill-dragon.command` configured with http body
  - `kill-dragon.handler` fetch the hero and build a `hero.aggregate` merging db and command data
  - `kill-dragon.handler` call killEnemy() on `hero.aggregate`
- - `hero.aggregate` kill the enemy and then apply `hero-killed-dragon.event`
- - `kill-dragon.handler` says everything is  done then comit() `hero.aggregate`
- - Eventstore store the event on the correct stream, it apply idempotency using expected version (mean if you do it twice event is ignored)
+ - `hero.aggregate` kill the enemy and apply `hero-killed-dragon.event`
+ - `kill-dragon.handler` commit() on `hero.aggregate` (write all events on aggregate)
+ - Eventstore stores the event on event's stream, applying idempotency using expected version (mean if you do it twice event is ignored the other times)
  - `hero-killed-dragon.handler` receive the event from Eventstore and log (can run in another process)
- - `heroes-sagas` received the event from Eventstore do some stuff and send to commandBus `drop-ancient-item-command`
+ - `heroes-sagas` receive the event from Eventstore do some logic and send to commandBus `drop-ancient-item-command`
  - `drop-ancient-item.handler` fetch the hero and build a `hero.aggregate`  merging db and command data
  - `drop-ancient-item.handler` addItem() on `hero.aggregate` 
  - `hero.aggregate` apply `hero-found-item.event`
  - `drop-ancient-item.handler` dropItem() on `hero.aggregate` 
  - `hero.aggregate` apply `hero-drop-item.event`
- - `kill-dragon.handler` says everything is done then comit() `hero.aggregate`
+ - `kill-dragon.handler` commit() on `hero.aggregate` (can be done after each call)
+  - Eventstore store the event on event's stream
  
+## Data transfer object
+Stupid data object with optionnals validation rules
+ 
+## Repository
+ Link with the database
+ 
+## Aggregate Root
+Where everything on an entity and it's child appends.  
+Updated only using events 
+
+## Command
+Data transfer object with a name that you must execute
+
+## Command handler
+Do the logic : 
+Read the Command, merge DB and command's data on the Aggregate, play with aggregate's methods, commit one or multiple time when needed
+
+## Event
+Data transfer object with a name and a stream name.  
+Can have a UUID, metadata and an expected version 
+
+## Event Handler
+Do the side effects.
+Receive event and do logic with them : usually update or insert on the database
+
+## Saga
+Side effects that create new commands.
+Receive events and return one or more commands.

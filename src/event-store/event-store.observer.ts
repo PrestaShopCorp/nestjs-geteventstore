@@ -81,7 +81,7 @@ export class EventStoreObserver {
     }
 
     this.eventstoreConnector
-      .writeEvents(eventWithId.eventStreamId, eventWithId)
+      .writeEvents(eventWithId.eventStreamId, [eventWithId])
       .pipe(timeout(this.writeTimeout))
       .subscribe(
         null,
@@ -127,7 +127,7 @@ export class EventStoreObserver {
             const stream = this._getStreamName(event);
 
             // Try to write events in eventstore...
-            return this.eventstoreConnector.writeEvents(stream, event).pipe(
+            return this.eventstoreConnector.writeEvents(stream, [event]).pipe(
               // ...with a timeout
               timeout(this.writeTimeout),
               // On success, we empty the returned observable because we dont want to

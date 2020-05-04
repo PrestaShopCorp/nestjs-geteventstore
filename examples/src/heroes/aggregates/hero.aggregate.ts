@@ -1,16 +1,11 @@
 import { HeroFoundItemEvent } from '../events/impl/hero-found-item.event';
 import { HeroKilledDragonEvent } from '../events/impl/hero-killed-dragon.event';
 import { HeroDropItemEvent } from '../events/impl/hero-drop-item.event';
-import { AggregateRootWithStream } from '../../../../src/event-store/shared/aggregate-root.interface';
+import { AggregateRoot } from '@nestjs/cqrs';
 
-export class Hero extends AggregateRootWithStream {
+export class Hero extends AggregateRoot {
   constructor(private id) {
     super();
-  }
-  get streamConfig() {
-    return {
-      streamName: `hero-${this.id}`
-    }
   }
   killEnemy(dragonId: string) {
     // logic

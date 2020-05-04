@@ -1,7 +1,7 @@
 import { EventBus, IEvent, IEventPublisher } from '@nestjs/cqrs';
-import { defer, from, Subject } from 'rxjs';
-import { createEventData, EventData, PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
-import { Injectable, Logger } from '@nestjs/common';
+import { Subject } from 'rxjs';
+import {  PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { EventStore } from './event-store.class';
 import { v4 } from 'uuid';
 import {
@@ -14,13 +14,12 @@ import {
   TEventStoreEvent,
 } from '../..';
 import { ExtendedCatchUpSubscription, ExtendedPersistentSubscription } from '../interfaces/EventStoreLibExtension';
-import { StreamConfig } from './shared/aggregate-root.interface';
-import { concatMap, map, toArray } from 'rxjs/operators';
+import { IAcknowledgeableAggregateEvent } from './shared/aggregate-event.interface';
 
 const fs = require('fs');
 
 @Injectable()
-export class EventStoreBus  implements IEventPublisher {
+export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModuleInit {
   private readonly eventMapper: (
     event: TEventStoreEvent | TAcknowledgeEventStoreEvent,
   ) => {};
@@ -36,7 +35,6 @@ export class EventStoreBus  implements IEventPublisher {
     config: EventStoreBusConfig,
     private eventBus: EventBus,
   ) {
-    console.log(eventBus);
     this.eventMapper = config.eventMapper;
     if (config.subscriptions) {
       // Nothing to connect to, don't connect
@@ -48,25 +46,25 @@ export class EventStoreBus  implements IEventPublisher {
       );
     }
   }
-  async bridgeEventsTo<T extends IEvent>(subject: Subject<T>): Promise<any> {
+
+  async bridgeEventsTo<T extends IEvent>(subject: Subject<T>) {
     this.subject$ = subject;
   }
+
   /**
    * Hack nest eventBus instance to override publisher
    */
   onModuleInit(): any {
-    // Comment avoir un eventbus complet ?!
-    console.log(this.eventBus);
+    this.logger.debug(`Replace EventBus publisher by Eventstore publish`);
     // FIXME typescript voodoo
     this.subject$ = (this.eventBus as any).subject$;
-   // this.bridgeEventsTo((this.eventBus as any).subject$);
-   // this.eventBus.publisher.publish = this.publish
-
-    console.log(this.eventBus);
+    this.bridgeEventsTo((this.eventBus as any).subject$);
+    this.eventBus.publisher = this;
   }
 
   async connect() {
     await this.eventStore.connect();
+    this.logger.debug(`Eventstore connected`);
   }
 
   async assertProjections(projections: EventStoreProjection[]) {
@@ -116,6 +114,7 @@ export class EventStoreBus  implements IEventPublisher {
             subscription.stream,
           );
         } catch (e) {
+          // FIXME see why status not exists
           if (e.response.status != 404) {
             throw e;
           }
@@ -185,42 +184,18 @@ export class EventStoreBus  implements IEventPublisher {
     );
   }
 
-  async publishAll(events: IEvent[], streamConfig?: StreamConfig) {
-    return await from(events)
-      .pipe(map(event => createEventData(
-        event['id'] || v4(),
-        event['type'] ||  event.constructor.name,
-        true,
-        Buffer.from(JSON.stringify(event['data'] || {})),
-        Buffer.from(JSON.stringify(event['metadata'] || {})),
-      )))
-      .pipe(toArray())
-      .pipe(concatMap(mappedEvents => {
-        return defer(() => this.eventStore.connection.appendToStream(
-          streamConfig.streamName,
-          streamConfig.expectedVersion,
-          mappedEvents,
-        ));
-      }))
-      .toPromise();
-  }
-
-  async publish(event: IEvent, stream?: string) {
-    const payload: EventData = createEventData(
-      event['id'] || v4(),
-      event['type'] ||  event.constructor.name,
-      true,
-      Buffer.from(JSON.stringify(event['data'] || {})),
-      Buffer.from(JSON.stringify(event['metadata'] || {})),
-    );
+  async publish(event: IEvent) {
+    const payload = {
+      id: event['id'] || v4(),
+      type: event['type'] || event.constructor.name,
+      data: event['data'] || {},
+      metadata: event['metadata'] || {}
+    }
     const expectedVersion = event['expectedVersion'] || ExpectedVersion.Any;
-
-
-
     try {
-      await this.eventStore.connection.appendToStream(stream, expectedVersion, [payload]);
+      await this.eventStore.writeEvents(event['streamName'], [payload], expectedVersion).toPromise();
     } catch (err) {
-      this.logger.error(`Got an error appending to stream ${event.constructor.name} ${err}`);
+      this.logger.error(`Error appending ${event.constructor.name} to stream ${event['streamName']} : ${err.response.statusText} (code ${err.response.status})`);
     }
   }
 
@@ -309,32 +284,24 @@ export class EventStoreBus  implements IEventPublisher {
     if (event.metadata.toString()) {
       metadata = JSON.parse(event.metadata.toString());
     }
-    /*if (Object.keys(metadata).length == 0) {
-      this.logger.warn(
-        `Received event of type ${event.eventType} with no metadata acknowledge`,
-      );
-      if (!_subscription._autoAck) {
-        _subscription.acknowledge([payload]);
-      }
-      return;
-    }*/
     // FIXME handle catchup that don't need ack/nack
     // TODO buffer one day ?
-    const ack = () => {
+    const ack = async () => {
       this.logger.log(
         `Acknowledge event ${event.eventType} with id ${event.eventId}`,
       );
-      _subscription.acknowledge([payload]);
+      return _subscription.acknowledge([payload]);
     };
-    const nack = (
+    const nack = async (
       action: PersistentSubscriptionNakEventAction,
       reason: string,
     ) => {
       this.logger.log(
         `Fail for event ${event.eventType} with id ${event.eventId} for reason ${reason}`,
       );
-      _subscription.fail([payload], action, reason);
+      return _subscription.fail([payload], action, reason);
     };
+    // FIXME use interface IAggregateEvent
 
     const finalEvent = this.eventMapper({
       data,
@@ -345,9 +312,7 @@ export class EventStoreBus  implements IEventPublisher {
       eventNumber: event.eventNumber.low,
       eventType: event.eventType,
       originalEventId: payload.originalEvent.eventId || event.eventId,
-      ack: ack,
-      nack: nack,
-    } as TAcknowledgeEventStoreEvent);
+    } as TAcknowledgeEventStoreEvent) as IAcknowledgeableAggregateEvent;
 
     if (!finalEvent) {
       this.logger.warn(
@@ -358,12 +323,27 @@ export class EventStoreBus  implements IEventPublisher {
       }
       return;
     }
+    // If event wants to handle ack/nack
+    // User made type check
+    if(finalEvent.hasOwnProperty('ack') && finalEvent.hasOwnProperty('nack')) {
+      finalEvent.ack = ack;
+      finalEvent.nack = nack;
+    }
+    else {
+      // Otherwise manage here
+      this.logger.log(
+        `Auto acknowledge event ${event.eventType} with id ${event.eventId}`,
+      );
+      _subscription.acknowledge([payload]);
+    }
     this.subject$.next(finalEvent);
   }
+
   onLiveProcessingStarted(subscription: ExtendedCatchUpSubscription) {
     subscription.isLive = true;
     this.logger.log('Live processing of EventStore events started!');
   }
+
   onDropped(
     subscription: ExtendedPersistentSubscription | ExtendedCatchUpSubscription,
     _reason: string,

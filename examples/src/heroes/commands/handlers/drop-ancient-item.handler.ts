@@ -1,14 +1,15 @@
-import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import * as clc from 'cli-color';
 import { HeroRepository } from '../../repository/hero.repository';
 import { DropAncientItemCommand } from '../impl/drop-ancient-item.command';
+import { EventStorePublisher } from '../../../../../src/event-store/event-store.publisher';
 
 @CommandHandler(DropAncientItemCommand)
 export class DropAncientItemHandler
   implements ICommandHandler<DropAncientItemCommand> {
   constructor(
     private readonly repository: HeroRepository,
-    private readonly publisher: EventPublisher,
+    private readonly publisher: EventStorePublisher,
   ) {}
 
   async execute(command: DropAncientItemCommand) {
@@ -20,10 +21,7 @@ export class DropAncientItemHandler
     );
     hero.addItem(itemId);
     hero.dropItem(itemId);
-    hero.commitToStream({
-      streamName: `hero_items-${heroId}`,
-      maxAge: '3d',
-      transaction: true,
-    });
+
+    hero.commit();
   }
 }

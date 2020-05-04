@@ -10,14 +10,8 @@ export type StreamConfig = {
   // Optional role access on eventstore
   permissions?: ['$admin'],
   // Default any, in which state the stream should be when writing
-  expectedVersion?: ExpectedVersion.NoStream,
+  expectedVersion?: ExpectedVersion,
   // Optional Retention rules default keep for long time
   maxAge?: '3d',
   maxKeep?: 10000,
-}
-
-export class AggregateRootWithStream extends AggregateRoot {
-  public streamConfig: StreamConfig
-
-  commitToStream(streamConfig?: StreamConfig): void {}
 }

@@ -17,6 +17,7 @@ export type TAcknowledgeEventStoreEvent = TEventStoreEvent & {
   nack: (action: PersistentSubscriptionNakEventAction, reason: string) => {}
 }
 
+
 export class EventStoreEvent implements IEvent {
   data;
   metadata;

@@ -9,7 +9,9 @@ import { HTTPClient } from 'geteventstore-promise';
 import { defer, from, throwError } from 'rxjs';
 import { Logger } from '@nestjs/common';
 import * as fp from 'lodash/fp';
-import { catchError, flatMap, map, toArray } from 'rxjs/operators';
+import { catchError, flatMap, map, tap, toArray } from 'rxjs/operators';
+import { ExpectedVersion } from './shared/aggregate-event.interface';
+import { IEvent } from '@nestjs/cqrs';
 
 export class EventStore {
   connection: EventStoreNodeConnection;
@@ -68,7 +70,8 @@ export class EventStore {
     });
   }
 
-  writeEvents(stream, ...events) {
+  writeEvents(stream, events: IEvent[], expectedVersion = ExpectedVersion.Any) {
+
     return defer(() => {
       return from(events).pipe(
         map(this._addDefaultVersion),
@@ -82,11 +85,13 @@ export class EventStore {
           });
         }),
         toArray(),
+        tap(esEvents => console.log('Writing events', stream)),
         flatMap(esEvents =>
-          from(this.HTTPClient.writeEvents(stream, esEvents)),
+          from(this.HTTPClient.writeEvents(stream, esEvents, {
+            expectedVersion
+          })),
         ),
       );
-      // TODO use eventstore observer here
     });
   }
 

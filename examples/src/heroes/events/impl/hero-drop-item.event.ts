@@ -1,4 +1,4 @@
-import { IAggregateEvent } from '../../../../../src';
+import { ExpectedVersion, IAggregateEvent } from '../../../../../src';
 import { v4 } from 'uuid';
 
 export class HeroDropItemEvent implements IAggregateEvent {
@@ -25,6 +25,6 @@ export class HeroDropItemEvent implements IAggregateEvent {
   }
 
   get expectedVersion() {
-    return 1;
+    return ExpectedVersion.Any;
   }
 }

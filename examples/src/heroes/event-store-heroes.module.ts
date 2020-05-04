@@ -20,14 +20,13 @@ import { EventStoreBusConfig, EventStoreCqrsModule, IEventStoreConfig } from '..
             },
             tcp: {
               host: process.env.EVENTSTORE_TCP_HOST || 'localhost',
-              port: process.env.EVENTSTORE_TCP_PORT || 1113,
+              port: process.env.EVENTSTORE_TCP_PORT || 11113,
             },
             http: {
               host: process.env.EVENTSTORE_HTTP_HOST || 'http://localhost',
-              port: process.env.EVENTSTORE_HTTP_PORT || 2113,
+              port: process.env.EVENTSTORE_HTTP_PORT || 22113,
             },
           } as IEventStoreConfig),
-
       },
       {
         eventMapper: (event) => {
@@ -43,7 +42,7 @@ import { EventStoreBusConfig, EventStoreCqrsModule, IEventStoreConfig } from '..
               // Event stream category (before the -)
               stream: '$ce-hero',
               group: 'data',
-              autoAck: true,
+              autoAck: false,
               bufferSize: 1,
               // Subscription is created with this options
               options: {

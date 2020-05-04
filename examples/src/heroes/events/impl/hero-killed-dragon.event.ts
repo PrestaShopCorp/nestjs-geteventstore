@@ -1,12 +1,12 @@
-import { ExpectedVersion, IAggregateEvent } from '../../../../../src';
+import { ExpectedVersion, IAggregateEvent, AcknowledgeableEvent} from '../../../../../src';
 
-export class HeroKilledDragonEvent implements IAggregateEvent {
-
+export class HeroKilledDragonEvent extends AcknowledgeableEvent implements IAggregateEvent {
   constructor(
     public readonly data: {
       heroId: string,
       dragonId: string
     }) {
+    super();
   }
 
   get streamName() {

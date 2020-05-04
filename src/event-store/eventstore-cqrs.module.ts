@@ -1,13 +1,12 @@
-import { CommandBus, CqrsModule, EventBus, IEvent, QueryBus } from '@nestjs/cqrs';
+import { CommandBus, CqrsModule, EventBus, EventPublisher, IEvent, QueryBus } from '@nestjs/cqrs';
 import { DynamicModule, Global, Module } from '@nestjs/common';
 import { EventStoreBus } from './event-store.bus';
 import { EventStore } from './event-store.class';
-import { ExplorerService } from '@nestjs/cqrs/dist/services/explorer.service';
 import { EventStoreModule, EventStoreModuleAsyncOptions } from './event-store.module';
 import { EventStoreObserver } from './event-store.observer';
 import { EventStoreBusConfig } from '../..';
 import { Subject } from 'rxjs';
-import { ModuleRef } from '@nestjs/core';
+import { EventStorePublisher } from './event-store.publisher';
 
 @Global()
 @Module({})
@@ -18,11 +17,16 @@ export class EventStoreCqrsModule extends CqrsModule {
   ): DynamicModule {
     return {
       module: EventStoreCqrsModule,
-      imports: [CqrsModule, EventStoreModule.forRootAsync(options)],
+      imports: [CqrsModule, EventBus, EventStoreModule.forRootAsync(options)],
       providers: [
+        EventPublisher,
+        CommandBus,
+        QueryBus,
+        EventStorePublisher,
+        EventStoreBus,
         {
-          provide: EventBus,
-          useFactory: (commandBus, eventStore, moduleRef, eventBus) => {
+          provide: EventStoreBus,
+          useFactory: (commandBus, eventStore, eventBus) => {
             // @ts-ignore
             return new EventStoreBus(
               eventStore,
@@ -31,7 +35,7 @@ export class EventStoreCqrsModule extends CqrsModule {
               eventBus
             );
           },
-          inject: [CommandBus, EventStore, ModuleRef, EventBus],
+          inject: [CommandBus, EventStore, EventBus],
         },
         {
           provide: EventStoreObserver,
@@ -43,10 +47,12 @@ export class EventStoreCqrsModule extends CqrsModule {
       ],
       exports: [
         EventStoreModule,
-        EventBus,
+        EventStorePublisher,
+        EventStoreObserver,
+        EventPublisher,
         CommandBus,
         QueryBus,
-        EventStoreObserver,
+        EventBus,
       ],
     };
   }

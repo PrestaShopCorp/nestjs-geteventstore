@@ -1,8 +1,8 @@
-import { IEvent } from '@nestjs/cqrs';
-import { Subject } from 'rxjs';
+import { EventBus, IEvent, IEventPublisher } from '@nestjs/cqrs';
+import { defer, from, Subject } from 'rxjs';
 import { createEventData, EventData, PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
-import { Logger } from '@nestjs/common';
-import { EventStore } from '../event-store.class';
+import { Injectable, Logger } from '@nestjs/common';
+import { EventStore } from './event-store.class';
 import { v4 } from 'uuid';
 import {
   EventStoreBusConfig,
@@ -10,15 +10,17 @@ import {
   EventStorePersistentSubscriptionConfig,
   EventStoreProjection,
   ExpectedVersion,
-  IAggregateEvent,
   TAcknowledgeEventStoreEvent,
   TEventStoreEvent,
 } from '../..';
-import { ExtendedCatchUpSubscription, ExtendedPersistentSubscription } from '../../interfaces/EventStoreLibExtension';
+import { ExtendedCatchUpSubscription, ExtendedPersistentSubscription } from '../interfaces/EventStoreLibExtension';
+import { StreamConfig } from './shared/aggregate-root.interface';
+import { concatMap, map, toArray } from 'rxjs/operators';
 
 const fs = require('fs');
 
-export class EventStoreBus {
+@Injectable()
+export class EventStoreBus  implements IEventPublisher {
   private readonly eventMapper: (
     event: TEventStoreEvent | TAcknowledgeEventStoreEvent,
   ) => {};
@@ -32,11 +34,13 @@ export class EventStoreBus {
     private eventStore: EventStore,
     private subject$: Subject<IEvent>,
     config: EventStoreBusConfig,
+    private eventBus: EventBus,
   ) {
-    this.connect();
-    if(config.subscriptions) {
-
-      this.eventMapper = config.eventMapper;
+    console.log(eventBus);
+    this.eventMapper = config.eventMapper;
+    if (config.subscriptions) {
+      // Nothing to connect to, don't connect
+      this.connect();
       this.assertProjections(config.projections || []);
       this.subscribeToCatchUpSubscriptions(config.subscriptions.catchup || []);
       this.subscribeToPersistentSubscriptions(
@@ -44,6 +48,23 @@ export class EventStoreBus {
       );
     }
   }
+  async bridgeEventsTo<T extends IEvent>(subject: Subject<T>): Promise<any> {
+    this.subject$ = subject;
+  }
+  /**
+   * Hack nest eventBus instance to override publisher
+   */
+  onModuleInit(): any {
+    // Comment avoir un eventbus complet ?!
+    console.log(this.eventBus);
+    // FIXME typescript voodoo
+    this.subject$ = (this.eventBus as any).subject$;
+   // this.bridgeEventsTo((this.eventBus as any).subject$);
+   // this.eventBus.publisher.publish = this.publish
+
+    console.log(this.eventBus);
+  }
+
   async connect() {
     await this.eventStore.connect();
   }
@@ -76,6 +97,11 @@ export class EventStoreBus {
     );
   }
 
+  onModuleDestroy(): any {
+    this.logger.log(`disconnect eventstore`);
+    this.eventStore.close();
+  }
+
   async subscribeToPersistentSubscriptions(
     subscriptions: EventStorePersistentSubscriptionConfig[],
   ) {
@@ -100,7 +126,7 @@ export class EventStoreBus {
           );
           this.logger.log(
             `Persistent subscription "${subscription.group}" on stream ${subscription.stream} created ! ` +
-              JSON.stringify(subscription.options),
+            JSON.stringify(subscription.options),
           );
         }
       }),
@@ -159,15 +185,37 @@ export class EventStoreBus {
     );
   }
 
-  async publish(event: IAggregateEvent, stream?: string) {
+  async publishAll(events: IEvent[], streamConfig?: StreamConfig) {
+    return await from(events)
+      .pipe(map(event => createEventData(
+        event['id'] || v4(),
+        event['type'] ||  event.constructor.name,
+        true,
+        Buffer.from(JSON.stringify(event['data'] || {})),
+        Buffer.from(JSON.stringify(event['metadata'] || {})),
+      )))
+      .pipe(toArray())
+      .pipe(concatMap(mappedEvents => {
+        return defer(() => this.eventStore.connection.appendToStream(
+          streamConfig.streamName,
+          streamConfig.expectedVersion,
+          mappedEvents,
+        ));
+      }))
+      .toPromise();
+  }
+
+  async publish(event: IEvent, stream?: string) {
     const payload: EventData = createEventData(
-      event.id || v4(),
-      event.constructor.name,
+      event['id'] || v4(),
+      event['type'] ||  event.constructor.name,
       true,
-      Buffer.from(JSON.stringify(event.data || {})),
-      Buffer.from(JSON.stringify(event.metadata || {})),
+      Buffer.from(JSON.stringify(event['data'] || {})),
+      Buffer.from(JSON.stringify(event['metadata'] || {})),
     );
-    const expectedVersion = event.expectedVersion || ExpectedVersion.Any;
+    const expectedVersion = event['expectedVersion'] || ExpectedVersion.Any;
+
+
 
     try {
       await this.eventStore.connection.appendToStream(stream, expectedVersion, [payload]);
@@ -296,9 +344,7 @@ export class EventStoreBus {
       created: new Date(event.created),
       eventNumber: event.eventNumber.low,
       eventType: event.eventType,
-      originalEventId: payload.originalEvent.eventId
-        ? payload.originalEvent.eventId
-        : event.eventId,
+      originalEventId: payload.originalEvent.eventId || event.eventId,
       ack: ack,
       nack: nack,
     } as TAcknowledgeEventStoreEvent);
@@ -314,7 +360,10 @@ export class EventStoreBus {
     }
     this.subject$.next(finalEvent);
   }
-
+  onLiveProcessingStarted(subscription: ExtendedCatchUpSubscription) {
+    subscription.isLive = true;
+    this.logger.log('Live processing of EventStore events started!');
+  }
   onDropped(
     subscription: ExtendedPersistentSubscription | ExtendedCatchUpSubscription,
     _reason: string,
@@ -324,8 +373,4 @@ export class EventStoreBus {
     this.logger.error(error);
   }
 
-  onLiveProcessingStarted(subscription: ExtendedCatchUpSubscription) {
-    subscription.isLive = true;
-    this.logger.log('Live processing of EventStore events started!');
-  }
 }

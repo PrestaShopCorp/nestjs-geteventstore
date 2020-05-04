@@ -14,6 +14,7 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     console.log(clc.greenBright('KillDragonCommand...'));
 
     const { heroId, dragonId } = command;
+    // add publisher capacity to the repository aggregate
     const hero = this.publisher.mergeObjectContext(
       await this.repository.findOneById(+heroId),
     );

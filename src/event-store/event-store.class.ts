@@ -86,6 +86,7 @@ export class EventStore {
           from(this.HTTPClient.writeEvents(stream, esEvents)),
         ),
       );
+      // TODO use eventstore observer here
     });
   }
 

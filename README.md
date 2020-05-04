@@ -254,13 +254,17 @@ export class MyQueue  {
 }
 ```
 
-## Next
+## SOA 2
+https://en.wikipedia.org/wiki/Event-driven_SOA
+
 Can run at Controller or Processor level or Service 
 
 ```typescript
-@EventStore({ 
+@EventDriven({ 
   // Prefix for streamName auto generate
   domain: 'order', 
+  // Customize observer to write events to
+  eventStoreInstance: EventStoreObserver,
   // Can be set also at app level
   bufferWithTime: '10s',
   bufferWithCount: 100,
@@ -268,28 +272,30 @@ Can run at Controller or Processor level or Service
   // name is source-target
   projections: [
     // Run inside eventstore to route, group, rename, ... events
+    // example link or copy some order_create, order_edit events in an order stream for overview
     'projection/order.js'
   ] 
 })
 class OrderService {
+    // Method Decorator and Class Decorator ?
     @StoreEvents({
-      // Optional generated with domain_methodName-id  in payload || uuidv4
+      // Optional generated with domain-methodName-id in payload || uuidv4
       // accessible in projection with $ce-order_create 
-      streamName: 'string',
+      streamName: (order, method) => `order_create-${order.id}`,
       // Optional Default to false
       transaction: true,
       // Optional role access on eventstore
       permissions: ['$admin'],
       // Default any, in which state the stream should be when writing
+      // Here nothing should exist before 
       expectedVersion: ExpectedVersion.NoStream,
       // Optional Retention rules default keep for long time
       maxAge: '3d',
       maxKeep: 10000,
     })
-    create(order) : Observable<IAggregateEvent> {
+    create(order) : Observable<IEvent> {
       
     }
-    @StoreEvents()
     edit(order) : Observable<IAggregateEvent> {
       
     }

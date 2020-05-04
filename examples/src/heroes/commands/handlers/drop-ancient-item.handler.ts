@@ -19,9 +19,11 @@ export class DropAncientItemHandler
       await this.repository.findOneById(+heroId),
     );
     hero.addItem(itemId);
-    hero.commit();
-
     hero.dropItem(itemId);
-    hero.commit()
+    hero.commitToStream({
+      streamName: `hero_items-${heroId}`,
+      maxAge: '3d',
+      transaction: true,
+    });
   }
 }

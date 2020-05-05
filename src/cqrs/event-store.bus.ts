@@ -1,8 +1,8 @@
-import { EventBus, IEvent, IEventPublisher } from '@nestjs/cqrs';
+import { EventBus, IEvent, IEventPublisher, IMessageSource } from '@nestjs/cqrs';
 import { Subject } from 'rxjs';
-import {  PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
+import { PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { EventStore } from './event-store.class';
+import { EventStore } from '../event-store.class';
 import { v4 } from 'uuid';
 import {
   EventStoreBusConfig,
@@ -14,12 +14,12 @@ import {
   TEventStoreEvent,
 } from '../..';
 import { ExtendedCatchUpSubscription, ExtendedPersistentSubscription } from '../interfaces/EventStoreLibExtension';
-import { IAcknowledgeableAggregateEvent } from './shared/aggregate-event.interface';
+import { IAcknowledgeableAggregateEvent } from '../interfaces/aggregate-event.interface';
 
 const fs = require('fs');
 
 @Injectable()
-export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModuleInit {
+export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModuleInit, IMessageSource {
   private readonly eventMapper: (
     event: TEventStoreEvent | TAcknowledgeEventStoreEvent,
   ) => {};
@@ -47,6 +47,7 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
     }
   }
 
+  // @ts-ignore
   async bridgeEventsTo<T extends IEvent>(subject: Subject<T>) {
     this.subject$ = subject;
   }
@@ -192,6 +193,9 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
       metadata: event['metadata'] || {}
     }
     const expectedVersion = event['expectedVersion'] || ExpectedVersion.Any;
+
+    // FIXME how to handle errors here
+    // TODO how to use observer
     try {
       await this.eventStore.writeEvents(event['streamName'], [payload], expectedVersion).toPromise();
     } catch (err) {

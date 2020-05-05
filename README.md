@@ -25,6 +25,10 @@ export default registerAs(
         host: process.env.EVENTSTORE_HTTP_HOST || 'http://localhost',
         port: process.env.EVENTSTORE_HTTP_PORT || 2113,
       },
+      options: {
+        heartbeatInterval: 3000,
+        heartbeatTimeout: 1000,
+      }
     } as IEventStoreConfig),
 );
 ```

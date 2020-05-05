@@ -4,6 +4,11 @@ import { TAcknowledgeEventStoreEvent, TEventStoreEvent } from './EventTypes';
 import { EventStoreProjection } from './EventStoreProjection';
 
 export type EventStoreBusConfig = {
+  writeBuffer: {
+    enabled: boolean,
+    writeTimeout: number,
+    retryInterval: number,
+  }
   projections?: EventStoreProjection[],
   subscriptions?: {
     catchup?: EventStoreCatchupSubscriptionConfig[],

@@ -1,4 +1,3 @@
-import { AggregateRoot } from '@nestjs/cqrs';
 import { ExpectedVersion } from './aggregate-event.interface';
 
 export type StreamConfig = {

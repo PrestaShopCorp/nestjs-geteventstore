@@ -1,14 +1,13 @@
+import {ConnectionSettings, TcpEndPoint } from 'node-eventstore-client';
+
+export interface HttpEndpoint extends TcpEndPoint {}
+
 export interface IEventStoreConfig {
   credentials: {
     username: string;
     password: string;
-  };
-  tcp: {
-    host: string;
-    port: number;
-  };
-  http: {
-    host: string;
-    port: number;
-  };
+  }
+  tcp: TcpEndPoint
+  http: HttpEndpoint
+  options: ConnectionSettings
 }

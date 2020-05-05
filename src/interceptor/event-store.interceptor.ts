@@ -1,7 +1,7 @@
 import { CallHandler, ExecutionContext, Inject, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable, Subject } from 'rxjs';
-import { EventStoreObserver } from './event-store.observer';
-import { EVENT_STORE_OBSERVER_TOKEN } from './shared/constants';
+import { EventStoreObserver } from '../observer/event-store.observer';
+import { EVENT_STORE_OBSERVER_TOKEN } from '../interfaces/constants';
 import * as express from 'express';
 import { filter, map } from 'rxjs/operators';
 import { EventStoreEvent } from '..';

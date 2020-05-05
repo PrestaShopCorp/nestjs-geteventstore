@@ -1,6 +1,5 @@
 import { IEvent } from '@nestjs/cqrs';
 import { PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
-import { TAcknowledgeEventStoreEvent } from '../..';
 
 export interface IAggregateEvent extends IEvent {
   streamName: string;

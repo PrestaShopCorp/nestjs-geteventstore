@@ -21,5 +21,5 @@ export class HeroFoundItemEvent implements IAggregateEvent {
   get id() {
     return  v4()
   }
-  get expectedVersion() {return ExpectedVersion.Any}
+  get expectedVersion() {return ExpectedVersion.EmptyStream}
 }

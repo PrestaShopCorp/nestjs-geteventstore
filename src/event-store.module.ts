@@ -1,6 +1,6 @@
 import { Global, Module, DynamicModule } from '@nestjs/common';
 import { EventStore } from './event-store.class';
-import { EventStoreObserverModule } from './event-store-observer.module';
+import { EventStoreObserverModule } from './observer/event-store-observer.module';
 import { EventStoreCoreModule } from './event-store-core.module';
 
 export interface EventStoreModuleAsyncOptions {

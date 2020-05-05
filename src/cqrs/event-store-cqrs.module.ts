@@ -1,9 +1,9 @@
 import { CommandBus, CqrsModule, EventBus, EventPublisher, IEvent, QueryBus } from '@nestjs/cqrs';
 import { DynamicModule, Global, Module } from '@nestjs/common';
 import { EventStoreBus } from './event-store.bus';
-import { EventStore } from './event-store.class';
-import { EventStoreModule, EventStoreModuleAsyncOptions } from './event-store.module';
-import { EventStoreObserver } from './event-store.observer';
+import { EventStore } from '../event-store.class';
+import { EventStoreModule, EventStoreModuleAsyncOptions } from '../event-store.module';
+import { EventStoreObserver } from '../observer/event-store.observer';
 import { EventStoreBusConfig } from '../..';
 import { Subject } from 'rxjs';
 import { EventStorePublisher } from './event-store.publisher';

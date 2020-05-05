@@ -9,10 +9,12 @@ import { HTTPClient } from 'geteventstore-promise';
 import { defer, from, throwError } from 'rxjs';
 import { Logger } from '@nestjs/common';
 import * as fp from 'lodash/fp';
-import { catchError, flatMap, map, tap, toArray } from 'rxjs/operators';
-import { ExpectedVersion } from './shared/aggregate-event.interface';
+import { catchError, flatMap, map, toArray } from 'rxjs/operators';
+import { ExpectedVersion } from './interfaces/aggregate-event.interface';
 import { IEvent } from '@nestjs/cqrs';
 
+
+// FIXME still needed ?
 export class EventStore {
   connection: EventStoreNodeConnection;
   expectedVersion: any;
@@ -54,10 +56,12 @@ export class EventStore {
       this.TCPEndpoint,
     );
     this.connection.connect();
+    // FIXME handler in config
     this.connection.on('connected', () => {
       this.logger.log('Connection to EventStore established!');
       this.isConnected = true;
     });
+    // FIXME handler in config
     this.connection.on('closed', () => {
       if (this.connectionCount <= 10) {
         this.connectionCount += 1;
@@ -85,7 +89,7 @@ export class EventStore {
           });
         }),
         toArray(),
-        tap(esEvents => console.log('Writing events', stream)),
+        //tap(esEvents => console.log('Writing events', stream)),
         flatMap(esEvents =>
           from(this.HTTPClient.writeEvents(stream, esEvents, {
             expectedVersion

@@ -1,7 +1,7 @@
 import { Global, Module, DynamicModule, Provider } from '@nestjs/common';
-import { EVENT_STORE_OBSERVER_TOKEN } from './shared/constants';
+import { EVENT_STORE_OBSERVER_TOKEN } from '../interfaces/constants';
 import { EventStoreObserver } from './event-store.observer';
-import { EventStore } from './event-store.class';
+import { EventStore } from '../event-store.class';
 
 @Global()
 @Module({})

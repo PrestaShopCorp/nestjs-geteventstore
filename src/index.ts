@@ -1,17 +1,18 @@
-// export public api from here
-// for example:
-// export * from './decorators';
-export * from './event-store/event-store.module';
-export * from './event-store/event-store.class';
-export * from './event-store/eventstore-cqrs.module';
-export * from './event-store/shared/aggregate-event.interface';
-export * from './event-store/event-store.observer';
-export * from './event-store/event-store-observer.module';
-export * from './event-store/event-store.interceptor';
-export * from './event-store/event-store.bus';
-//export * from './event-store/eventstore-cqrs/event-bus.provider';
+export * from './interfaces/aggregate-event.interface';
 export * from './interfaces/IEventStoreConfig';
 export * from './interfaces/EventStoreBusConfig';
 export * from './interfaces/EventTypes';
 export * from './interfaces/SubscriptionTypes';
 export * from './interfaces/EventStoreProjection';
+
+export * from './event-store.module';
+export * from './event-store.class';
+
+export * from './cqrs/event-store-cqrs.module';
+export * from './cqrs/event-store.bus';
+export * from './cqrs/event-store.publisher';
+
+export * from './observer/event-store.observer';
+export * from './observer/event-store-observer.module';
+
+export * from './interceptor/event-store.interceptor';

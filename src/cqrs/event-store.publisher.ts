@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { IEvent,AggregateRoot,EventBus } from '@nestjs/cqrs';
-import { EventStore } from './event-store.class';
-import { StreamConfig } from './shared/aggregate-root.interface';
+import { EventStore } from '../event-store.class';
+import { StreamConfig } from '../interfaces/aggregate-root.interface';
 import { tap } from 'rxjs/operators';
 
 export interface Constructor<T> {

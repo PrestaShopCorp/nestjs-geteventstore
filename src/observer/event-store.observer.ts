@@ -11,7 +11,7 @@ import {
 } from 'rxjs/operators';
 import * as fp from 'lodash/fp';
 import * as uuid from 'uuid';
-import { EventStore } from './event-store.class';
+import { EventStore } from '../event-store.class';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -81,7 +81,7 @@ export class EventStoreObserver {
     }
 
     this.eventstoreConnector
-      .writeEvents(eventWithId.eventStreamId, [eventWithId])
+      .writeEvents(eventWithId.eventStreamId, eventWithId)
       .pipe(timeout(this.writeTimeout))
       .subscribe(
         null,

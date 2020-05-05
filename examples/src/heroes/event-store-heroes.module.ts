@@ -6,7 +6,7 @@ import { QueryHandlers } from './queries/handlers';
 import { HeroRepository } from './repository/hero.repository';
 import { HeroesGameSagas } from './sagas/heroes.sagas';
 import { heroesEvents } from './events/impl/index';
-import { EventStoreBusConfig, EventStoreCqrsModule, IEventStoreConfig } from '../../../src';
+import { IEventStoreBusConfig, EventStoreCqrsModule, IEventStoreConfig, IEventStoreEventOptions } from '../../../src';
 
 @Module({
   imports: [
@@ -29,12 +29,12 @@ import { EventStoreBusConfig, EventStoreCqrsModule, IEventStoreConfig } from '..
           } as IEventStoreConfig),
       },
       {
-        eventMapper: (event) => {
-          let className = `${event.eventType}`;
+        eventMapper: (data, options: IEventStoreEventOptions) => {
+          let className = `${options.eventType}`;
           Logger.log(
-            `Build ${className} received from stream ${event.eventStreamId} with id ${event.eventId}`,
+            `Build ${className} received from stream ${options.eventStreamId} with id ${options.eventId}`,
           );
-          return new heroesEvents[className](event.data);
+          return new heroesEvents[className](data, options);
         },
         subscriptions: {
           persistent: [
@@ -52,7 +52,7 @@ import { EventStoreBusConfig, EventStoreCqrsModule, IEventStoreConfig } from '..
             },
           ],
         },
-      } as EventStoreBusConfig,
+      } as IEventStoreBusConfig,
     ),
   ],
   controllers: [HeroesGameController],

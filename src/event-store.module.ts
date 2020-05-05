@@ -1,7 +1,6 @@
 import { Global, Module, DynamicModule } from '@nestjs/common';
 import { EventStore } from './event-store.class';
 import { EventStoreObserverModule } from './observer/event-store-observer.module';
-import { EventStoreCoreModule } from './event-store-core.module';
 
 export interface EventStoreModuleAsyncOptions {
   useFactory: (...args: any[]) => Promise<any> | any;
@@ -28,7 +27,6 @@ export class EventStoreModule {
           },
           inject: options.inject,
         },
-        EventStoreCoreModule,
         EventStoreObserverModule,
       ],
       exports: [EventStore, EventStoreObserverModule],

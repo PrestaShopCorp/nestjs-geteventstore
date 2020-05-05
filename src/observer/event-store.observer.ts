@@ -65,7 +65,7 @@ export class EventStoreObserver {
 
   writeEvent(stream, event) {
     /**
-     * add default id if missing. It will allow us to send the event multiple time
+     * add default eventId if missing. It will allow us to send the event multiple time
      * without risking to duplicate it.
      */
     const eventWithId = this.addDefaultId(event);

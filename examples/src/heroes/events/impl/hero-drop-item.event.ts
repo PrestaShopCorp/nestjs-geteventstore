@@ -1,30 +1,14 @@
-import { ExpectedVersion, IAggregateEvent } from '../../../../../src';
-import { v4 } from 'uuid';
+import { EventStoreEvent } from '../../../../../src';
 
-export class HeroDropItemEvent implements IAggregateEvent {
-  constructor(
-    public readonly data: {
-      heroId: string,
-      itemId: string
-    }) {
+export class HeroDropItemEvent extends EventStoreEvent {
+  constructor(public readonly data: {
+    heroId: string;
+    itemId: string;
+  }, options?) {
+    super(data, options);
   }
 
-  get streamName() {
+  get eventStreamId() {
     return `hero-${this.data.heroId}`;
-  }
-
-  get metadata() {
-    return {
-      version: 1,
-      created_at: new Date(),
-    };
-  }
-
-  get id() {
-    return v4();
-  }
-
-  get expectedVersion() {
-    return ExpectedVersion.Any;
   }
 }

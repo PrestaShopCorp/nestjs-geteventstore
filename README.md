@@ -7,7 +7,7 @@ Example config in projects consumming this lib:
 
 ```typescript
 import { registerAs } from '@nestjs/config';
-import { IEventStoreConfig } from 'nestjs-geteventstore';
+import { EventStoreConfigInterface } from 'nestjs-geteventstore';
 
 export default registerAs(
   'eventstore',
@@ -29,7 +29,7 @@ export default registerAs(
         heartbeatInterval: 3000,
         heartbeatTimeout: 1000,
       }
-    } as IEventStoreConfig),
+    } as EventStoreConfigInterface),
 );
 ```
 
@@ -114,7 +114,7 @@ Can be done in same container or on dedicated container for all
 
 ```typescript
 
-const busConfig: EventStoreBusConfig = {
+const busConfig: EventStoreBusConfigInterface = {
   eventMapper: eventBuilder,
   subscriptions: {
     persistent: [
@@ -265,7 +265,7 @@ Can run at Controller or Processor level or Service
 
 ```typescript
 @EventDriven({ 
-  // Prefix for streamName auto generate
+  // Prefix for eventStreamId auto generate
   domain: 'order', 
   // Customize observer to write events to
   eventStoreInstance: EventStoreObserver,
@@ -283,7 +283,7 @@ Can run at Controller or Processor level or Service
 class OrderService {
     // Method Decorator and Class Decorator ?
     @StoreEvents({
-      // Optional generated with domain-methodName-id in payload || uuidv4
+      // Optional generated with domain-methodName-eventId in payload || uuidv4
       // accessible in projection with $ce-order_create 
       streamName: (order, method) => `order_create-${order.id}`,
       // Optional Default to false

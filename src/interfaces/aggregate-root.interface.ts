@@ -1,7 +1,7 @@
-import { ExpectedVersion } from './aggregate-event.interface';
+import { ExpectedVersion } from './event.interface';
 
-export type StreamConfig = {
-  // Optional generated with domain_methodName-id  in payload || uuidv4
+export interface IStreamConfig {
+  // Optional generated with domain_methodName-eventId  in payload || uuidv4
   // accessible in projection with $ce-order_create
   streamName?: string,
   // Optional Default to false

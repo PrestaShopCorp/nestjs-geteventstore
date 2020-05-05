@@ -1,38 +1,40 @@
 import { EventBus, IEvent, IEventPublisher, IMessageSource } from '@nestjs/cqrs';
 import { Subject } from 'rxjs';
-import { PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
+import {
+  EventStoreCatchUpSubscription,
+  EventStorePersistentSubscription,
+  PersistentSubscriptionNakEventAction,
+} from 'node-eventstore-client';
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { EventStore } from '../event-store.class';
 import { v4 } from 'uuid';
 import {
-  EventStoreBusConfig,
   EventStoreCatchupSubscriptionConfig,
-  EventStorePersistentSubscriptionConfig,
-  EventStoreProjection,
+  EventStoreEvent,
   ExpectedVersion,
-  TAcknowledgeEventStoreEvent,
-  TEventStoreEvent,
-} from '../..';
-import { ExtendedCatchUpSubscription, ExtendedPersistentSubscription } from '../interfaces/EventStoreLibExtension';
-import { IAcknowledgeableAggregateEvent } from '../interfaces/aggregate-event.interface';
+  IEventStoreBusConfig,
+  IEventStoreEventOptions,
+  IEventStorePersistentSubscriptionConfig,
+  IEventStoreProjection,
+} from '../';
+import { IAcknowledgeableEvent } from '..';
 
 const fs = require('fs');
 
 @Injectable()
 export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModuleInit, IMessageSource {
   private readonly eventMapper: (
-    event: TEventStoreEvent | TAcknowledgeEventStoreEvent,
+    data,
+    options: IEventStoreEventOptions,
   ) => {};
   private logger = new Logger('EventStoreBus');
-  private catchupSubscriptions: ExtendedCatchUpSubscription[] = [];
-  private catchupSubscriptionsCount: number;
-  private persistentSubscriptions: ExtendedPersistentSubscription[] = [];
-  private persistentSubscriptionsCount: number;
+  private catchupSubscriptions: EventStoreCatchUpSubscription[] = [];
+  private persistentSubscriptions: EventStorePersistentSubscription[] = [];
 
   constructor(
     private eventStore: EventStore,
     private subject$: Subject<IEvent>,
-    config: EventStoreBusConfig,
+    config: IEventStoreBusConfig,
     private eventBus: EventBus,
   ) {
     this.eventMapper = config.eventMapper;
@@ -68,7 +70,41 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
     this.logger.debug(`Eventstore connected`);
   }
 
-  async assertProjections(projections: EventStoreProjection[]) {
+  onModuleDestroy(): any {
+    this.logger.log(`disconnect eventstore`);
+    this.eventStore.close();
+  }
+
+  async publish(event: IEvent) {
+    const payload = {
+      id: event['eventId'] || v4(),
+      type: event['eventType'] || event.constructor.name,
+      data: event['data'] || {},
+      metadata: event['metadata'] || {},
+    };
+    const expectedVersion = event['expectedVersion'] || ExpectedVersion.Any;
+
+    // FIXME how to handle errors here
+    // TODO how to use observer
+    try {
+      await this.eventStore.writeEvents(event['eventStreamId'], [payload], expectedVersion).toPromise();
+    } catch (err) {
+      if (!err.response) {
+        this.logger.error(`Error appending ${event.constructor.name} to stream ${event['eventStreamId']} : ${err.message}`);
+      } else {
+        this.logger.warn(`Error appending ${event.constructor.name} to stream ${event['eventStreamId']} : ${err.response.statusText} (code ${err.response.status})`);
+      }
+    }
+  }
+
+  get subscriptions() {
+    return {
+      persistent: this.persistentSubscriptions,
+      catchup: this.catchupSubscriptions,
+    };
+  }
+
+  async assertProjections(projections: IEventStoreProjection[]) {
     await Promise.all(
       projections.map(async projection => {
         let content;
@@ -96,13 +132,42 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
     );
   }
 
-  onModuleDestroy(): any {
-    this.logger.log(`disconnect eventstore`);
-    this.eventStore.close();
+  subscribeToCatchUpSubscriptions(
+    subscriptions: EventStoreCatchupSubscriptionConfig[],
+  ) {
+    this.catchupSubscriptions = subscriptions.map((config: EventStoreCatchupSubscriptionConfig) => {
+      return this.subscribeToCatchupSubscription(config.stream, config.onSubscriptionStart, config.onSubscriptionDropped);
+    });
+  }
+
+  subscribeToCatchupSubscription(stream: string, onSubscriptionStart: (subscription) => void = undefined, onSubscriptionDropped: (sub, reason, error) => void = undefined): EventStoreCatchUpSubscription {
+    this.logger.log(`Catching up and subscribing to stream ${stream}!`);
+    try {
+      return this.eventStore.connection.subscribeToStreamFrom(
+        stream,
+        0,
+        true,
+        (sub, payload) => this.onEvent(sub, payload),
+        subscription => {
+          this.catchupSubscriptions[stream] = subscription;
+          if (onSubscriptionStart) {
+            onSubscriptionStart(subscription);
+          }
+        },
+        (subscription, reason, error) => {
+          delete this.catchupSubscriptions[stream];
+          if (onSubscriptionDropped) {
+            onSubscriptionDropped(subscription, reason, error);
+          }
+        },
+      ) as EventStoreCatchUpSubscription;
+    } catch (err) {
+      this.logger.error(err.message);
+    }
   }
 
   async subscribeToPersistentSubscriptions(
-    subscriptions: EventStorePersistentSubscriptionConfig[],
+    subscriptions: IEventStorePersistentSubscriptionConfig[],
   ) {
     await Promise.all(
       subscriptions.map(async subscription => {
@@ -131,142 +196,71 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
         }
       }),
     );
-    this.persistentSubscriptionsCount = subscriptions.length;
     this.persistentSubscriptions = await Promise.all(
-      subscriptions.map(async subscription => {
+      subscriptions.map(async config => {
         this.logger.log(
-          `Connecting to persistent subscription "${subscription.group}" on stream ${subscription.stream}`,
+          `Connecting to persistent subscription "${config.group}" on stream ${config.stream}`,
         );
         return await this.subscribeToPersistentSubscription(
-          subscription.stream,
-          subscription.group,
-          subscription.autoAck,
-          subscription.bufferSize,
-          subscription.onSubscriptionDropped,
+          config.stream,
+          config.group,
+          config.autoAck,
+          config.bufferSize,
+          config.onSubscriptionStart,
+          config.onSubscriptionDropped,
         );
       }),
     );
   }
 
-  subscribeToCatchUpSubscriptions(
-    subscriptions: EventStoreCatchupSubscriptionConfig[],
-  ) {
-    this.catchupSubscriptionsCount = subscriptions.length;
-    this.catchupSubscriptions = subscriptions.map(subscription => {
-      return this.subscribeToCatchupSubscription(subscription.stream);
-    });
-  }
-
-  get allCatchUpSubscriptionsLive(): boolean {
-    const initialized =
-      this.catchupSubscriptions.length === this.catchupSubscriptionsCount;
-    return (
-      initialized &&
-      this.catchupSubscriptions.every(subscription => {
-        return !!subscription && subscription.isLive;
-      })
-    );
-  }
-
-  get allPersistentSubscriptionsLive(): boolean {
-    const initialized =
-      this.persistentSubscriptions.length === this.persistentSubscriptionsCount;
-    return (
-      initialized &&
-      this.persistentSubscriptions.every(subscription => {
-        return !!subscription && subscription.isLive;
-      })
-    );
-  }
-
-  get isLive(): boolean {
-    return (
-      this.allCatchUpSubscriptionsLive && this.allPersistentSubscriptionsLive
-    );
-  }
-
-  async publish(event: IEvent) {
-    const payload = {
-      id: event['id'] || v4(),
-      type: event['type'] || event.constructor.name,
-      data: event['data'] || {},
-      metadata: event['metadata'] || {}
-    }
-    const expectedVersion = event['expectedVersion'] || ExpectedVersion.Any;
-
-    // FIXME how to handle errors here
-    // TODO how to use observer
-    try {
-      await this.eventStore.writeEvents(event['streamName'], [payload], expectedVersion).toPromise();
-    } catch (err) {
-      this.logger.error(`Error appending ${event.constructor.name} to stream ${event['streamName']} : ${err.response.statusText} (code ${err.response.status})`);
-    }
-  }
-
-  subscribeToCatchupSubscription(stream: string): ExtendedCatchUpSubscription {
-    this.logger.log(`Catching up and subscribing to stream ${stream}!`);
-    try {
-      return this.eventStore.connection.subscribeToStreamFrom(
-        stream,
-        0,
-        true,
-        (sub, payload) => this.onEvent(sub, payload),
-        subscription =>
-          this.onLiveProcessingStarted(
-            subscription as ExtendedCatchUpSubscription,
-          ),
-        (sub, reason, error) =>
-          this.onDropped(sub as ExtendedCatchUpSubscription, reason, error),
-      ) as ExtendedCatchUpSubscription;
-    } catch (err) {
-      this.logger.error(err.message);
-    }
-  }
-
   async subscribeToPersistentSubscription(
     stream: string,
-    subscriptionName: string,
+    group: string,
     autoAck: boolean = false,
     bufferSize: number = 10,
+    onSubscriptionStart: (sub) => void = undefined,
     onSubscriptionDropped: (sub, reason, error) => void = undefined,
-  ): Promise<ExtendedPersistentSubscription> {
+  ): Promise<EventStorePersistentSubscription> {
     try {
-      const resolved = (await this.eventStore.connection.connectToPersistentSubscription(
+      return await this.eventStore.connection.connectToPersistentSubscription(
         stream,
-        subscriptionName,
+        group,
         (sub, payload) => {
           this.onEvent(sub, payload);
         },
-        (sub, reason, error) => {
-          this.onDropped(sub as ExtendedPersistentSubscription, reason, error);
+        (subscription, reason, error) => {
+          delete this.persistentSubscriptions[`${stream}-${group}`];
           if (onSubscriptionDropped) {
-            onSubscriptionDropped(sub, reason, error);
+            onSubscriptionDropped(subscription, reason, error);
           }
         },
         undefined,
         bufferSize,
         autoAck,
-      )) as ExtendedPersistentSubscription;
-
-      resolved.isLive = true;
-      this.logger.log(
-        `Connected to persistent subscription ${subscriptionName} on stream ${stream}!`,
-      );
-      return resolved;
+      ).then(subscription => {
+        this.logger.log(
+          `Connected to persistent subscription ${group} on stream ${stream}!`,
+        );
+        this.persistentSubscriptions[`${stream}-${group}`] = subscription;
+        if (onSubscriptionStart) {
+          onSubscriptionStart(subscription);
+        }
+        return subscription;
+      });
     } catch (err) {
       this.logger.error(err.message);
     }
   }
 
-  async onEvent(_subscription, payload) {
+  async onEvent(subscription, payload) {
     const { event } = payload;
 
-    if (/*!payload.isResolved ||*/ !event || !event.isJson) {
+    if (!event || !event.isJson) {
       this.logger.error(
         `Received event that could not be resolved! stream ${event.eventStreamId} type ${event.eventType} id ${event.eventId} acknowledge `,
       );
-      if (!_subscription._autoAck) {
-        _subscription.acknowledge([payload]);
+      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
+        subscription.acknowledge([payload]);
       }
       return;
     }
@@ -278,8 +272,8 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
       this.logger.warn(
         `Received event of type ${event.eventType} with shitty data acknowledge`,
       );
-      if (!_subscription._autoAck) {
-        _subscription.acknowledge([payload]);
+      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
+        subscription.acknowledge([payload]);
       }
       return;
     }
@@ -288,27 +282,9 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
     if (event.metadata.toString()) {
       metadata = JSON.parse(event.metadata.toString());
     }
-    // FIXME handle catchup that don't need ack/nack
-    // TODO buffer one day ?
-    const ack = async () => {
-      this.logger.log(
-        `Acknowledge event ${event.eventType} with id ${event.eventId}`,
-      );
-      return _subscription.acknowledge([payload]);
-    };
-    const nack = async (
-      action: PersistentSubscriptionNakEventAction,
-      reason: string,
-    ) => {
-      this.logger.log(
-        `Fail for event ${event.eventType} with id ${event.eventId} for reason ${reason}`,
-      );
-      return _subscription.fail([payload], action, reason);
-    };
-    // FIXME use interface IAggregateEvent
 
-    const finalEvent = this.eventMapper({
-      data,
+    // FIXME use interface IAggregateEvent
+    const finalEvent = this.eventMapper(data, {
       metadata,
       eventStreamId: event.eventStreamId,
       eventId: event.eventId,
@@ -316,45 +292,52 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
       eventNumber: event.eventNumber.low,
       eventType: event.eventType,
       originalEventId: payload.originalEvent.eventId || event.eventId,
-    } as TAcknowledgeEventStoreEvent) as IAcknowledgeableAggregateEvent;
+    }) as IAcknowledgeableEvent & EventStoreEvent;
 
     if (!finalEvent) {
       this.logger.warn(
         `Received event of type ${event.eventType} with no declared handler acknowledge`,
       );
-      if (!_subscription._autoAck) {
-        _subscription.acknowledge([payload]);
+      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
+        subscription.acknowledge([payload]);
       }
       return;
     }
     // If event wants to handle ack/nack
-    // User made type check
-    if(finalEvent.hasOwnProperty('ack') && finalEvent.hasOwnProperty('nack')) {
-      finalEvent.ack = ack;
-      finalEvent.nack = nack;
+    // only for persistent
+    if (subscription.hasOwnProperty('_autoAck')) {
+      if (
+        typeof finalEvent.ack == 'function' &&
+        typeof finalEvent.nack == 'function'
+      ) {
+        const ack = async () => {
+          this.logger.debug(
+            `Acknowledge event ${event.eventType} with id ${event.eventId}`,
+          );
+          return subscription.acknowledge([payload]);
+        };
+        const nack = async (
+          action: PersistentSubscriptionNakEventAction,
+          reason: string,
+        ) => {
+          this.logger.debug(
+            `Fail for event ${event.eventType} with id ${event.eventId} for reason ${reason}`,
+          );
+          return subscription.fail([payload], action, reason);
+        };
+
+        finalEvent.ack = ack;
+        finalEvent.nack = nack;
+      } else {
+        // Otherwise manage here
+        this.logger.debug(
+          `Auto acknowledge event ${event.eventType} with id ${event.eventId}`,
+        );
+        subscription.acknowledge([payload]);
+      }
     }
-    else {
-      // Otherwise manage here
-      this.logger.log(
-        `Auto acknowledge event ${event.eventType} with id ${event.eventId}`,
-      );
-      _subscription.acknowledge([payload]);
-    }
+
+    // Dispatch to event handlers and sagas
     this.subject$.next(finalEvent);
   }
-
-  onLiveProcessingStarted(subscription: ExtendedCatchUpSubscription) {
-    subscription.isLive = true;
-    this.logger.log('Live processing of EventStore events started!');
-  }
-
-  onDropped(
-    subscription: ExtendedPersistentSubscription | ExtendedCatchUpSubscription,
-    _reason: string,
-    error: Error,
-  ) {
-    subscription.isLive = false;
-    this.logger.error(error);
-  }
-
 }

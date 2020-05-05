@@ -3,8 +3,8 @@ import { DynamicModule, Global, Module } from '@nestjs/common';
 import { EventStoreBus } from './event-store.bus';
 import { EventStore } from '../event-store.class';
 import { EventStoreModule, EventStoreModuleAsyncOptions } from '../event-store.module';
-import { EventStoreObserver } from '../observer/event-store.observer';
-import { EventStoreBusConfig } from '../..';
+import { EventStoreObserver } from '..';
+import { IEventStoreBusConfig } from '..';
 import { Subject } from 'rxjs';
 import { EventStorePublisher } from './event-store.publisher';
 
@@ -13,7 +13,7 @@ import { EventStorePublisher } from './event-store.publisher';
 export class EventStoreCqrsModule extends CqrsModule {
   static forRootAsync(
     options: EventStoreModuleAsyncOptions,
-    eventStoreBusConfig: EventStoreBusConfig,
+    eventStoreBusConfig: IEventStoreBusConfig,
   ): DynamicModule {
     return {
       module: EventStoreCqrsModule,

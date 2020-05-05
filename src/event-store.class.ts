@@ -10,7 +10,7 @@ import { defer, from, throwError } from 'rxjs';
 import { Logger } from '@nestjs/common';
 import * as fp from 'lodash/fp';
 import { catchError, flatMap, map, toArray } from 'rxjs/operators';
-import { ExpectedVersion } from './interfaces/aggregate-event.interface';
+import { ExpectedVersion } from './interfaces/event.interface';
 import { IEvent } from '@nestjs/cqrs';
 
 

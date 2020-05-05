@@ -1,22 +1,25 @@
-import { ExpectedVersion, IAggregateEvent, AcknowledgeableEvent} from '../../../../../src';
+import {
+  AcknowledgeableEventStoreEvent,
+  ExpectedVersion,
+  IExpectedVersionEvent,
+} from '../../../../../src';
 
-export class HeroKilledDragonEvent extends AcknowledgeableEvent implements IAggregateEvent {
+export class HeroKilledDragonEvent extends AcknowledgeableEventStoreEvent
+  implements IExpectedVersionEvent {
+
   constructor(
     public readonly data: {
       heroId: string,
       dragonId: string
-    }) {
-    super();
+    }, options?) {
+    super(data, options);
   }
 
-  get streamName() {
+  get eventStreamId() {
     return `hero-${this.data.heroId}`;
   }
-  get metadata() {
-    return {
-      version: 1,
-      created_at: new Date(),
-    };
+
+  get expectedVersion() {
+    return ExpectedVersion.NoStream;
   }
-  get expectedVersion() {return ExpectedVersion.NoStream}
 }

@@ -17,12 +17,12 @@ export class EventStoreInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     // Extract correlation from request
     const req: express.Request = context.switchToHttp().getRequest();
-    const correlationId = req.header('x-correlation-id');
+    const correlationId = req.header('x-correlation-eventId');
 
     // Build router to send data to next and Eventstore
     const handlerSubject$ = new Subject();
 
-    // Add correlation id to the event
+    // Add correlation eventId to the event
     // only if return is an event
     handlerSubject$
       .pipe(

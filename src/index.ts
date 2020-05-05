@@ -1,9 +1,10 @@
-export * from './interfaces/aggregate-event.interface';
-export * from './interfaces/IEventStoreConfig';
-export * from './interfaces/EventStoreBusConfig';
-export * from './interfaces/EventTypes';
-export * from './interfaces/SubscriptionTypes';
-export * from './interfaces/EventStoreProjection';
+export * from './interfaces/event-store-bus-config.interface';
+export * from './interfaces/event-store-config.interface';
+export * from './interfaces/event.interface';
+export * from './interfaces/aggregate-root.interface';
+export * from './interfaces/constants';
+export * from './interfaces/subscription.interface';
+export * from './interfaces/projection.interface';
 
 export * from './event-store.module';
 export * from './event-store.class';

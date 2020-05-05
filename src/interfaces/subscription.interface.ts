@@ -1,4 +1,11 @@
-export type EventStorePersistentSubscriptionConfig = {
+import { EventStoreCatchUpSubscription, EventStorePersistentSubscription } from 'node-eventstore-client';
+
+export enum namedConsumerStrategy {
+  ROUND_ROBIN = 'RoundRobin',
+  DISPATCH_TO_SINGLE = 'DispatchToSingle',
+  PINNED = 'Pinned',
+}
+export type IEventStorePersistentSubscriptionConfig = {
   stream: string;
   group: string;
   options?: {
@@ -18,9 +25,11 @@ export type EventStorePersistentSubscriptionConfig = {
   },
   autoAck?: boolean | undefined;
   bufferSize?: number | undefined;
-
+  onSubscriptionStart?: (
+    sub: EventStorePersistentSubscription,
+  ) => void | undefined;
   onSubscriptionDropped?: (
-    sub: EventStorePersistentSubscriptionConfig,
+    sub: EventStorePersistentSubscription,
     reason: string,
     error: string,
   ) => void | undefined;
@@ -28,8 +37,12 @@ export type EventStorePersistentSubscriptionConfig = {
 
 export type EventStoreCatchupSubscriptionConfig = {
   stream: string;
-};
-// TODO add config for startEvent
-export type EventStoreVolatileSubscription = {
-  stream: string;
+  onSubscriptionStart?: (
+    sub: EventStoreCatchUpSubscription,
+  ) => void | undefined;
+  onSubscriptionDropped?: (
+    sub: EventStoreCatchUpSubscription,
+    reason: string,
+    error: string,
+  ) => void | undefined;
 };

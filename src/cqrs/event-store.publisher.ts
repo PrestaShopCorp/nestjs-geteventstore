@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { IEvent,AggregateRoot,EventBus } from '@nestjs/cqrs';
 import { EventStore } from '../event-store.class';
-import { StreamConfig } from '../interfaces/aggregate-root.interface';
+import { IStreamConfig } from '../interfaces/aggregate-root.interface';
 import { tap } from 'rxjs/operators';
 
 export interface Constructor<T> {
@@ -13,7 +13,7 @@ export interface Constructor<T> {
 export class EventStorePublisher {
   constructor(private readonly eventBus: EventBus, private readonly eventStore: EventStore) {}
 
-  async commitToStream(aggregateRoot: AggregateRoot, streamConfig: StreamConfig) {
+  async commitToStream(aggregateRoot: AggregateRoot, streamConfig: IStreamConfig) {
     console.log('Commit to stream ', streamConfig);
     const events = aggregateRoot.getUncommittedEvents();
     return this.eventStore.writeEvents(streamConfig.streamName, events, streamConfig.expectedVersion)

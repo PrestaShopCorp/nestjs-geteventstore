@@ -1,9 +1,4 @@
-import {
-  createConnection,
-  EventStoreNodeConnection,
-  expectedVersion,
-  TcpEndPoint,
-} from 'node-eventstore-client';
+import { createConnection, EventStoreNodeConnection, expectedVersion, TcpEndPoint } from 'node-eventstore-client';
 import * as geteventstorePromise from 'geteventstore-promise';
 import { HTTPClient } from 'geteventstore-promise';
 import { defer, from, throwError } from 'rxjs';
@@ -43,7 +38,7 @@ export class EventStore {
     this._addDefaultVersion = fp.merge({ metadata: { version: 1 } });
     this._toEventstoreEvent = e =>
       new geteventstorePromise.EventFactory().newEvent(
-        e.type,
+        e.type || e.constructor.name,
         e.data,
         e.metadata,
         e.id,
@@ -92,7 +87,7 @@ export class EventStore {
         //tap(esEvents => console.log('Writing events', stream)),
         flatMap(esEvents =>
           from(this.HTTPClient.writeEvents(stream, esEvents, {
-            expectedVersion
+            expectedVersion,
           })),
         ),
       );

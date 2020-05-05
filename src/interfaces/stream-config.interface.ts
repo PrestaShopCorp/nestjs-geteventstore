@@ -11,6 +11,6 @@ export interface IStreamConfig {
   // Default any, in which state the stream should be when writing
   expectedVersion?: ExpectedVersion,
   // Optional Retention rules default keep for long time
-  maxAge?: '3d',
-  maxKeep?: 10000,
+  maxAge?: number,
+  maxKeep?: (number),
 }

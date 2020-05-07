@@ -1,13 +1,13 @@
 import {
-  AcknowledgeableEventStoreEvent,
+  EventStoreEvent,
 } from '../../../../../src';
 
-export class HeroKilledDragonEvent extends AcknowledgeableEventStoreEvent {
-
+export class HeroDamagedEnemyEvent extends EventStoreEvent {
   constructor(
     public readonly data: {
       heroId: string,
-      dragonId: string
+      dragonId: string,
+      hitPoint: number
     }, options?) {
     super(data, options);
   }
@@ -15,5 +15,4 @@ export class HeroKilledDragonEvent extends AcknowledgeableEventStoreEvent {
   get eventStreamId() {
     return `hero-${this.data.heroId}`;
   }
-
 }

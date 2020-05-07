@@ -1,9 +1,9 @@
 import { EventStoreCatchUpSubscription, EventStorePersistentSubscription } from 'node-eventstore-client';
 
-export enum namedConsumerStrategy {
-  ROUND_ROBIN = 'RoundRobin',
-  DISPATCH_TO_SINGLE = 'DispatchToSingle',
-  PINNED = 'Pinned',
+export enum NamedConsumerStrategy {
+  RoundRobin = 'RoundRobin',
+  DispatchToSingle = 'DispatchToSingle',
+  Pinned = 'Pinned',
 }
 export type IEventStorePersistentSubscriptionConfig = {
   stream: string;
@@ -21,7 +21,7 @@ export type IEventStorePersistentSubscriptionConfig = {
     minCheckPointCount?: number,
     maxCheckPointCount?: number,
     maxSubscriberCount?: number,
-    namedConsumerStrategy?: 'RoundRobin' | 'DispatchToSingle' | 'Pinned',
+    namedConsumerStrategy?: NamedConsumerStrategy,
   },
   autoAck?: boolean | undefined;
   bufferSize?: number | undefined;

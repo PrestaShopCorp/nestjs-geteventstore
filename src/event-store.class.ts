@@ -49,6 +49,7 @@ export class EventStore {
     this.connection = createConnection(
       { defaultUserCredentials: this.credentials },
       this.TCPEndpoint,
+      // TODO NAMED connection as option
     );
     this.connection.connect();
     // FIXME handler in config
@@ -70,7 +71,6 @@ export class EventStore {
   }
 
   writeEvents(stream, events: IEvent[], expectedVersion = ExpectedVersion.Any) {
-
     return defer(() => {
       return from(events).pipe(
         map(this._addDefaultVersion),

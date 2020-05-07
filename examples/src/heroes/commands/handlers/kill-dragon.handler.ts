@@ -9,30 +9,45 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
   constructor(
     private readonly repository: HeroRepository,
     private readonly publisher: EventStorePublisher,
-  ) {}
+  ) {
+  }
 
   async execute(command: KillDragonCommand) {
     const { heroId, dragonId } = command;
 
     console.log(clc.greenBright(`KillDragonCommand... for hero ${heroId} on enemy ${dragonId}`));
-    // add publisher capacity to the repository aggregate
+    // build aggregate by fetching data from database
+    // add publish capacity to the aggregate root
     const hero = this.publisher.mergeObjectContext(
-      await this.repository.findOneById(+heroId),
+      await this.repository.findOneById(+heroId)
     );
-
-    hero.damageEnemy(dragonId, 3);
-    hero.damageEnemy(dragonId, 8);
-    hero.damageEnemy(dragonId, 10);
-    hero.killEnemy(dragonId);
-    // Commit events one by one
-    // hero.commit();
-
-    // Commit events in bulk with custom stream
-    this.publisher.commitToStream(hero, {
-      streamName: `hero_kill-${heroId}`,
+    // Use custom stream only for this process
+    hero.setStreamConfig({
+      streamName: `hero_fight-${heroId}`,
+      // Bug if the stream is not new when writing
       expectedVersion: ExpectedVersion.NoStream,
-      maxAge: 3*24*60*60*1000,
+      // Set retention rules for this new stream
+      metadata: {
+        $maxAge: 1000*3600*24,
+        $maxCount: 5
+      },
     });
+    hero.damageEnemy(dragonId, 2);
+    hero.damageEnemy(dragonId, -8);
+    hero.damageEnemy(dragonId, 10);
+    hero.damageEnemy(dragonId, 10);
+    hero.damageEnemy(dragonId, -1);
+    hero.damageEnemy(dragonId, 10);
+    hero.damageEnemy(dragonId, 10);
+    hero.damageEnemy(dragonId, 10);
+    hero.commit();
+
+    // Change stream for final event
+    hero.setStreamConfig({
+      streamName: `hero-${heroId}`,
+    })
+    hero.killEnemy(dragonId);
+    hero.commit();
 
     return command;
   }

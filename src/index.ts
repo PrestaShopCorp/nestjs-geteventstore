@@ -12,6 +12,7 @@ export * from './event-store.class';
 export * from './cqrs/event-store-cqrs.module';
 export * from './cqrs/event-store.bus';
 export * from './cqrs/event-store.publisher';
+export * from './cqrs/event-store.aggregate-root';
 
 export * from './observer/event-store.observer';
 export * from './observer/event-store-observer.module';

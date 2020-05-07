@@ -1,5 +1,5 @@
 import { EventBus, IEvent, IEventPublisher, IMessageSource } from '@nestjs/cqrs';
-import { Subject } from 'rxjs';
+import { from, Subject } from 'rxjs';
 import {
   EventStoreCatchUpSubscription,
   EventStorePersistentSubscription,
@@ -16,8 +16,10 @@ import {
   IEventStoreEventOptions,
   IEventStorePersistentSubscriptionConfig,
   IEventStoreProjection,
+  IStreamConfig,
 } from '../';
 import { IAcknowledgeableEvent } from '..';
+import { map, toArray } from 'rxjs/operators';
 
 const fs = require('fs');
 
@@ -62,7 +64,9 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
     // FIXME typescript voodoo
     this.subject$ = (this.eventBus as any).subject$;
     this.bridgeEventsTo((this.eventBus as any).subject$);
-    this.eventBus.publisher = this;
+    console.log(this.eventBus.publisher)
+    this.eventBus.publish = this.publish;
+    //this.eventBus.publishAll = this.publishAll;
   }
 
   async connect() {
@@ -74,20 +78,22 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
     this.logger.log(`disconnect eventstore`);
     this.eventStore.close();
   }
-
-  async publish(event: IEvent) {
-    const payload = {
+  addDefaultEventValue(event: IEvent): IEvent {
+    return {
       id: event['eventId'] || v4(),
       type: event['eventType'] || event.constructor.name,
       data: event['data'] || {},
       metadata: event['metadata'] || {},
-    };
+    } as IEvent;
+  }
+
+  async publish(event: IEvent) {
     const expectedVersion = event['expectedVersion'] || ExpectedVersion.Any;
 
     // FIXME how to handle errors here
     // TODO how to use observer
     try {
-      await this.eventStore.writeEvents(event['eventStreamId'], [payload], expectedVersion).toPromise();
+      await this.eventStore.writeEvents(event['eventStreamId'], [this.addDefaultEventValue(event)], expectedVersion).toPromise();
     } catch (err) {
       if (!err.response) {
         this.logger.error(`Error appending ${event.constructor.name} to stream ${event['eventStreamId']} : ${err.message}`);
@@ -97,7 +103,16 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
     }
   }
 
-  get subscriptions() {
+  async publishAll(events: IEvent[], streamConfig: IStreamConfig) {
+    events = await from(events).pipe(map(this.addDefaultEventValue),toArray()).toPromise();
+    const expectedVersion = streamConfig.expectedVersion || ExpectedVersion.Any;
+    const eventCount = events.length;
+    this.logger.debug(`Commit ${eventCount} events to stream ${streamConfig.streamName} with expectedVersion ${streamConfig.expectedVersion}`);
+    // TODO HANDLE errors
+    return await this.eventStore.writeEvents(streamConfig.streamName, events, expectedVersion).toPromise();
+  }
+
+  get subscriptions(): { persistent: EventStorePersistentSubscription[], catchup: EventStoreCatchUpSubscription[] } {
     return {
       persistent: this.persistentSubscriptions,
       catchup: this.catchupSubscriptions,
@@ -255,9 +270,19 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
   async onEvent(subscription, payload) {
     const { event } = payload;
 
-    if (!event || !event.isJson) {
-      this.logger.error(
-        `Received event that could not be resolved! stream ${event.eventStreamId} type ${event.eventType} id ${event.eventId} acknowledge `,
+    if (!payload.isResolved) {
+      this.logger.warn(
+        `Ignore unresolved event from stream ${payload.originalStreamId} with ID ${payload.originalEvent.eventId}`,
+      );
+      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
+        subscription.acknowledge([payload]);
+      }
+      return;
+    }
+    // TODO handle not JSON
+    if (!event.isJson) {
+      this.logger.warn(
+        `Received event that could not be resolved! stream ${event.eventStreamId} type ${event.eventType} id ${event.eventId} `,
       );
       if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
         subscription.acknowledge([payload]);
@@ -283,7 +308,6 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
       metadata = JSON.parse(event.metadata.toString());
     }
 
-    // FIXME use interface IAggregateEvent
     const finalEvent = this.eventMapper(data, {
       metadata,
       eventStreamId: event.eventStreamId,

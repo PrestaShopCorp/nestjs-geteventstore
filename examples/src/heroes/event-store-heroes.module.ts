@@ -34,6 +34,9 @@ import { IEventStoreBusConfig, EventStoreCqrsModule, IEventStoreConfig, IEventSt
           Logger.log(
             `Build ${className} received from stream ${options.eventStreamId} with id ${options.eventId}`,
           );
+          if(!heroesEvents[className]) {
+            return false;
+          }
           return new heroesEvents[className](data, options);
         },
         subscriptions: {

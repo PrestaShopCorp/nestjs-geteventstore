@@ -1,4 +1,4 @@
-import { CommandBus, CqrsModule, EventBus, EventPublisher, IEvent, QueryBus } from '@nestjs/cqrs';
+import { CommandBus, CqrsModule, EventBus, IEvent, QueryBus } from '@nestjs/cqrs';
 import { DynamicModule, Global, Module } from '@nestjs/common';
 import { EventStoreBus } from './event-store.bus';
 import { EventStore } from '../event-store.class';
@@ -19,10 +19,8 @@ export class EventStoreCqrsModule extends CqrsModule {
       module: EventStoreCqrsModule,
       imports: [CqrsModule, EventBus, EventStoreModule.forRootAsync(options)],
       providers: [
-        EventPublisher,
         CommandBus,
         QueryBus,
-        EventStorePublisher,
         EventStoreBus,
         {
           provide: EventStoreBus,
@@ -44,12 +42,18 @@ export class EventStoreCqrsModule extends CqrsModule {
           },
           inject: [EventStore],
         },
+        {
+          provide: EventStorePublisher,
+          useFactory: (eventBus, eventStore) => {
+            return new EventStorePublisher(eventBus, eventStore);
+          },
+          inject: [EventStoreBus, EventStore],
+        },
       ],
       exports: [
         EventStoreModule,
         EventStorePublisher,
         EventStoreObserver,
-        EventPublisher,
         CommandBus,
         QueryBus,
         EventBus,

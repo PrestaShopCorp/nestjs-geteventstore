@@ -16,7 +16,7 @@ import {
   IEventStoreEventOptions,
   IEventStorePersistentSubscriptionConfig,
   IEventStoreProjection,
-  IStreamConfig,
+  IStreamConfig, ISubscriptionStatus,
 } from '../';
 import { IAcknowledgeableEvent } from '..';
 import { map, toArray } from 'rxjs/operators';
@@ -30,8 +30,8 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
     options: IEventStoreEventOptions,
   ) => {};
   private logger = new Logger('EventStoreBus');
-  private catchupSubscriptions: EventStoreCatchUpSubscription[] = [];
-  private persistentSubscriptions: EventStorePersistentSubscription[] = [];
+  private catchupSubscriptions: ISubscriptionStatus[] = [];
+  private persistentSubscriptions: ISubscriptionStatus[] = [];
 
   constructor(
     private eventStore: EventStore,
@@ -110,7 +110,7 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
     return await this.eventStore.writeEvents(streamConfig.streamName, events, expectedVersion).toPromise();
   }
 
-  get subscriptions(): { persistent: EventStorePersistentSubscription[], catchup: EventStoreCatchUpSubscription[] } {
+  get subscriptions(): { persistent: ISubscriptionStatus[], catchup: ISubscriptionStatus[] } {
     return {
       persistent: this.persistentSubscriptions,
       catchup: this.catchupSubscriptions,
@@ -148,7 +148,7 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
   subscribeToCatchUpSubscriptions(
     subscriptions: EventStoreCatchupSubscriptionConfig[],
   ) {
-    this.catchupSubscriptions = subscriptions.map((config: EventStoreCatchupSubscriptionConfig) => {
+    subscriptions.map((config: EventStoreCatchupSubscriptionConfig) => {
       return this.subscribeToCatchupSubscription(config.stream, config.onSubscriptionStart, config.onSubscriptionDropped);
     });
   }
@@ -209,7 +209,7 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
         }
       }),
     );
-    this.persistentSubscriptions = await Promise.all(
+    await Promise.all(
       subscriptions.map(async config => {
         this.logger.log(
           `Connecting to persistent subscription "${config.group}" on stream ${config.stream}`,
@@ -242,7 +242,8 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
           this.onEvent(sub, payload);
         },
         (subscription, reason, error) => {
-          delete this.persistentSubscriptions[`${stream}-${group}`];
+          this.persistentSubscriptions[`${stream}-${group}`].isConnected = false;
+          this.persistentSubscriptions[`${stream}-${group}`].status = reason+" "+error;
           if (onSubscriptionDropped) {
             onSubscriptionDropped(subscription, reason, error);
           }
@@ -254,7 +255,11 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
         this.logger.log(
           `Connected to persistent subscription ${group} on stream ${stream}!`,
         );
-        this.persistentSubscriptions[`${stream}-${group}`] = subscription;
+        this.persistentSubscriptions[`${stream}-${group}`] = {
+          isConnected: true,
+          subscription: subscription,
+          status: ''
+        };
         if (onSubscriptionStart) {
           onSubscriptionStart(subscription);
         }

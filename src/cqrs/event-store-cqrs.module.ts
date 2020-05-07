@@ -7,6 +7,7 @@ import { EventStoreObserver, IEventStoreConfig } from '..';
 import { IEventStoreBusConfig } from '..';
 import { Subject } from 'rxjs';
 import { EventStorePublisher } from './event-store.publisher';
+import { EventStoreBusHealthIndicator } from '../health/event-store-bus.health-indicator';
 
 @Global()
 @Module({})
@@ -50,9 +51,17 @@ export class EventStoreCqrsModule extends CqrsModule {
           },
           inject: [EventStoreBus, EventStore],
         },
+        {
+          provide: EventStoreBusHealthIndicator,
+          useFactory: (eventStoreBus) => {
+            return new EventStoreBusHealthIndicator(eventStoreBus);
+          },
+          inject: [EventStoreBus]
+        }
       ],
       exports: [
         EventStoreModule,
+        EventStoreBusHealthIndicator,
         EventStorePublisher,
         EventStoreObserver,
         CommandBus,

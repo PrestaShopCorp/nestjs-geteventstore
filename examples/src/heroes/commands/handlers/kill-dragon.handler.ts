@@ -2,7 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import * as clc from 'cli-color';
 import { HeroRepository } from '../../repository/hero.repository';
 import { KillDragonCommand } from '../impl/kill-dragon.command';
-import { EventStorePublisher, ExpectedVersion } from '../../../../../src/';
+import { DAY, EventStorePublisher, ExpectedVersion } from '../../../../../src/';
 
 @CommandHandler(KillDragonCommand)
 export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
@@ -19,7 +19,7 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     // build aggregate by fetching data from database
     // add publish capacity to the aggregate root
     const hero = this.publisher.mergeObjectContext(
-      await this.repository.findOneById(+heroId)
+      await this.repository.findOneById(+heroId),
     );
     // Use custom stream only for this process
     hero.setStreamConfig({
@@ -28,8 +28,8 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
       expectedVersion: ExpectedVersion.NoStream,
       // Set retention rules for this new stream
       metadata: {
-        $maxAge: 1000*3600*24,
-        $maxCount: 5
+        $maxAge: 2 * DAY,
+        $maxCount: 5,
       },
     });
     hero.damageEnemy(dragonId, 2);
@@ -45,7 +45,9 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     // Change stream for final event
     hero.setStreamConfig({
       streamName: `hero-${heroId}`,
-    })
+      // It must be a new stream
+      expectedVersion: ExpectedVersion.NoStream,
+    });
     hero.killEnemy(dragonId);
     hero.commit();
 

@@ -6,35 +6,40 @@ import { QueryHandlers } from './queries/handlers';
 import { HeroRepository } from './repository/hero.repository';
 import { HeroesGameSagas } from './sagas/heroes.sagas';
 import { heroesEvents } from './events/impl/index';
-import { IEventStoreBusConfig, EventStoreCqrsModule, IEventStoreConfig, IEventStoreEventOptions } from '../../../src';
+import { EventStoreCqrsModule, IEventStoreEventOptions } from '../../../src';
+import { HealthController } from './health.controller';
+import { TerminusModule } from '@nestjs/terminus';
 
 @Module({
   imports: [
-    EventStoreCqrsModule.forRootAsync(
+    TerminusModule,
+    EventStoreCqrsModule.registerAsync(
       {
-        useFactory: () =>
-          ({
-            credentials: {
-              username: process.env.EVENTSTORE_CREDENTIALS_USERNAME || 'admin',
-              password: process.env.EVENTSTORE_CREDENTIALS_PASSWORD || 'changeit',
-            },
-            tcp: {
-              host: process.env.EVENTSTORE_TCP_HOST || 'localhost',
-              port: process.env.EVENTSTORE_TCP_PORT || 11113,
-            },
-            http: {
-              host: process.env.EVENTSTORE_HTTP_HOST || 'http://localhost',
-              port: process.env.EVENTSTORE_HTTP_PORT || 22113,
-            },
-          } as IEventStoreConfig),
+        credentials: {
+          username: process.env.EVENTSTORE_CREDENTIALS_USERNAME || 'admin',
+          password: process.env.EVENTSTORE_CREDENTIALS_PASSWORD || 'changeit',
+        },
+        tcp: {
+          host: process.env.EVENTSTORE_TCP_HOST || 'localhost',
+          port: +process.env.EVENTSTORE_TCP_PORT || 11113,
+        },
+        http: {
+          host: process.env.EVENTSTORE_HTTP_HOST || 'http://localhost',
+          port: +process.env.EVENTSTORE_HTTP_PORT || 22113,
+        },
+        tcpConnectionName: 'connection-hero-event-handler-and-saga',
+        onTcpConnected: () => {
+        },
+        onTcpDisconnected: () => {
+        },
       },
       {
         eventMapper: (data, options: IEventStoreEventOptions) => {
           let className = `${options.eventType}`;
-          Logger.log(
+          Logger.debug(
             `Build ${className} received from stream ${options.eventStreamId} with id ${options.eventId}`,
           );
-          if(!heroesEvents[className]) {
+          if (!heroesEvents[className]) {
             return false;
           }
           return new heroesEvents[className](data, options);
@@ -52,13 +57,20 @@ import { IEventStoreBusConfig, EventStoreCqrsModule, IEventStoreConfig, IEventSt
                 resolveLinktos: true,
                 minCheckPointCount: 1,
               },
+              onSubscriptionStart: (subscription) => {
+              },
+              onSubscriptionDropped: (subscription) => {
+              },
             },
           ],
         },
-      } as IEventStoreBusConfig,
+      },
     ),
   ],
-  controllers: [HeroesGameController],
+  controllers: [
+    HealthController,
+    HeroesGameController,
+  ],
   providers: [
     HeroRepository,
     ...CommandHandlers,

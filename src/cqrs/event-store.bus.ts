@@ -36,19 +36,11 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
   constructor(
     private eventStore: EventStore,
     private subject$: Subject<IEvent>,
-    config: IEventStoreBusConfig,
+    private config: IEventStoreBusConfig,
     private eventBus: EventBus,
   ) {
     this.eventMapper = config.eventMapper;
-    if (config.subscriptions) {
-      // Nothing to connect to, don't connect
-      this.connect();
-      this.assertProjections(config.projections || []);
-      this.subscribeToCatchUpSubscriptions(config.subscriptions.catchup || []);
-      this.subscribeToPersistentSubscriptions(
-        config.subscriptions.persistent || [],
-      );
-    }
+
   }
 
   // @ts-ignore
@@ -64,20 +56,26 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
     // FIXME typescript voodoo
     this.subject$ = (this.eventBus as any).subject$;
     this.bridgeEventsTo((this.eventBus as any).subject$);
-    console.log(this.eventBus.publisher)
     this.eventBus.publish = this.publish;
-    //this.eventBus.publishAll = this.publishAll;
   }
 
   async connect() {
-    await this.eventStore.connect();
-    this.logger.debug(`Eventstore connected`);
+    // Nothing to connect to, don't connect
+    await this.assertProjections(this.config.projections || []);
+    if (this.config.subscriptions) {
+      await this.eventStore.connect();
+      await this.subscribeToCatchUpSubscriptions(this.config.subscriptions.catchup || []);
+      await this.subscribeToPersistentSubscriptions(this.config.subscriptions.persistent || []);
+      this.logger.debug(`Eventstore connected`);
+    }
+    return Promise.resolve(this);
   }
 
   onModuleDestroy(): any {
     this.logger.log(`disconnect eventstore`);
     this.eventStore.close();
   }
+
   addDefaultEventValue(event: IEvent): IEvent {
     return {
       id: event['eventId'] || v4(),
@@ -104,7 +102,7 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
   }
 
   async publishAll(events: IEvent[], streamConfig: IStreamConfig) {
-    events = await from(events).pipe(map(this.addDefaultEventValue),toArray()).toPromise();
+    events = await from(events).pipe(map(this.addDefaultEventValue), toArray()).toPromise();
     const expectedVersion = streamConfig.expectedVersion || ExpectedVersion.Any;
     const eventCount = events.length;
     this.logger.debug(`Commit ${eventCount} events to stream ${streamConfig.streamName} with expectedVersion ${streamConfig.expectedVersion}`);

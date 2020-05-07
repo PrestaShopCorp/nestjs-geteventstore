@@ -46,9 +46,11 @@
     "rxjs": "^6.3.3"
   },
   "dependencies": {
-    "@nestjs/common": "^7.0.0",
-    "@nestjs/core": "^7.0.0",
+    "@nestjs/common": "^6.0.0",
+    "@nestjs/core": "^6.0.0",
     "@nestjs/cqrs": "^6.1.0",
+    "@nestjs/terminus": "^7.0.1",
+    "@godaddy/terminus": "^4.4.1",
     "geteventstore-promise": "^3.2.0",
     "lodash": "^4.17.15",
     "node-eventstore-client": "^0.2.13",

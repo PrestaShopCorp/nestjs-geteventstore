@@ -1,11 +1,8 @@
-import { Global, Module, DynamicModule } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { EventStore } from './event-store.class';
-import { EventStoreObserverModule } from './observer/event-store-observer.module';
-
-export interface EventStoreModuleAsyncOptions {
-  useFactory: (...args: any[]) => Promise<any> | any;
-  inject?: any[];
-}
+//import { EventStoreObserverModule } from './observer/event-store-observer.module';
+import { IEventStoreConfig } from './interfaces/event-store-config.interface';
+import { EventStoreHealthIndicator } from './health/event-store.health-indicator';
 
 @Global()
 @Module({
@@ -13,7 +10,28 @@ export interface EventStoreModuleAsyncOptions {
   exports: [EventStore],
 })
 export class EventStoreModule {
-  static forRootAsync(options: EventStoreModuleAsyncOptions): DynamicModule {
+  static register(config: IEventStoreConfig) {
+    return {
+      module: EventStoreModule,
+      providers: [
+        {
+          provide: EventStore,
+          useFactory: () => {
+            return new EventStore(config);
+          },
+        },
+        {
+          provide: EventStoreHealthIndicator,
+          useFactory: (eventStore) => {
+            return new EventStoreHealthIndicator(eventStore);
+          },
+          inject: [EventStore]
+        }
+      ],
+      exports: [EventStore, EventStoreHealthIndicator]
+    }
+  }
+  /*static forRootAsync(options: EventStoreModuleAsyncOptions): DynamicModule {
     return {
       module: EventStoreModule,
       providers: [
@@ -32,5 +50,5 @@ export class EventStoreModule {
       exports: [EventStore, EventStoreObserverModule],
       imports: [EventStoreObserverModule.forRootAsync(EventStore)],
     };
-  }
+  }*/
 }

@@ -1,4 +1,4 @@
-import { createConnection, EventStoreNodeConnection, expectedVersion, TcpEndPoint } from 'node-eventstore-client';
+import { createConnection, EventStoreNodeConnection, expectedVersion } from 'node-eventstore-client';
 import * as geteventstorePromise from 'geteventstore-promise';
 import { HTTPClient } from 'geteventstore-promise';
 import { defer, from, throwError } from 'rxjs';
@@ -7,6 +7,7 @@ import * as fp from 'lodash/fp';
 import { catchError, flatMap, map, toArray } from 'rxjs/operators';
 import { ExpectedVersion } from './interfaces/event.interface';
 import { IEvent } from '@nestjs/cqrs';
+import { IEventStoreConfig } from './interfaces/event-store-config.interface';
 
 
 // FIXME still needed ?
@@ -22,16 +23,14 @@ export class EventStore {
   _toEventstoreEvent: (e: any) => any;
 
   constructor(
-    private credentials,
-    private TCPEndpoint: TcpEndPoint,
-    private HTTPEndpoint: any,
+    public readonly config: IEventStoreConfig,
   ) {
     this.HTTPClient = new geteventstorePromise.HTTPClient({
-      hostname: this.HTTPEndpoint.host.replace(/^https?:\/\//, ''),
-      port: this.HTTPEndpoint.port,
+      hostname: config.http.host.replace(/^https?:\/\//, ''),
+      port: config.http.port,
       credentials: {
-        username: this.credentials.username,
-        password: this.credentials.password,
+        username: config.credentials.username,
+        password: config.credentials.password,
       },
     });
     this.expectedVersion = expectedVersion;
@@ -47,25 +46,27 @@ export class EventStore {
 
   connect() {
     this.connection = createConnection(
-      { defaultUserCredentials: this.credentials },
-      this.TCPEndpoint,
-      // TODO NAMED connection as option
+      { defaultUserCredentials: this.config.credentials },
+      this.config.tcp,
+      this.config.tcpConnectionName
     );
     this.connection.connect();
-    // FIXME handler in config
+
     this.connection.on('connected', () => {
       this.logger.log('Connection to EventStore established!');
       this.isConnected = true;
+      this.config.onTcpConnected(this);
     });
     // FIXME handler in config
     this.connection.on('closed', () => {
+      this.isConnected = false;
+      this.config.onTcpDisconnected(this);
       if (this.connectionCount <= 10) {
         this.connectionCount += 1;
       } else {
         throw new Error('To many eventStore connect retrys');
       }
       this.logger.error('Connection to EventStore closed!');
-      this.isConnected = false;
       this.connect();
     });
   }

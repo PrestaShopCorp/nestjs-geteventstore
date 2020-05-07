@@ -1,7 +1,6 @@
-import { CallHandler, ExecutionContext, Inject, Injectable, NestInterceptor } from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable, Subject } from 'rxjs';
-import { EventStoreObserver } from '../observer/event-store.observer';
-import { EVENT_STORE_OBSERVER_TOKEN } from '../interfaces/constants';
+import { EventStoreObserver } from '..';
 import * as express from 'express';
 import { filter, map } from 'rxjs/operators';
 import { EventStoreEvent } from '..';
@@ -9,7 +8,6 @@ import { EventStoreEvent } from '..';
 @Injectable()
 export class EventStoreInterceptor implements NestInterceptor {
   constructor(
-    @Inject(EVENT_STORE_OBSERVER_TOKEN)
     private readonly eventStoreOberver: EventStoreObserver,
   ) {
   }

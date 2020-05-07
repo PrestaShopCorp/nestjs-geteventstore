@@ -1,14 +1,13 @@
-import { Global, Module, DynamicModule, Provider } from '@nestjs/common';
-import { EVENT_STORE_OBSERVER_TOKEN } from '../interfaces/constants';
+import { Global, Module, Provider } from '@nestjs/common';
 import { EventStoreObserver } from './event-store.observer';
 import { EventStore } from '../event-store.class';
 
 @Global()
 @Module({})
 export class EventStoreObserverModule {
-  public static forRootAsync(eventstore): DynamicModule {
+  public static register() {
     const provider: Provider = {
-      provide: EVENT_STORE_OBSERVER_TOKEN,
+      provide: EventStoreObserver,
       useFactory: eventstore => {
         return new EventStoreObserver(eventstore);
       },

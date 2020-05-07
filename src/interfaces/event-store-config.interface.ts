@@ -1,4 +1,5 @@
 import {ConnectionSettings, TcpEndPoint } from 'node-eventstore-client';
+import { EventStore } from '../event-store.class';
 
 export interface IHttpEndpoint extends TcpEndPoint {}
 
@@ -7,9 +8,10 @@ export interface IEventStoreConfig {
     username: string;
     password: string;
   }
-  tcp: TcpEndPoint
+  tcpConnectionName?: string,
+  tcp?: TcpEndPoint
   http?: IHttpEndpoint
   options?: ConnectionSettings
-  onConnected?: () => void
-  onDisconnected?: () => void
+  onTcpConnected?: (eventStore: EventStore) => void
+  onTcpDisconnected?: (eventStore: EventStore) => void
 }

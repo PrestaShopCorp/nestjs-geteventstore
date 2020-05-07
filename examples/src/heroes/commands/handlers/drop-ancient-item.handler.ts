@@ -16,6 +16,7 @@ export class DropAncientItemHandler
     console.log(clc.yellowBright('Async DropAncientItemCommand...'));
 
     const { heroId, itemId } = command;
+    // Use default aggregate config
     const hero = this.publisher.mergeObjectContext(
       await this.repository.findOneById(+heroId),
     );

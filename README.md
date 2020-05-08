@@ -182,8 +182,9 @@ Identical with nest cqrs if your want.
 You win `ack()` and `nack()` if your event extends `AcknowledgeableEventStoreEvent`
 (only for persistent subscriptions)
 
-Nack strategies are available : 
-```
+Nack strategies are available
+ 
+```typescript
 @EventsHandler(HeroKilledDragonEvent)
 export class HeroKilledDragonHandler
   implements IEventHandler<HeroKilledDragonEvent> {
@@ -288,21 +289,6 @@ you can also send linkTo to do symlink like
 https://eventstore.com/docs/getting-started/projections/index.html  
 https://eventstore.com/docs/projections/user-defined-projections/index.html
 
-
-## ErrorInterceptor
-// TODO subscribe to eventbus subject to send error to any tools 
-
-## Query bus
-// TODO code to query the state in the projection
-// TO create new query to eventstore ?
-
-## Local Buffering
-// TODO : adapt to tcp client and onConnected
-// Work with http client
-// pluggable to error handler
-
-# Interceptor
-
 ## Terminus health
 Give status send 503 on your `HealthController`
 ```typescript
@@ -326,37 +312,26 @@ export class HealthController {
 }
 ```
 
+## ErrorInterceptor
+// TODO subscribe to eventbus subject to send error to any tools 
+
+## Query bus
+// TODO code to query the state in the projection
+// TO create new query to eventstore ?
+
+## Local Buffering
+// TODO : adapt to tcp client and onConnected
+// Work with http client and eventstore observer
+
+
 # HTTP/GRPC/...
 
 It can also be used without CQRS 
 
-### Import module
-```typescript
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { EventStoreInterceptor, EventStoreModule } from 'nestjs-geteventstore';
-@Module({
-    imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      load: [
-        EventstoreConfig,
-      ],
-    }),
-    EventStoreModule.forRootAsync({
-      useFactory: async (config: ConfigService) => config.get('eventstore'),
-      inject: [ConfigService],
-    }),
-    ],
-    controllers: [MyController],
-    providers: [],
-})
-export class AppModule {}
-```
 ### Using it as an interceptor
 With this syntax all the output of your services are sent to eventstore
 
-Latest event will be sent back to http.
+By default only last event will be sent back to http.  
 
 ```typescript
 @UseInterceptors(EventStoreInterceptor)

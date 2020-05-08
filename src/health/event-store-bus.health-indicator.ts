@@ -7,18 +7,21 @@ export class EventStoreBusHealthIndicator extends HealthIndicator {
   }
 
   public check(): HealthIndicatorResult {
-    let res = [], causes = {};
-    // FIXME missing name
-    this.eventStoreBus.subscriptions.persistent.forEach((status, name) => {
-      if(!status.status) {
-        causes[name] = `Subscription dropped`
+    let res = {}, causes = {};
+    const subscriptions = this.eventStoreBus.subscriptions.persistent;
+    for(const subscriptionName in subscriptions) {
+      if(subscriptions[subscriptionName].isConnected === false) {
+        causes[subscriptionName] = `Subscription ${subscriptions[subscriptionName].streamName} ${subscriptions[subscriptionName].group} dropped`
         throw new HealthCheckError(
-          `subscription not connected`,
+          `subscription-${subscriptionName}`,
           causes,
         );
       }
-      res.push(name);
-    });
-    return super.getStatus('subscription', true, { message: `Connected to subsbscriptions ${res.join(', ')}` });
+      res[`subscription-${subscriptionName}`] = {
+        status: 'up',
+        message: `Connected to ${subscriptions[subscriptionName].streamName} ${subscriptions[subscriptionName].group}`
+      }
+    }
+    return res;
   }
 }

@@ -51,9 +51,9 @@ export class EventStorePublisher {
     const eventBus = this.eventBus;
     const eventStore = this.eventStore;
 
-    object.commit = () => {
+    object.commit = async () => {
       if (object.streamConfig) {
-        eventBus.publishAll(object.getUncommittedEvents(), object.streamConfig);
+        await eventBus.publishAll(object.getUncommittedEvents(), object.streamConfig);
       } else {
         object.getUncommittedEvents().forEach(event => object.publish(event));
       }

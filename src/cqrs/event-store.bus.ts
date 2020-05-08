@@ -1,5 +1,5 @@
 import { EventBus, IEvent, IEventPublisher, IMessageSource } from '@nestjs/cqrs';
-import { from, Subject } from 'rxjs';
+import { empty, from, Subject } from 'rxjs';
 import {
   EventStoreCatchUpSubscription,
   EventStorePersistentSubscription,
@@ -16,10 +16,11 @@ import {
   IEventStoreEventOptions,
   IEventStorePersistentSubscriptionConfig,
   IEventStoreProjection,
-  IStreamConfig, ISubscriptionStatus,
+  IStreamConfig,
+  ISubscriptionStatus,
 } from '../';
 import { IAcknowledgeableEvent } from '..';
-import { map, toArray } from 'rxjs/operators';
+import { flatMap, map, share, toArray } from 'rxjs/operators';
 
 const fs = require('fs');
 
@@ -30,8 +31,8 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
     options: IEventStoreEventOptions,
   ) => {};
   private logger = new Logger('EventStoreBus');
-  private catchupSubscriptions: ISubscriptionStatus[] = [];
-  private persistentSubscriptions: ISubscriptionStatus[] = [];
+  private catchupSubscriptions: ISubscriptionStatus = {};
+  private persistentSubscriptions: ISubscriptionStatus = {};
 
   constructor(
     private eventStore: EventStore,
@@ -81,36 +82,48 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
       id: event['eventId'] || v4(),
       type: event['eventType'] || event.constructor.name,
       data: event['data'] || {},
-      metadata: event['metadata'] || {},
+      metadata: event['metadata'] || {
+        version: 1,
+        created_at: new Date()
+      },
     } as IEvent;
   }
 
-  async publish(event: IEvent) {
+   publish(event: IEvent) {
     const expectedVersion = event['expectedVersion'] || ExpectedVersion.Any;
 
-    // FIXME how to handle errors here
-    // TODO how to use observer
-    try {
-      await this.eventStore.writeEvents(event['eventStreamId'], [this.addDefaultEventValue(event)], expectedVersion).toPromise();
-    } catch (err) {
-      if (!err.response) {
-        this.logger.error(`Error appending ${event.constructor.name} to stream ${event['eventStreamId']} : ${err.message}`);
-      } else {
-        this.logger.warn(`Error appending ${event.constructor.name} to stream ${event['eventStreamId']} : ${err.response.statusText} (code ${err.response.status})`);
-      }
-    }
+    const write$ = this.eventStore.writeEvents(event['eventStreamId'], [this.addDefaultEventValue(event)], expectedVersion)
+      .pipe(
+        // Send only errors to subject
+        flatMap(_ => empty()),
+        share(),
+      );
+    write$.subscribe(this.subject$);
+    return write$;
   }
 
-  async publishAll(events: IEvent[], streamConfig: IStreamConfig) {
-    events = await from(events).pipe(map(this.addDefaultEventValue), toArray()).toPromise();
+  publishAll(events: IEvent[], streamConfig: IStreamConfig) {
+    const event$ = from(events)
+      .pipe(
+        map(this.addDefaultEventValue),
+        toArray()
+      );
     const expectedVersion = streamConfig.expectedVersion || ExpectedVersion.Any;
     const eventCount = events.length;
     this.logger.debug(`Commit ${eventCount} events to stream ${streamConfig.streamName} with expectedVersion ${streamConfig.expectedVersion}`);
-    // TODO HANDLE errors
-    return await this.eventStore.writeEvents(streamConfig.streamName, events, expectedVersion).toPromise();
+
+    const write$ = event$.pipe(
+      flatMap(events =>
+        this.eventStore.writeEvents(event['eventStreamId'], [events], expectedVersion),
+      ),
+      share(),
+    );
+    // Send only errors to subject
+    write$.pipe(flatMap(_ => empty())).subscribe(this.subject$);
+    return write$;
   }
 
-  get subscriptions(): { persistent: ISubscriptionStatus[], catchup: ISubscriptionStatus[] } {
+  get subscriptions(): { persistent: ISubscriptionStatus, catchup: ISubscriptionStatus } {
     return {
       persistent: this.persistentSubscriptions,
       catchup: this.catchupSubscriptions,
@@ -118,6 +131,7 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
   }
 
   async assertProjections(projections: IEventStoreProjection[]) {
+
     await Promise.all(
       projections.map(async projection => {
         let content;
@@ -162,13 +176,18 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
         true,
         (sub, payload) => this.onEvent(sub, payload),
         subscription => {
-          this.catchupSubscriptions[stream] = subscription;
+          this.catchupSubscriptions[stream] = {
+            isConnected: true,
+            streamName: stream,
+            subscription: subscription,
+            status: `Connected catchup subscription on stream ${stream}!`,
+          };
           if (onSubscriptionStart) {
             onSubscriptionStart(subscription);
           }
         },
         (subscription, reason, error) => {
-          delete this.catchupSubscriptions[stream];
+          this.catchupSubscriptions[stream].isConnected = false;
           if (onSubscriptionDropped) {
             onSubscriptionDropped(subscription, reason, error);
           }
@@ -243,7 +262,7 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
         },
         (subscription, reason, error) => {
           this.persistentSubscriptions[`${stream}-${group}`].isConnected = false;
-          this.persistentSubscriptions[`${stream}-${group}`].status = reason+" "+error;
+          this.persistentSubscriptions[`${stream}-${group}`].status = reason + ' ' + error;
           if (onSubscriptionDropped) {
             onSubscriptionDropped(subscription, reason, error);
           }
@@ -257,8 +276,10 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
         );
         this.persistentSubscriptions[`${stream}-${group}`] = {
           isConnected: true,
+          streamName: stream,
+          group: group,
           subscription: subscription,
-          status: ''
+          status: `Connected to persistent subscription ${group} on stream ${stream}!`,
         };
         if (onSubscriptionStart) {
           onSubscriptionStart(subscription);
@@ -278,7 +299,7 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
         `Ignore unresolved event from stream ${payload.originalStreamId} with ID ${payload.originalEvent.eventId}`,
       );
       if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
-        subscription.acknowledge([payload]);
+        await subscription.acknowledge([payload]);
       }
       return;
     }
@@ -288,7 +309,7 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
         `Received event that could not be resolved! stream ${event.eventStreamId} type ${event.eventType} id ${event.eventId} `,
       );
       if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
-        subscription.acknowledge([payload]);
+        await subscription.acknowledge([payload]);
       }
       return;
     }
@@ -301,7 +322,7 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
         `Received event of type ${event.eventType} with shitty data acknowledge`,
       );
       if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
-        subscription.acknowledge([payload]);
+        await subscription.acknowledge([payload]);
       }
       return;
     }
@@ -326,7 +347,7 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
         `Received event of type ${event.eventType} with no declared handler acknowledge`,
       );
       if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
-        subscription.acknowledge([payload]);
+        await subscription.acknowledge([payload]);
       }
       return;
     }

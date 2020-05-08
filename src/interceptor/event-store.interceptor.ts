@@ -17,7 +17,7 @@ export class EventStoreInterceptor implements NestInterceptor {
     const req: express.Request = context.switchToHttp().getRequest();
     const correlationId = req.header('x-correlation-eventId');
 
-    // Build router to send data to next and Eventstore
+    // to send data on next and Eventstore
     const handlerSubject$ = new Subject();
 
     // Add correlation eventId to the event

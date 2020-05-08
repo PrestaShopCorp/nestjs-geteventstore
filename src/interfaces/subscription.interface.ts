@@ -5,12 +5,17 @@ export enum NamedConsumerStrategy {
   DispatchToSingle = 'DispatchToSingle',
   Pinned = 'Pinned',
 }
-export interface ISubscriptionStatus  {
-  isConnected: boolean,
-  status: string,
-  name: string,
-  subscription: EventStorePersistentSubscription|EventStoreCatchUpSubscription
+
+export interface ISubscriptionStatus {
+  [key: string]: {
+    isConnected: boolean,
+    status: string,
+    streamName: string,
+    group?: string,
+    subscription?: EventStorePersistentSubscription | EventStoreCatchUpSubscription
+  }
 }
+
 export type IEventStorePersistentSubscriptionConfig = {
   stream: string;
   group: string;

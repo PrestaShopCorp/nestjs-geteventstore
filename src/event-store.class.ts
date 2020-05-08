@@ -1,7 +1,7 @@
 import { createConnection, EventStoreNodeConnection, expectedVersion } from 'node-eventstore-client';
 import * as geteventstorePromise from 'geteventstore-promise';
 import { HTTPClient } from 'geteventstore-promise';
-import { defer, from, throwError } from 'rxjs';
+import { from, throwError } from 'rxjs';
 import { Logger } from '@nestjs/common';
 import * as fp from 'lodash/fp';
 import { catchError, flatMap, map, toArray } from 'rxjs/operators';
@@ -48,7 +48,7 @@ export class EventStore {
     this.connection = createConnection(
       { defaultUserCredentials: this.config.credentials },
       this.config.tcp,
-      this.config.tcpConnectionName
+      this.config.tcpConnectionName,
     );
     this.connection.connect();
 
@@ -61,6 +61,8 @@ export class EventStore {
     this.connection.on('closed', () => {
       this.isConnected = false;
       this.config.onTcpDisconnected(this);
+
+      // Move to strategy
       if (this.connectionCount <= 10) {
         this.connectionCount += 1;
       } else {
@@ -72,10 +74,8 @@ export class EventStore {
   }
 
   writeEvents(stream, events: IEvent[], expectedVersion = ExpectedVersion.Any) {
-    return defer(() => {
-      return from(events).pipe(
-        map(this._addDefaultVersion),
-        // tap(console.log),
+    return from(events)
+      .pipe(
         map(this._toEventstoreEvent),
         // If the event is invalid (if _toEventstoreEvent throw an exception), return a 400 error
         catchError(err => {
@@ -85,14 +85,18 @@ export class EventStore {
           });
         }),
         toArray(),
+      ).pipe(
         //tap(esEvents => console.log('Writing events', stream)),
         flatMap(esEvents =>
-          from(this.HTTPClient.writeEvents(stream, esEvents, {
-            expectedVersion,
-          })),
+          from(this.connection.appendToStream(stream, expectedVersion, esEvents)),// TODO chose writer (HTTP/TCP) and strategy
         ),
+        catchError(err => {
+          return throwError({
+            ...err,
+            message: `Error appending ${events.length} events (ie ${events.shift().constructor.name}) to stream ${stream} : ${err.message}`,
+          });
+        }),
       );
-    });
   }
 
   close() {

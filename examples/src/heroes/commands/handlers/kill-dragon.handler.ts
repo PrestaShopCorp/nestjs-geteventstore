@@ -22,7 +22,7 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
       await this.repository.findOneById(+heroId),
     );
     // Use custom stream only for this process
-    hero.setStreamConfig({
+    await hero.setStreamConfig({
       streamName: `hero_fight-${heroId}`,
       // Bug if the stream is not new when writing
       expectedVersion: ExpectedVersion.NoStream,
@@ -32,6 +32,7 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
         $maxCount: 5,
       },
     });
+
     hero.damageEnemy(dragonId, 2);
     hero.damageEnemy(dragonId, -8);
     hero.damageEnemy(dragonId, 10);
@@ -43,7 +44,7 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     hero.commit();
 
     // Change stream for final event
-    hero.setStreamConfig({
+    await hero.setStreamConfig({
       streamName: `hero-${heroId}`,
       // It must be a new stream
       expectedVersion: ExpectedVersion.NoStream,

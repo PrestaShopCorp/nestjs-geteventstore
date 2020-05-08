@@ -1,191 +1,332 @@
 # nestjs-eventstore
 
-# How to
-## Configuration
+Event store driven NestJS and CQRS
 
-Example config in projects consumming this lib:
+example is from official Nest JS example
 
-```typescript
-import { registerAs } from '@nestjs/config';
-import { EventStoreConfigInterface } from 'nestjs-geteventstore';
-
-export default registerAs(
-  'eventstore',
-  () =>
-    ({
-      credentials: {
-        username: process.env.EVENTSTORE_CREDENTIALS_USERNAME,
-        password: process.env.EVENTSTORE_CREDENTIALS_PASSWORD,
-      },
-      tcp: {
-        host: process.env.EVENTSTORE_TCP_HOST || 'localhost',
-        port: process.env.EVENTSTORE_TCP_PORT || 1113,
-      },
-      http: {
-        host: process.env.EVENTSTORE_HTTP_HOST || 'http://localhost',
-        port: process.env.EVENTSTORE_HTTP_PORT || 2113,
-      },
-      options: {
-        heartbeatInterval: 3000,
-        heartbeatTimeout: 1000,
-      }
-    } as EventStoreConfigInterface),
-);
+```shell script
+docker run -p 22113: -p 11113: -d -n eventstore eventstore/eventstore
+yarn
+cd examples
+yarn
+yarn start
 ```
 
-
-## CQRS
-Using it in CQRS is straightforward
-
-### Write events
-
-see https://github.com/kamilmysliwiec/nest-cqrs-example
-just add on import
+# Eventstore config
 
 ```typescript
-
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      load: [EventStoreConfig],
-    }),
-    EventStoreCqrsModule.forRootAsync(
+    EventStoreModule.registerAsync(
       {
-        inject: [ConfigService],
-        useFactory: async (config: ConfigService) => config.get('eventstore'),
+        credentials: {
+          username: process.env.EVENTSTORE_CREDENTIALS_USERNAME || 'admin',
+          password: process.env.EVENTSTORE_CREDENTIALS_PASSWORD || 'changeit',
+        },
+        tcp: {
+          host: process.env.EVENTSTORE_TCP_HOST || 'localhost',
+          port: +process.env.EVENTSTORE_TCP_PORT || 1113,
+        },
+        http: {
+          host: process.env.EVENTSTORE_HTTP_HOST || 'http://localhost',
+          port: +process.env.EVENTSTORE_HTTP_PORT || 2113,
+        },
+        tcpConnectionName: 'connection-hero-event-handler-and-saga',
+        onTcpConnected: () => {
+        },
+        onTcpDisconnected: () => {
+        },
       },
-      {},
     ),
   ],
+  controllers: [],
+  providers: [],
 })
-export class ProjectionDataModule {}
+export class AppModule {}
+
 ```
 
-### Minimal event definitions
+# CQRS
 
-```typescript 
-import { IAggregateEvent } from '../../../../../src';
-import { v4 } from 'uuid';
+## Aggregate root 
+```typescript
 
-export class HeroDropItemEvent implements IAggregateEvent {
-  // Set data and metadata on constructor
-  constructor(
-    // Put wath ever you want in this
-    public readonly data: {
-      heroId: string,
-      itemId: string
-    }) {
-  }
-  // Mandatory if none error will be thrown
-  // Eventstore split at first - to define category
-  // here category is 'hero' I can get all events with stream $ce-hero
-  get streamName() {
-    return `hero-${this.data.heroId}`;
-  }
-
-  // Optionnal but so usefull
-  get metadata() {
-    return {
-      version: 1,
-      created_at: new Date(),
-    };
-  }
-  // Optionnal default is uuid-v4
-  // if you build your own id, eventstore can manage idempotency
-  // caution if eventstore is rebooted, duplicate ID can exist
-  get id() {
-    return v4();
-  }
-  // Optionnal default is ignore version
-  // Best way to garanty idempotency even after eventsore reboot
-  // can be an integer or https://github.com/EventStore/documentation/blob/master/http-api/optional-http-headers/expected-version.md
-  get expectedVersion() {
-    return ExpectedVersion.NoStream;
+export class Hero                   
+  ## Change from base cqrs
+  extends EventStoreAggregateRoot {
+  constructor(private id) {
+    super();
+    // Where your events are gonna be stored by default
+    this.streamConfig = {
+      streamName: `hero-${id}`
+    } as IStreamConfig;
   }
 }
-
 ```
-
-### Handling events
-Events are sent to eventstore and then read from eventstore to do side effects and sagas.
-
-Can be done in same container or on dedicated container for all 
-
+## Command handling
 ```typescript
-
-const busConfig: EventStoreBusConfigInterface = {
-  eventMapper: eventBuilder,
-  subscriptions: {
-    persistent: [
-      {
-        stream: '$ce-my_stream',
-        group: 'data',
-        autoAck: false,
-        bufferSize: 10,
-        onSubscriptionDropped: (sub, reason, error) => {
-          Logger.error(`Subscription dropped : ${reason} ${error}, die in 5s`);
-          process.exit(137);
-        },
-        // Subscription is created with this options
-        options: {
-          resolveLinktos: true,
-          minCheckPointCount: 1,
-        },
-      },
-    ],
-  },
-};
-
-@Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      load: [EventStoreConfig],
-    }),
-    EventStoreCqrsModule.forRootAsync(
-      {
-        inject: [ConfigService],
-        useFactory: async (config: ConfigService) => config.get('eventstore'),
-      },
-      busConfig,
-    ),
-  ],
-  providers: [
-    MyEventHandler,
-  ],
-})
-export class ProjectionDataModule {}
-
-```
-
-```typescript
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-
-@EventsHandler(DoneThisEvent)
-export class MyEventHandler
-  implements
-    IEventHandler<DoneThisEvent> {
+@CommandHandler(DropAncientItemCommand)
+export class DropAncientItemHandler
+  implements ICommandHandler<DropAncientItemCommand> {
   constructor(
-    private readonly myRepository: myRepository,
+    private readonly repository: HeroRepository,
+    // Only change from base CQRS
+    private readonly publisher: EventStorePublisher,
   ) {}
 
-  async handle(event: DoneThisEvent) {
-    try {
-        const shopId = event.getStreamId();
-        const createdAt = new Date(event.metadata.created_at);
-        const realMerchantId = await this.myRepository.getById(event.data.id);
-        event.ack();
-    }
-    catch(e) {
-      event.nack(PersistentSubscriptionNakEventAction.Park, e.message);
-    }
+  async execute(command: DropAncientItemCommand) {
+    console.log(clc.yellowBright('Async DropAncientItemCommand...'));
+
+    const { heroId, itemId } = command;
+    const hero = this.publisher.mergeObjectContext(
+      await this.repository.findOneById(+heroId),
+    );
+    hero.addItem(itemId);
+    hero.dropItem(itemId);
+
+    hero.commit();
   }
 }
+```
+## Idempotency
 
+### Using event id
+Eventstore keep in memory a few million id and deduplicate on this  
+means a reboot you don't have idempotency
+
+Add a custom eventId in your event `` 
+
+### Using expectedVersion
+Guaranty idempotency even after restart  
+Guaranty events order
+
+Bonus define in eventStore the retention rules and stream access rules
+
+Bonus start transaction on a handler, continue it some where else (alpha)
+
+```typescript
+@CommandHandler(KillDragonCommand)
+export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
+  constructor(
+    private readonly repository: HeroRepository,
+    // Needed 
+    private readonly publisher: EventStorePublisher,
+  ) {
+  }
+
+  async execute(command: KillDragonCommand) {
+    const { heroId, dragonId } = command;
+    const hero = this.publisher.mergeObjectContext(
+      await this.repository.findOneById(+heroId),
+    );
+    // Use custom stream only for this process
+    await hero.setStreamConfig({
+      // all next events will have this stream
+      streamName: `hero_fight-${heroId}`,
+      // Error if the stream is not new when writing
+      // You can set your custom order by using this attribute in event
+      expectedVersion: ExpectedVersion.NoStream,
+     
+      // Set retention rules for this new stream
+      metadata: {
+        // stream is deleted (needs scavenge to be run)
+        $maxAge: 2 * DAY,
+        // store only the last x events in the stream
+        $maxCount: 5,
+      },
+
+      (TO FINISH)
+      // id of the transaction to start
+      transaction: await publisher.startTransaction()
+      // Or continue from
+      transaction: await this.publisher.continueTransaction(transaction.id)
+    });
+    hero.damageEnemy(dragonId, 2);
+    hero.damageEnemy(dragonId, -8);
+
+    //Write and dispatch events
+    hero.commit();
+
+    // Change stream for next events
+    await hero.setStreamConfig({
+      streamName: `hero-${heroId}`,
+      // It must be a new stream
+      expectedVersion: ExpectedVersion.NoStream,
+    });
+    hero.killEnemy(dragonId);
+    hero.commit();
+  }
+}
 ```
 
-## HTTP/GRPC/...
+
+## Saga
+Identical to default implementation
+```typescript
+@Saga()
+dragonKilled = (events$: Observable<any>): Observable<ICommand> => {
+return events$
+  .pipe(
+    filter(ev => ev instanceof HeroKilledDragonEvent),
+    delay(400),
+    map(event => {
+      console.log(clc.redBright('Inside [HeroesGameSagas] Saga after a little sleep'));
+      return new DropAncientItemCommand(event.data.heroId, itemId);
+    }),
+  );
+}
+```
+## EventHandler
+Identical with nest cqrs if your want.
+
+You win `ack()` and `nack()` if your event extends `AcknowledgeableEventStoreEvent`
+(only for persistent subscriptions)
+
+Nack strategies are available : 
+```
+@EventsHandler(HeroKilledDragonEvent)
+export class HeroKilledDragonHandler
+  implements IEventHandler<HeroKilledDragonEvent> {
+  async handle(event: HeroKilledDragonEvent) {
+    console.log(clc.greenBright('HeroKilledDragonEventHandler...'));
+    await event.ack();
+  }
+}
+```
+
+## Subscription
+Sends eventstore events to saga and event handler
+
+Configured from your module config, you can manage multiple tcp subscriptions or catchup in parrallel
+in the same bus
+
+Persistent : 
+ - realtime   
+ - you can ack, nack and 
+ - you have a pointer in your event stack.  
+ - dedicated interface in eventstore is also available  
+  
+Catchup : 
+ - to start you must tell where you are in the event stack
+ - continue to wait for realtime
+
+```typescript
+@Module({
+  imports: [
+    TerminusModule,
+    EventStoreCqrsModule.registerAsync(
+      {
+        credentials: {
+          username: process.env.EVENTSTORE_CREDENTIALS_USERNAME || 'admin',
+          password: process.env.EVENTSTORE_CREDENTIALS_PASSWORD || 'changeit',
+        },
+        tcp: {
+          host: process.env.EVENTSTORE_TCP_HOST || 'localhost',
+          port: +process.env.EVENTSTORE_TCP_PORT || 11113,
+        },
+        http: {
+          host: process.env.EVENTSTORE_HTTP_HOST || 'http://localhost',
+          port: +process.env.EVENTSTORE_HTTP_PORT || 22113,
+        },
+        tcpConnectionName: 'connection-hero-event-handler-and-saga',
+        onTcpConnected: () => {
+        },
+        onTcpDisconnected: () => {
+        },
+      },
+      {
+        // Where you map event store incoming event to your format
+        eventMapper: (data, options: IEventStoreEventOptions) => {
+          let className = `${options.eventType}`;
+          Logger.debug(
+            `Build ${className} received from stream ${options.eventStreamId} with id ${options.eventId}`,
+          );
+          if (!heroesEvents[className]) {
+            return false;
+          }
+          return new heroesEvents[className](data, options);
+        },
+        subscriptions: {
+          persistent: [
+            {
+              // Event stream category (before the -)
+              stream: '$ce-hero',
+              group: 'data',
+              autoAck: false,
+              bufferSize: 1,
+              // Subscription is created with this options
+              options: {
+                resolveLinktos: true,
+                minCheckPointCount: 1,
+              },
+              onSubscriptionStart: (subscription) => {
+              },
+              onSubscriptionDropped: (subscription) => {
+              },
+            },
+          ],
+        },
+      },
+    ),
+  ],
+  controllers: [],
+  providers: [],
+})
+export class AppModule {
+}
+```
+
+## Projections
+You can code your eventstore projection's in javascript in the project  
+
+Using projection config and the js file 
+it asserts that projection exist and run during your app's boot. 
+
+With a projection you can route event to emit new events to another stream.
+you can also send linkTo to do symlink like  
+
+https://eventstore.com/docs/getting-started/projections/index.html  
+https://eventstore.com/docs/projections/user-defined-projections/index.html
+
+
+## ErrorInterceptor
+// TODO subscribe to eventbus subject to send error to any tools 
+
+## Query bus
+// TODO code to query the state in the projection
+// TO create new query to eventstore ?
+
+## Local Buffering
+// TODO : adapt to tcp client and onConnected
+// Work with http client
+// pluggable to error handler
+
+# Interceptor
+
+## Terminus health
+Give status send 503 on your `HealthController`
+```typescript
+@Controller('health')
+export class HealthController {
+  constructor(
+    private health: HealthCheckService,
+    private eventStoreHealthIndicator: EventStoreHealthIndicator,
+    private eventStoreBusHealthIndicator: EventStoreBusHealthIndicator,
+  ) {
+  }
+
+  @Get()
+  @HealthCheck()
+  healthCheck() {
+    return this.health.check([
+      async () => this.eventStoreHealthIndicator.check(),
+      async () => this.eventStoreBusHealthIndicator.check(),
+    ]);
+  }
+}
+```
+
+# HTTP/GRPC/...
 
 It can also be used without CQRS 
 
@@ -256,81 +397,4 @@ export class MyQueue  {
     return await dispatcher$.toPromise();
   }
 }
-```
-
-## SOA 2
-https://en.wikipedia.org/wiki/Event-driven_SOA
-
-Can run at Controller or Processor level or Service 
-
-```typescript
-@EventDriven({ 
-  // Prefix for eventStreamId auto generate
-  domain: 'order', 
-  // Customize observer to write events to
-  eventStoreInstance: EventStoreObserver,
-  // Can be set also at app level
-  bufferWithTime: '10s',
-  bufferWithCount: 100,
-  // for this domain the projection
-  // name is source-target
-  projections: [
-    // Run inside eventstore to route, group, rename, ... events
-    // example link or copy some order_create, order_edit events in an order stream for overview
-    'projection/order.js'
-  ] 
-})
-class OrderService {
-    // Method Decorator and Class Decorator ?
-    @StoreEvents({
-      // Optional generated with domain-methodName-eventId in payload || uuidv4
-      // accessible in projection with $ce-order_create 
-      streamName: (order, method) => `order_create-${order.id}`,
-      // Optional Default to false
-      transaction: true,
-      // Optional role access on eventstore
-      permissions: ['$admin'],
-      // Default any, in which state the stream should be when writing
-      // Here nothing should exist before 
-      expectedVersion: ExpectedVersion.NoStream,
-      // Optional Retention rules default keep for long time
-      maxAge: '3d',
-      maxKeep: 10000,
-    })
-    create(order) : Observable<IEvent> {
-      
-    }
-    edit(order) : Observable<IAggregateEvent> {
-      
-    }
-}
-```
-
-```
-
-```
-
-```typescript
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-
-@EventsHandler(DoneThisEvent)
-export class MyEventHandler implements IEventHandler<DoneThisEvent> {
-  constructor(private readonly myRepository: myRepository,) {}
-
-  async handle(event: DoneThisEvent) {
-    try {
-        const doneId = event.getStreamId();
-        const createdAt = new Date(event.metadata.created_at);
-        const currentId = await this.myRepository.getById(event.data.id);
-        if(doneId != currentId) {
-          throw new Error('!!');
-        }  
-        event.ack();
-    }
-    catch(e) {
-      event.nack(PersistentSubscriptionNakEventAction.Park, e.message);
-    }
-  }
-}
-
 ```

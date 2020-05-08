@@ -1,6 +1,15 @@
 
 [Nest](https://github.com/kamilmysliwiec/nest) framework Eventstore [CQRS module](https://github.com/kamilmysliwiec/nest-cqrs) usage example.
 
+# Story
+The hero fight the dragon in an epic fight.
+he kills the dragon, and a dragon can be killed only once.
+We need to keep only the last 5 move of the fight and delete them after 3 days for faery RGPD.
+
+When it's done the hero search and find an item.  
+He can find this special item only once until he drop hit.
+
+
 ## Installation
 
 ```
@@ -9,7 +18,7 @@ yarn install
 
 ## Start
 ```
-docker run -d -p 2113:2113 -e EVENSTORE_RUN_PROJECTIONS=System --name geteventstore eventstore/eventstore
+docker run -d -p 2113:2113 -p 1113:1113 -e EVENSTORE_RUN_PROJECTIONS=System --name geteventstore eventstore/eventstore
 yarn start
 ```
 
@@ -20,7 +29,7 @@ curl -XPUT localhost:3000/hero/hero-5421/kill -d'{
 }'
 ```
 Call it multiple time to try idemptotency
-see events on http://localhost:2113/web/index.html#/streams/hero-greg (admin/changeit)
+see events on http://localhost:2113/web/index.html#/streams/hero-5421 (admin/changeit)
 
 ## What the code does
  - `heroes.controller` send to the command bus `kill-dragon.command` configured with http body
@@ -28,7 +37,7 @@ see events on http://localhost:2113/web/index.html#/streams/hero-greg (admin/cha
  - `kill-dragon.handler` call killEnemy() on `hero.aggregate`
  - `hero.aggregate` kill the enemy and apply `hero-killed-dragon.event`
  - `kill-dragon.handler` commit() on `hero.aggregate` (write all events on aggregate)
- - Eventstore stores the event on event's stream, applying idempotency using expected version (mean if you do it twice event is ignored the other times)
+ - Eventstore stores the event on event's stream, applying idempotency (mean if you do it twice event is ignored the other times)
  - `hero-killed-dragon.handler` receive the event from Eventstore and log (can run in another process)
  - `heroes-sagas` receive the event from Eventstore do some logic and send to commandBus `drop-ancient-item-command`
  - `drop-ancient-item.handler` fetch the hero and build a `hero.aggregate`  merging db and command data

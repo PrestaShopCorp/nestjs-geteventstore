@@ -11,7 +11,7 @@ export * from './event-store.class';
 
 export * from './health/event-store.health-indicator';
 export * from './health/event-store-bus.health-indicator';
-export * from './health/event-store-observer.health-indicator';
+//export * from './health/event-store-observer.health-indicator';
 
 export * from './cqrs/event-store-cqrs.module';
 export * from './cqrs/event-store.bus';

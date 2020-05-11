@@ -48,11 +48,56 @@ export class AppModule {}
 
 # CQRS
 
+## Events
+
+Basic one 
+```typescript
+export class HeroKilledDragonEvent implements IEvent{
+  constructor(
+    public readonly data: {
+      heroId: string,
+      dragonId: string
+    }) {
+  }
+}
+ ```
+
+Basic one with options (event id, ...) 
+```typescript
+export class HeroKilledDragonEvent extends EventStoreEvent {
+  constructor(
+    public readonly data: {
+      heroId: string,
+      dragonId: string
+    }, options?) {
+    super(data, options);
+  }
+}
+ ```
+
+Acknowledgeable and with a custom stream
+````typescript
+export class HeroKilledDragonEvent 
+  extends AcknowledgeableEventStoreEvent {
+  constructor(
+    public readonly data: {
+      heroId: string,
+      dragonId: string
+    }, options?) {
+    super(data, options);
+  }
+
+  get eventStreamId() {
+    return `hero-${this.data.heroId}`;
+  }
+
+}
+````
+
 ## Aggregate root 
 ```typescript
-
 export class Hero                   
-  ## Change from base cqrs
+  // Change from base cqrs
   extends EventStoreAggregateRoot {
   constructor(private id) {
     super();
@@ -289,6 +334,24 @@ you can also send linkTo to do symlink like
 https://eventstore.com/docs/getting-started/projections/index.html  
 https://eventstore.com/docs/projections/user-defined-projections/index.html
 
+```javascript
+fromCategory('hero')
+// One state per id (hero-541)
+.foreachStream()
+.when({
+    // Set default state when start
+    $init: function(){
+        return {
+            count: 0
+        }
+    },
+    // When event is received
+    ItemAddedEvent: function(s,e){
+        s.count += 1;
+    }
+})
+```
+
 ## Terminus health
 Give status send 503 on your `HealthController`
 ```typescript
@@ -340,17 +403,13 @@ export class MyController {
     @Post('/test')
     postMyRoute(
       @Body() body: MyDTO,
-    ): Observable<
-      | DoneThisEvent
-      | DoneThatEvent
-      | FinalizedThisEvent
-    > {
+    ): Observable {
       return this.myService.doThisAction(body);
     }
 }
 ```
 
-### Using it in a queue
+### Using it in a queue or custom script
 ```typescript
 @Injectable()
 @Processor

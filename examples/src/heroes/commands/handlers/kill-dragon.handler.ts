@@ -9,13 +9,16 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
   constructor(
     private readonly repository: HeroRepository,
     private readonly publisher: EventStorePublisher,
-  ) {
-  }
+  ) {}
 
   async execute(command: KillDragonCommand) {
     const { heroId, dragonId } = command;
 
-    console.log(clc.greenBright(`KillDragonCommand... for hero ${heroId} on enemy ${dragonId}`));
+    console.log(
+      clc.greenBright(
+        `KillDragonCommand... for hero ${heroId} on enemy ${dragonId}`,
+      ),
+    );
     // build aggregate by fetching data from database
     // add publish capacity to the aggregate root
     const hero = this.publisher.mergeObjectContext(
@@ -41,7 +44,7 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     hero.damageEnemy(dragonId, 10);
     hero.damageEnemy(dragonId, 10);
     hero.damageEnemy(dragonId, 10);
-    hero.commit();
+    await hero.commit();
 
     // Change stream for final event
     await hero.setStreamConfig({
@@ -50,7 +53,7 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
       expectedVersion: ExpectedVersion.NoStream,
     });
     hero.killEnemy(dragonId);
-    hero.commit();
+    await hero.commit();
 
     return command;
   }

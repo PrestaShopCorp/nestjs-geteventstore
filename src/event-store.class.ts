@@ -1,4 +1,10 @@
-import { createConnection, EventStoreNodeConnection, expectedVersion } from 'node-eventstore-client';
+import {
+  createConnection,
+  createJsonEventData,
+  EventData,
+  EventStoreNodeConnection,
+  expectedVersion,
+} from 'node-eventstore-client';
 import * as geteventstorePromise from 'geteventstore-promise';
 import { HTTPClient } from 'geteventstore-promise';
 import { from, throwError } from 'rxjs';
@@ -8,7 +14,7 @@ import { catchError, flatMap, map, toArray } from 'rxjs/operators';
 import { ExpectedVersion } from './interfaces/event.interface';
 import { IEvent } from '@nestjs/cqrs';
 import { IEventStoreConfig } from './interfaces/event-store-config.interface';
-
+import { v4 } from 'uuid';
 
 // FIXME still needed ?
 export class EventStore {
@@ -22,9 +28,7 @@ export class EventStore {
   _addDefaultVersion: any;
   _toEventstoreEvent: (e: any) => any;
 
-  constructor(
-    public readonly config: IEventStoreConfig,
-  ) {
+  constructor(public readonly config: IEventStoreConfig) {
     this.HTTPClient = new geteventstorePromise.HTTPClient({
       hostname: config.http.host.replace(/^https?:\/\//, ''),
       port: config.http.port,
@@ -35,13 +39,18 @@ export class EventStore {
     });
     this.expectedVersion = expectedVersion;
     this._addDefaultVersion = fp.merge({ metadata: { version: 1 } });
-    this._toEventstoreEvent = e =>
-      new geteventstorePromise.EventFactory().newEvent(
-        e.type || e.constructor.name,
-        e.data,
-        e.metadata,
-        e.id,
-      );
+  }
+
+  private toEventStoreEvent(event): EventData {
+    return createJsonEventData(
+      event['eventId'] || v4(),
+      event['data'] || {},
+      event['metadata'] || {
+        version: 1,
+        created_at: new Date(),
+      },
+      event['eventType'] || event.constructor.name,
+    );
   }
 
   async connect() {
@@ -62,7 +71,7 @@ export class EventStore {
       this.isConnected = false;
       this.config.onTcpDisconnected(this);
 
-      // TODO is this the place to reconnect
+      // TODO is this the place to reconnect ?
       // Move to strategy
       if (this.connectionCount <= 10) {
         this.connectionCount += 1;
@@ -77,24 +86,27 @@ export class EventStore {
   writeEvents(stream, events: IEvent[], expectedVersion = ExpectedVersion.Any) {
     return from(events)
       .pipe(
-        map(this._toEventstoreEvent),
-        // If the event is invalid (if _toEventstoreEvent throw an exception), return a 400 error
+        map(this.toEventStoreEvent),
         catchError(err => {
           return throwError({
-            message: `Unable to convert event to Eventstore event : ${err.message}`,
+            message: `Unable to convert event to EventStore event : ${err.message}`,
             response: { status: 400 },
           });
         }),
         toArray(),
-      ).pipe(
-        //tap(esEvents => console.log('Writing events', stream)),
-        flatMap(esEvents =>
-          from(this.connection.appendToStream(stream, expectedVersion, esEvents)),// TODO chose writer (HTTP/TCP) and strategy
+      )
+      .pipe(
+        //tap(esEvents => console.log('Writing events', stream, esEvents)),
+        flatMap(
+          esEvents =>
+            from(
+              this.connection.appendToStream(stream, expectedVersion, esEvents),
+            ), // TODO chose writer (HTTP/TCP) and strategy
         ),
         catchError(err => {
           return throwError({
             ...err,
-            message: `Error appending ${events.length} events (ie ${events.shift().constructor.name}) to stream ${stream} : ${err.message}`,
+            message: `Error appending ${events.length} events (ie. ${events[0].constructor.name}) to stream ${stream} : ${err.message}`,
           });
         }),
       );

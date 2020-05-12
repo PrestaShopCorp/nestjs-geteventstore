@@ -12,14 +12,16 @@ const itemId = '0';
 export class HeroesGameSagas {
   @Saga()
   dragonKilled = (events$: Observable<any>): Observable<ICommand> => {
-    return events$
-      .pipe(
-        filter(ev => ev instanceof HeroKilledDragonEvent),
-        delay(400),
-        map(event => {
-          console.log(clc.redBright('Inside [HeroesGameSagas] Saga after a little sleep'));
-          return new DropAncientItemCommand(event.data.heroId, itemId);
-        }),
-      );
-  }
+    return events$.pipe(
+      filter(ev => ev instanceof HeroKilledDragonEvent),
+      delay(400),
+      map(event => {
+        console.log(
+          clc.redBright('Inside [HeroesGameSagas] Saga after a little sleep'),
+        );
+        console.log(event);
+        return new DropAncientItemCommand(event.data.heroId, itemId);
+      }),
+    );
+  };
 }

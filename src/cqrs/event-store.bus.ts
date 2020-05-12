@@ -212,8 +212,7 @@ export class EventStoreBus implements IEventPublisher, OnModuleDestroy, OnModule
             subscription.stream,
           );
         } catch (e) {
-          // FIXME see why status not exists
-          if (e.response.status != 404) {
+          if (!e.response ||e.response.status != 404) {
             throw e;
           }
           await this.eventStore.HTTPClient.persistentSubscriptions.assert(

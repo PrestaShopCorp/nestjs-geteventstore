@@ -44,24 +44,25 @@ export class EventStore {
       );
   }
 
-  connect() {
+  async connect() {
     this.connection = createConnection(
       { defaultUserCredentials: this.config.credentials },
       this.config.tcp,
       this.config.tcpConnectionName,
     );
-    this.connection.connect();
+    this.logger.debug('Connecting to EventStore');
+    await this.connection.connect();
 
     this.connection.on('connected', () => {
       this.logger.log('Connection to EventStore established!');
       this.isConnected = true;
       this.config.onTcpConnected(this);
     });
-    // FIXME handler in config
     this.connection.on('closed', () => {
       this.isConnected = false;
       this.config.onTcpDisconnected(this);
 
+      // TODO is this the place to reconnect
       // Move to strategy
       if (this.connectionCount <= 10) {
         this.connectionCount += 1;

@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IEvent } from '@nestjs/cqrs';
 import {
+  EventStore,
+  EventStoreAggregateRoot,
   EventStoreBus,
   ExpectedVersion,
-  EventStoreAggregateRoot,
-  EventStore,
 } from '..';
 import { EventStoreTransaction } from 'node-eventstore-client';
 
@@ -16,6 +16,7 @@ export interface Constructor<T> {
 // @ts-ignore
 export class EventStorePublisher {
   public readonly logger = new Logger('EventStorePublisher');
+
   constructor(
     private readonly eventBus: EventStoreBus,
     private readonly eventStore: EventStore,
@@ -30,6 +31,7 @@ export class EventStorePublisher {
       async publish(event: IEvent) {
         await eventBus.publish(event);
       }
+
       async commit() {
         if (this.streamConfig) {
           await eventBus.publishAll(
@@ -41,6 +43,7 @@ export class EventStorePublisher {
         }
         this.uncommit();
       }
+
       async setStreamMetadata(
         streamMetadata,
         expectedStreamMetadataVersion: number = ExpectedVersion.Any,
@@ -51,6 +54,7 @@ export class EventStorePublisher {
           streamMetadata,
         );
       }
+
       async startTransaction(
         expectedVersion: number = ExpectedVersion.Any,
       ): Promise<EventStoreTransaction> {
@@ -59,6 +63,7 @@ export class EventStorePublisher {
           expectedVersion,
         );
       }
+
       async continueTransaction(
         transaction: EventStoreTransaction,
       ): Promise<EventStoreTransaction> {

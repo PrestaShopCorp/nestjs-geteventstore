@@ -1,26 +1,29 @@
-import { EventStoreCatchupSubscriptionConfig, IEventStorePersistentSubscriptionConfig } from './subscription.interface';
+import {
+  EventStoreCatchupSubscriptionConfig,
+  IEventStorePersistentSubscriptionConfig,
+} from './subscription.interface';
 import { IEvent } from '@nestjs/cqrs';
 import { IEventStoreEventOptions } from './event.interface';
 import { IEventStoreProjection } from './projection.interface';
 import { Logger } from '@nestjs/common';
 
 export interface IEventStoreBusConfig {
-  projections?: IEventStoreProjection[],
+  projections?: IEventStoreProjection[];
   subscriptions?: {
-    catchup?: EventStoreCatchupSubscriptionConfig[],
+    catchup?: EventStoreCatchupSubscriptionConfig[];
     //volatile? : EventStoreVolatileSubscription[],
-    persistent?: IEventStorePersistentSubscriptionConfig[]
+    persistent?: IEventStorePersistentSubscriptionConfig[];
   };
   eventMapper?: (data: any, options: IEventStoreEventOptions) => IEvent | false;
   writeBuffer?: {
-    enabled: boolean,
-    writeTimeout: number,
-    retryInterval: number,
-  }
-};
-export type AllEvents = {
-  IEvent
+    enabled: boolean;
+    writeTimeout: number;
+    retryInterval: number;
+  };
 }
+export type AllEvents = {
+  IEvent;
+};
 export const defaultEventMapper = (allEvents: AllEvents) => {
   return (data, options: IEventStoreEventOptions) => {
     let className = `${options.eventType}Event`;

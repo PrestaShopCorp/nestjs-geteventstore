@@ -4,7 +4,7 @@ import {
   IEventPublisher,
   IMessageSource,
 } from '@nestjs/cqrs';
-import { empty, of, Subject } from 'rxjs';
+import { empty, Subject } from 'rxjs';
 import {
   EventStoreCatchUpSubscription,
   EventStorePersistentSubscription,
@@ -45,7 +45,7 @@ export class EventStoreBus
     private eventStore: EventStore,
     private subject$: Subject<IEvent>,
     private config: IEventStoreBusConfig,
-    private eventBus: EventBus,
+    private eventBus: EventBus, //private writeBuffer: EventStoreObserver,
   ) {
     this.eventMapper = config.eventMapper;
   }
@@ -108,20 +108,10 @@ export class EventStoreBus
       `Commit ${eventCount} events to stream ${streamConfig.streamName} with expectedVersion ${streamConfig.expectedVersion}`,
     );
 
-    const write$ = of(events).pipe(
-      flatMap(events =>
-        this.eventStore.writeEvents(
-          streamConfig.streamName,
-          events,
-          expectedVersion,
-        ),
-      ),
-      flatMap(_ => empty()),
-      share(),
-    );
-    //write$.subscribe(this.subject$);
-
-    return write$.toPromise();
+    return this.eventStore
+      .writeEvents(streamConfig.streamName, events, expectedVersion)
+      .toPromise();
+    //.subscribe(this.writeBuffer);
   }
 
   get subscriptions(): {

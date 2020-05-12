@@ -22,6 +22,7 @@ export interface IAggregateEvent extends IEvent {
   eventId?: string;
   expectedVersion?: number | ExpectedVersion;
 }
+
 export interface IExpectedVersionEvent {
   expectedVersion: number | ExpectedVersion;
 }
@@ -48,7 +49,10 @@ export abstract class EventStoreEvent implements IAggregateEvent {
    */
   protected readonly originalEventId: string;
 
-  protected constructor(public readonly data: any, options: IEventStoreEventOptions = {}) {
+  protected constructor(
+    public readonly data: any,
+    options: IEventStoreEventOptions = {},
+  ) {
     this.metadata = options.metadata || {
       created_at: new Date(),
       version: 1,
@@ -79,11 +83,13 @@ export interface IAcknowledgeableEvent {
   ) => Promise<any>;
 }
 
-export abstract class AcknowledgeableEventStoreEvent extends EventStoreEvent implements IAcknowledgeableEvent {
-  ack () {
-    return Promise.resolve()
+export abstract class AcknowledgeableEventStoreEvent extends EventStoreEvent
+  implements IAcknowledgeableEvent {
+  ack() {
+    return Promise.resolve();
   }
+
   nack(action: PersistentSubscriptionNakEventAction, reason: string) {
-    return Promise.resolve()
+    return Promise.resolve();
   }
 }

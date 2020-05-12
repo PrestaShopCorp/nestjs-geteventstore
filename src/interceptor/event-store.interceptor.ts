@@ -1,16 +1,17 @@
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import {
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  NestInterceptor,
+} from '@nestjs/common';
 import { Observable, Subject } from 'rxjs';
-import { EventStoreObserver } from '..';
+import { EventStoreEvent, EventStoreObserver } from '..';
 import * as express from 'express';
 import { filter, map } from 'rxjs/operators';
-import { EventStoreEvent } from '..';
 
 @Injectable()
 export class EventStoreInterceptor implements NestInterceptor {
-  constructor(
-    private readonly eventStoreOberver: EventStoreObserver,
-  ) {
-  }
+  constructor(private readonly eventStoreOberver: EventStoreObserver) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     // Extract correlation from request

@@ -1,15 +1,12 @@
 import {
   createConnection,
   createJsonEventData,
-  EventData,
   EventStoreNodeConnection,
-  expectedVersion,
 } from 'node-eventstore-client';
 import * as geteventstorePromise from 'geteventstore-promise';
 import { HTTPClient } from 'geteventstore-promise';
 import { from, throwError } from 'rxjs';
 import { Logger } from '@nestjs/common';
-import * as fp from 'lodash/fp';
 import { catchError, flatMap, map, toArray } from 'rxjs/operators';
 import { ExpectedVersion } from './interfaces/event.interface';
 import { IEvent } from '@nestjs/cqrs';
@@ -18,15 +15,10 @@ import { v4 } from 'uuid';
 
 // FIXME still needed ?
 export class EventStore {
-  connection: EventStoreNodeConnection;
-  expectedVersion: any;
-  isConnected: boolean = false;
-  HTTPClient: HTTPClient;
-  connectionCount: number = 0;
-
+  public connection: EventStoreNodeConnection;
+  public readonly HTTPClient: HTTPClient;
+  public isConnected: boolean = false;
   private logger: Logger = new Logger(this.constructor.name);
-  _addDefaultVersion: any;
-  _toEventstoreEvent: (e: any) => any;
 
   constructor(public readonly config: IEventStoreConfig) {
     this.HTTPClient = new geteventstorePromise.HTTPClient({
@@ -37,20 +29,6 @@ export class EventStore {
         password: config.credentials.password,
       },
     });
-    this.expectedVersion = expectedVersion;
-    this._addDefaultVersion = fp.merge({ metadata: { version: 1 } });
-  }
-
-  private toEventStoreEvent(event): EventData {
-    return createJsonEventData(
-      event['eventId'] || v4(),
-      event['data'] || {},
-      event['metadata'] || {
-        version: 1,
-        created_at: new Date(),
-      },
-      event['eventType'] || event.constructor.name,
-    );
   }
 
   async connect() {
@@ -69,24 +47,22 @@ export class EventStore {
     });
     this.connection.on('closed', () => {
       this.isConnected = false;
-      this.config.onTcpDisconnected(this);
-
-      // TODO is this the place to reconnect ?
-      // Move to strategy
-      if (this.connectionCount <= 10) {
-        this.connectionCount += 1;
-      } else {
-        throw new Error('To many eventStore connect retrys');
-      }
       this.logger.error('Connection to EventStore closed!');
-      this.connect();
+      this.config.onTcpDisconnected(this);
     });
   }
 
   writeEvents(stream, events: IEvent[], expectedVersion = ExpectedVersion.Any) {
     return from(events)
       .pipe(
-        map(this.toEventStoreEvent),
+        map(event =>
+          createJsonEventData(
+            event['eventId'] || v4(),
+            event['data'] || {},
+            event['metadata'] || { version: 1, created_at: new Date() },
+            event['eventType'] || event.constructor.name,
+          ),
+        ),
         catchError(err => {
           return throwError({
             message: `Unable to convert event to EventStore event : ${err.message}`,
@@ -97,16 +73,18 @@ export class EventStore {
       )
       .pipe(
         //tap(esEvents => console.log('Writing events', stream, esEvents)),
-        flatMap(
-          esEvents =>
-            from(
-              this.connection.appendToStream(stream, expectedVersion, esEvents),
-            ), // TODO chose writer (HTTP/TCP) and strategy
+        flatMap(esEvents =>
+          from(
+            this.connection.appendToStream(stream, expectedVersion, esEvents),
+          ),
         ),
         catchError(err => {
+          if (err.response) {
+            err.message = err.message + ' : ' + err.response.statusText;
+          }
           return throwError({
             ...err,
-            message: `Error appending ${events.length} events (ie. ${events[0].constructor.name}) to stream ${stream} : ${err.message}`,
+            message: `Error appending ${events.length} events to stream ${stream} : ${err.message}`,
           });
         }),
       );

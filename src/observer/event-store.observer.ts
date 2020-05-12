@@ -1,18 +1,19 @@
-import { interval, from, EMPTY, defer, of, Subject, merge } from 'rxjs';
+import { defer, EMPTY, from, interval, merge, of, Subject } from 'rxjs';
 import {
-  timeout,
-  map,
-  concatAll,
-  mergeMapTo,
   catchError,
+  concatAll,
   filter,
+  map,
+  mergeMapTo,
   tap,
+  timeout,
   toArray,
 } from 'rxjs/operators';
 import * as fp from 'lodash/fp';
 import * as uuid from 'uuid';
 import { EventStore } from '../event-store.class';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { WrongExpectedVersionError } from 'node-eventstore-client';
 
 @Injectable()
 export class EventStoreObserver {
@@ -22,6 +23,7 @@ export class EventStoreObserver {
   retryInterval: number;
   _getStreamName: any;
   _incrementRetryCount: any;
+  logger = new Logger(this.constructor.name);
   retryTrigger: Subject<unknown>;
 
   constructor(
@@ -102,7 +104,11 @@ export class EventStoreObserver {
         filter(() => !this.retryInProgress),
         filter(() => this.retryBuffer.length > 0),
       )
-      .subscribe(() => this.retry(), () => {}, () => {});
+      .subscribe(
+        () => this.retry(),
+        () => {},
+        () => {},
+      );
   }
 
   private retry() {
@@ -192,16 +198,28 @@ export class EventStoreObserver {
         null,
       );
   }
+
   private isRetryable(err) {
     // TODO handle tcp
+    this.logger.debug(`Write error ${err.message}`);
+    switch (err.constructor) {
+      case WrongExpectedVersionError:
+        this.logger.debug(`Error ${err.constructor} don't retry`);
+        return false;
+      default:
+        this.logger.warn(`Retry error ${err.constructor}`);
+        return true;
+    }
     const errCode = fp.getOr(200, 'response.status', err);
     return errCode !== 400;
   }
+
   private addToRetryBuffer(event, incrementRetryCount = false) {
     this.retryBuffer.push(
       incrementRetryCount ? this._incrementRetryCount(event) : event,
     );
   }
+
   private addDefaultId(event) {
     if (event.id) {
       return event;

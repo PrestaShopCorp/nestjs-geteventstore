@@ -22,15 +22,16 @@ export class EventStoreModule {
         },
         {
           provide: EventStoreHealthIndicator,
-          useFactory: (eventStore) => {
+          useFactory: eventStore => {
             return new EventStoreHealthIndicator(eventStore);
           },
-          inject: [EventStore]
-        }
+          inject: [EventStore],
+        },
       ],
-      exports: [EventStore, EventStoreHealthIndicator]
-    }
+      exports: [EventStore, EventStoreHealthIndicator],
+    };
   }
+
   /*static forRootAsync(options: EventStoreModuleAsyncOptions): DynamicModule {
     return {
       module: EventStoreModule,

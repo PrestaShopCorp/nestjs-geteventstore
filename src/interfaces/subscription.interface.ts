@@ -1,4 +1,7 @@
-import { EventStoreCatchUpSubscription, EventStorePersistentSubscription } from 'node-eventstore-client';
+import {
+  EventStoreCatchUpSubscription,
+  EventStorePersistentSubscription,
+} from 'node-eventstore-client';
 
 export enum NamedConsumerStrategy {
   RoundRobin = 'RoundRobin',
@@ -8,32 +11,34 @@ export enum NamedConsumerStrategy {
 
 export interface ISubscriptionStatus {
   [key: string]: {
-    isConnected: boolean,
-    status: string,
-    streamName: string,
-    group?: string,
-    subscription?: EventStorePersistentSubscription | EventStoreCatchUpSubscription
-  }
+    isConnected: boolean;
+    status: string;
+    streamName: string;
+    group?: string;
+    subscription?:
+      | EventStorePersistentSubscription
+      | EventStoreCatchUpSubscription;
+  };
 }
 
 export type IEventStorePersistentSubscriptionConfig = {
   stream: string;
   group: string;
   options?: {
-    resolveLinktos?: boolean,
-    startFrom?: number,
-    extraStatistics?: boolean,
-    messageTimeout?: number,
-    maxRetryCount?: number,
-    liveBufferSize?: number,
-    readBatchSize?: number,
-    historyBufferSize?: number,
-    checkPointAfter?: number,
-    minCheckPointCount?: number,
-    maxCheckPointCount?: number,
-    maxSubscriberCount?: number,
-    namedConsumerStrategy?: NamedConsumerStrategy,
-  },
+    resolveLinktos?: boolean;
+    startFrom?: number;
+    extraStatistics?: boolean;
+    messageTimeout?: number;
+    maxRetryCount?: number;
+    liveBufferSize?: number;
+    readBatchSize?: number;
+    historyBufferSize?: number;
+    checkPointAfter?: number;
+    minCheckPointCount?: number;
+    maxCheckPointCount?: number;
+    maxSubscriberCount?: number;
+    namedConsumerStrategy?: NamedConsumerStrategy;
+  };
   autoAck?: boolean | undefined;
   bufferSize?: number | undefined;
   onSubscriptionStart?: (

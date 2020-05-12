@@ -1,9 +1,9 @@
-import {
-  HealthCheck,
-  HealthCheckService,
-} from '@nestjs/terminus';
+import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
 import { Controller, Get } from '@nestjs/common';
-import { EventStoreHealthIndicator, EventStoreBusHealthIndicator } from '../../../src';
+import {
+  EventStoreBusHealthIndicator,
+  EventStoreHealthIndicator,
+} from '../../../src';
 
 @Controller('health')
 export class HealthController {
@@ -11,8 +11,7 @@ export class HealthController {
     private health: HealthCheckService,
     private eventStoreHealthIndicator: EventStoreHealthIndicator,
     private eventStoreBusHealthIndicator: EventStoreBusHealthIndicator,
-  ) {
-  }
+  ) {}
 
   @Get()
   @HealthCheck()
@@ -23,4 +22,3 @@ export class HealthController {
     ]);
   }
 }
-

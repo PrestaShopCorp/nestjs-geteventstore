@@ -1,12 +1,18 @@
-import { EventStoreEvent, ExpectedVersion, IExpectedVersionEvent } from '../../../../../src';
+import {
+  EventStoreEvent,
+  ExpectedVersion,
+  IExpectedVersionEvent,
+} from '../../../../../src';
 
 export class HeroFoundItemEvent extends EventStoreEvent
   implements IExpectedVersionEvent {
   constructor(
     public readonly data: {
-      heroId: string,
-      itemId: string
-    }, options?) {
+      heroId: string;
+      itemId: string;
+    },
+    options?,
+  ) {
     super(data, options);
   }
 

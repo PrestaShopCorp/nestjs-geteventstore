@@ -11,6 +11,9 @@ async function bootstrap() {
     module.hot.dispose(() => app.close());
   }
 
-  await app.listen(3000, () => console.log('Application is listening on port 3000.'));
+  await app.listen(3000, () =>
+    console.log('Application is listening on port 3000.'),
+  );
 }
+
 bootstrap();

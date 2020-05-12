@@ -28,10 +28,8 @@ import { TerminusModule } from '@nestjs/terminus';
           port: +process.env.EVENTSTORE_HTTP_PORT || 22113,
         },
         tcpConnectionName: 'connection-hero-event-handler-and-saga',
-        onTcpConnected: () => {
-        },
-        onTcpDisconnected: () => {
-        },
+        onTcpConnected: () => {},
+        onTcpDisconnected: () => {},
       },
       {
         eventMapper: (data, options: IEventStoreEventOptions) => {
@@ -57,20 +55,15 @@ import { TerminusModule } from '@nestjs/terminus';
                 resolveLinktos: true,
                 minCheckPointCount: 1,
               },
-              onSubscriptionStart: (subscription) => {
-              },
-              onSubscriptionDropped: (subscription) => {
-              },
+              onSubscriptionStart: subscription => {},
+              onSubscriptionDropped: subscription => {},
             },
           ],
         },
       },
     ),
   ],
-  controllers: [
-    HealthController,
-    HeroesGameController,
-  ],
+  controllers: [HealthController, HeroesGameController],
   providers: [
     HeroRepository,
     ...CommandHandlers,
@@ -79,5 +72,4 @@ import { TerminusModule } from '@nestjs/terminus';
     HeroesGameSagas,
   ],
 })
-export class EventStoreHeroesModule {
-}
+export class EventStoreHeroesModule {}

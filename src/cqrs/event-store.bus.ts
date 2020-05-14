@@ -4,12 +4,8 @@ import {
   IEventPublisher,
   IMessageSource,
 } from '@nestjs/cqrs';
-import { empty, Subject } from 'rxjs';
-import {
-  EventStoreCatchUpSubscription,
-  EventStorePersistentSubscription,
-  PersistentSubscriptionNakEventAction,
-} from 'node-eventstore-client';
+import { Subject } from 'rxjs';
+import { PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
 import {
   Injectable,
   Logger,
@@ -20,16 +16,16 @@ import { EventStore } from '../event-store.class';
 import {
   EventStoreCatchupSubscriptionConfig,
   EventStoreEvent,
+  EventStoreVolatileSubscriptionConfig,
   ExpectedVersion,
   IEventStoreBusConfig,
   IEventStoreEventOptions,
   IEventStorePersistentSubscriptionConfig,
   IEventStoreProjection,
   IStreamConfig,
-  ISubscriptionStatus,
 } from '../';
 import { IAcknowledgeableEvent } from '..';
-import { flatMap, share } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 
 const fs = require('fs');
 
@@ -38,14 +34,12 @@ export class EventStoreBus
   implements IEventPublisher, OnModuleDestroy, OnModuleInit, IMessageSource {
   private readonly eventMapper: (data, options: IEventStoreEventOptions) => {};
   private logger = new Logger('EventStoreBus');
-  private catchupSubscriptions: ISubscriptionStatus = {};
-  private persistentSubscriptions: ISubscriptionStatus = {};
 
   constructor(
     private eventStore: EventStore,
     private subject$: Subject<IEvent>,
     private config: IEventStoreBusConfig,
-    private eventBus: EventBus, //private writeBuffer: EventStoreObserver,
+    private eventBus: EventBus,
   ) {
     this.eventMapper = config.eventMapper;
   }
@@ -58,21 +52,26 @@ export class EventStoreBus
   /**
    * Hack nest eventBus instance to override publisher
    */
-  onModuleInit(): any {
+  async onModuleInit() {
     this.logger.debug(`Replace EventBus publisher by Eventstore publish`);
     // FIXME typescript voodoo
     this.subject$ = (this.eventBus as any).subject$;
     this.bridgeEventsTo((this.eventBus as any).subject$);
     this.eventBus.publish = this.publish;
+
+    return await this.connect();
   }
 
   async connect() {
     // Nothing to connect to, don't connect
+    await this.eventStore.connect();
     await this.assertProjections(this.config.projections || []);
     if (this.config.subscriptions) {
-      await this.eventStore.connect();
       await this.subscribeToCatchUpSubscriptions(
         this.config.subscriptions.catchup || [],
+      );
+      await this.subscribeToVolatileSubscriptions(
+        this.config.subscriptions.volatile || [],
       );
       await this.subscribeToPersistentSubscriptions(
         this.config.subscriptions.persistent || [],
@@ -90,15 +89,17 @@ export class EventStoreBus
   publish(event: IEvent) {
     const expectedVersion = event['expectedVersion'] || ExpectedVersion.Any;
 
-    const write$ = this.eventStore
+    return this.eventStore
       .writeEvents(event['eventStreamId'], [event], expectedVersion)
       .pipe(
-        // Send only errors to subject
-        flatMap(_ => empty()),
-        share(),
-      );
-    write$.subscribe(this.subject$);
-    return write$;
+        tap(_ => {
+          // Forward to local event handler and saga
+          if (this.config.publishAlsoLocally) {
+            this.subject$.next(event);
+          }
+        }),
+      )
+      .toPromise();
   }
 
   async publishAll(events: IEvent[], streamConfig: IStreamConfig) {
@@ -107,21 +108,17 @@ export class EventStoreBus
     this.logger.debug(
       `Commit ${eventCount} events to stream ${streamConfig.streamName} with expectedVersion ${streamConfig.expectedVersion}`,
     );
-
     return this.eventStore
       .writeEvents(streamConfig.streamName, events, expectedVersion)
+      .pipe(
+        tap(_ => {
+          // Forward to local event handler and saga
+          if (this.config.publishAlsoLocally) {
+            events.forEach(this.subject$.next);
+          }
+        }),
+      )
       .toPromise();
-    //.subscribe(this.writeBuffer);
-  }
-
-  get subscriptions(): {
-    persistent: ISubscriptionStatus;
-    catchup: ISubscriptionStatus;
-  } {
-    return {
-      persistent: this.persistentSubscriptions,
-      catchup: this.catchupSubscriptions,
-    };
   }
 
   async assertProjections(projections: IEventStoreProjection[]) {
@@ -152,51 +149,37 @@ export class EventStoreBus
     );
   }
 
-  subscribeToCatchUpSubscriptions(
+  async subscribeToCatchUpSubscriptions(
     subscriptions: EventStoreCatchupSubscriptionConfig[],
   ) {
-    subscriptions.map((config: EventStoreCatchupSubscriptionConfig) => {
-      return this.subscribeToCatchupSubscription(
-        config.stream,
-        config.onSubscriptionStart,
-        config.onSubscriptionDropped,
-      );
-    });
+    await Promise.all(
+      subscriptions.map((config: EventStoreCatchupSubscriptionConfig) => {
+        return this.eventStore.subscribeToCatchupSubscription(
+          config.stream,
+          this.onEvent,
+          config.lastCheckpoint,
+          config.resolveLinkTos,
+          config.onSubscriptionStart,
+          config.onSubscriptionDropped,
+        );
+      }),
+    );
   }
 
-  subscribeToCatchupSubscription(
-    stream: string,
-    onSubscriptionStart: (subscription) => void = undefined,
-    onSubscriptionDropped: (sub, reason, error) => void = undefined,
-  ): EventStoreCatchUpSubscription {
-    this.logger.log(`Catching up and subscribing to stream ${stream}!`);
-    try {
-      return this.eventStore.connection.subscribeToStreamFrom(
-        stream,
-        0,
-        true,
-        (sub, payload) => this.onEvent(sub, payload),
-        subscription => {
-          this.catchupSubscriptions[stream] = {
-            isConnected: true,
-            streamName: stream,
-            subscription: subscription,
-            status: `Connected catchup subscription on stream ${stream}!`,
-          };
-          if (onSubscriptionStart) {
-            onSubscriptionStart(subscription);
-          }
-        },
-        (subscription, reason, error) => {
-          this.catchupSubscriptions[stream].isConnected = false;
-          if (onSubscriptionDropped) {
-            onSubscriptionDropped(subscription, reason, error);
-          }
-        },
-      ) as EventStoreCatchUpSubscription;
-    } catch (err) {
-      this.logger.error(err.message);
-    }
+  async subscribeToVolatileSubscriptions(
+    subscriptions: EventStoreVolatileSubscriptionConfig[],
+  ) {
+    await Promise.all(
+      subscriptions.map((config: EventStoreVolatileSubscriptionConfig) => {
+        return this.eventStore.subscribeToVolatileSubscription(
+          config.stream,
+          this.onEvent,
+          config.resolveLinkTos,
+          config.onSubscriptionStart,
+          config.onSubscriptionDropped,
+        );
+      }),
+    );
   }
 
   async subscribeToPersistentSubscriptions(
@@ -233,9 +216,10 @@ export class EventStoreBus
         this.logger.log(
           `Connecting to persistent subscription "${config.group}" on stream ${config.stream}`,
         );
-        return await this.subscribeToPersistentSubscription(
+        return await this.eventStore.subscribeToPersistentSubscription(
           config.stream,
           config.group,
+          this.onEvent,
           config.autoAck,
           config.bufferSize,
           config.onSubscriptionStart,
@@ -245,60 +229,10 @@ export class EventStoreBus
     );
   }
 
-  async subscribeToPersistentSubscription(
-    stream: string,
-    group: string,
-    autoAck: boolean = false,
-    bufferSize: number = 10,
-    onSubscriptionStart: (sub) => void = undefined,
-    onSubscriptionDropped: (sub, reason, error) => void = undefined,
-  ): Promise<EventStorePersistentSubscription> {
-    try {
-      return await this.eventStore.connection
-        .connectToPersistentSubscription(
-          stream,
-          group,
-          (sub, payload) => {
-            this.onEvent(sub, payload);
-          },
-          (subscription, reason, error) => {
-            this.persistentSubscriptions[
-              `${stream}-${group}`
-            ].isConnected = false;
-            this.persistentSubscriptions[`${stream}-${group}`].status =
-              reason + ' ' + error;
-            if (onSubscriptionDropped) {
-              onSubscriptionDropped(subscription, reason, error);
-            }
-          },
-          undefined,
-          bufferSize,
-          autoAck,
-        )
-        .then(subscription => {
-          this.logger.log(
-            `Connected to persistent subscription ${group} on stream ${stream}!`,
-          );
-          this.persistentSubscriptions[`${stream}-${group}`] = {
-            isConnected: true,
-            streamName: stream,
-            group: group,
-            subscription: subscription,
-            status: `Connected to persistent subscription ${group} on stream ${stream}!`,
-          };
-          if (onSubscriptionStart) {
-            onSubscriptionStart(subscription);
-          }
-          return subscription;
-        });
-    } catch (err) {
-      this.logger.error(err.message);
-    }
-  }
-
   async onEvent(subscription, payload) {
     const { event } = payload;
 
+    // TODO allow unresolved event
     if (!payload.isResolved) {
       this.logger.warn(
         `Ignore unresolved event from stream ${payload.originalStreamId} with ID ${payload.originalEvent.eventId}`,
@@ -310,6 +244,7 @@ export class EventStoreBus
     }
     // TODO handle not JSON
     if (!event.isJson) {
+      // TODO add info on error not coded
       this.logger.warn(
         `Received event that could not be resolved! stream ${event.eventStreamId} type ${event.eventType} id ${event.eventId} `,
       );
@@ -319,6 +254,7 @@ export class EventStoreBus
       return;
     }
 
+    // TODO throw error
     let data = {};
     try {
       data = JSON.parse(event.data.toString());

@@ -3,18 +3,23 @@ import {
   HealthIndicator,
   HealthIndicatorResult,
 } from '@nestjs/terminus';
-import { EventStoreBus } from '..';
+import { EventStore } from '..';
 
-export class EventStoreBusHealthIndicator extends HealthIndicator {
-  constructor(private eventStoreBus: EventStoreBus) {
+export class EventStoreSubscriptionHealthIndicator extends HealthIndicator {
+  constructor(private eventStore: EventStore) {
     super();
   }
 
   public check(): HealthIndicatorResult {
     let res = {},
       causes = {};
-    const subscriptions = this.eventStoreBus.subscriptions.persistent;
+    const subscriptions = this.eventStore.subscriptions.persistent;
+
+    // TODO refactor
     for (const subscriptionName in subscriptions) {
+      if (!subscriptions.hasOwnProperty(subscriptionName)) {
+        continue;
+      }
       if (subscriptions[subscriptionName].isConnected === false) {
         causes[
           subscriptionName

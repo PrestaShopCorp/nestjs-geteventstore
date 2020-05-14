@@ -1,7 +1,7 @@
 import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
 import { Controller, Get } from '@nestjs/common';
 import {
-  EventStoreBusHealthIndicator,
+  EventStoreSubscriptionHealthIndicator,
   EventStoreHealthIndicator,
 } from '../../../src';
 
@@ -10,7 +10,7 @@ export class HealthController {
   constructor(
     private health: HealthCheckService,
     private eventStoreHealthIndicator: EventStoreHealthIndicator,
-    private eventStoreBusHealthIndicator: EventStoreBusHealthIndicator,
+    private eventStoreSubscriptionHealthIndicator: EventStoreSubscriptionHealthIndicator,
   ) {}
 
   @Get()
@@ -18,7 +18,7 @@ export class HealthController {
   healthCheck() {
     return this.health.check([
       async () => this.eventStoreHealthIndicator.check(),
-      async () => this.eventStoreBusHealthIndicator.check(),
+      async () => this.eventStoreSubscriptionHealthIndicator.check(),
     ]);
   }
 }

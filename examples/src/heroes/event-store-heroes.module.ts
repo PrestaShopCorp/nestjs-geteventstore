@@ -5,7 +5,7 @@ import { HeroesGameController } from './heroes.controller';
 import { QueryHandlers } from './queries/handlers';
 import { HeroRepository } from './repository/hero.repository';
 import { HeroesGameSagas } from './sagas/heroes.sagas';
-import { heroesEvents } from './events/impl/index';
+import { heroesEvents } from './events/impl';
 import { EventStoreCqrsModule, IEventStoreEventOptions } from '../../../src';
 import { HealthController } from './health.controller';
 import { TerminusModule } from '@nestjs/terminus';
@@ -34,12 +34,12 @@ import { TerminusModule } from '@nestjs/terminus';
       {
         eventMapper: (data, options: IEventStoreEventOptions) => {
           let className = `${options.eventType}`;
-          Logger.debug(
-            `Build ${className} received from stream ${options.eventStreamId} with id ${options.eventId}`,
-          );
           if (!heroesEvents[className]) {
             return false;
           }
+          Logger.debug(
+            `Build ${className} received from stream ${options.eventStreamId} with id ${options.eventId}`,
+          );
           return new heroesEvents[className](data, options);
         },
         subscriptions: {
@@ -55,8 +55,6 @@ import { TerminusModule } from '@nestjs/terminus';
                 resolveLinktos: true,
                 minCheckPointCount: 1,
               },
-              onSubscriptionStart: subscription => {},
-              onSubscriptionDropped: subscription => {},
             },
           ],
         },

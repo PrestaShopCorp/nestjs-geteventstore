@@ -21,15 +21,16 @@
     "rxjs": "^6.4.0"
   },
   "devDependencies": {
+    "@compodoc/compodoc": "^1.1.11",
     "@types/express": "^4.16.1",
     "@types/node": "^11.9.4",
     "nodemon": "^1.18.10",
     "prettier": "^1.12.1",
     "start-server-webpack-plugin": "^2.2.5",
+    "ts-loader": "^7.0.4",
     "ts-node": "^8.0.2",
     "typescript": "^3.3.3",
     "webpack": "^4.43.0",
-    "webpack-node-externals": "^1.7.2",
-    "ts-loader": "^7.0.4"
+    "webpack-node-externals": "^1.7.2"
   }
 }

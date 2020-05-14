@@ -26,7 +26,7 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     );
     // Use custom stream only for this process
     await hero.setStreamConfig({
-      streamName: `hero_fight-${heroId}`,
+      streamName: `dragon_killed-${dragonId}`,
       // Bug if the stream is not new when writing
       expectedVersion: ExpectedVersion.NoStream,
       // Set retention rules for this new stream

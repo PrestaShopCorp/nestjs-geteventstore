@@ -10,7 +10,7 @@ export * from './event-store.module';
 export * from './event-store.class';
 
 export * from './health/event-store.health-indicator';
-export * from './health/event-store-bus.health-indicator';
+export * from './health/event-store-subscription.health-indicator';
 //export * from './health/event-store-observer.health-indicator';
 
 export * from './cqrs/event-store-cqrs.module';

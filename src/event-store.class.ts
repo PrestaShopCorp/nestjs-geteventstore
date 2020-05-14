@@ -2,6 +2,7 @@ import {
   createConnection,
   createJsonEventData,
   EventStoreNodeConnection,
+  EventStorePersistentSubscription,
 } from 'node-eventstore-client';
 import * as geteventstorePromise from 'geteventstore-promise';
 import { HTTPClient } from 'geteventstore-promise';
@@ -12,13 +13,16 @@ import { ExpectedVersion } from './interfaces/event.interface';
 import { IEvent } from '@nestjs/cqrs';
 import { IEventStoreConfig } from './interfaces/event-store-config.interface';
 import { v4 } from 'uuid';
+import { ISubscriptionStatus } from './interfaces/subscription.interface';
 
-// FIXME still needed ?
 export class EventStore {
   public connection: EventStoreNodeConnection;
   public readonly HTTPClient: HTTPClient;
   public isConnected: boolean = false;
   private logger: Logger = new Logger(this.constructor.name);
+  private catchupSubscriptions: ISubscriptionStatus = {};
+  private volatileSubscriptions: ISubscriptionStatus = {};
+  private persistentSubscriptions: ISubscriptionStatus = {};
 
   constructor(public readonly config: IEventStoreConfig) {
     this.HTTPClient = new geteventstorePromise.HTTPClient({
@@ -92,5 +96,132 @@ export class EventStore {
 
   close() {
     this.connection.close();
+  }
+  get subscriptions(): {
+    persistent: ISubscriptionStatus;
+    catchup: ISubscriptionStatus;
+  } {
+    return {
+      persistent: this.persistentSubscriptions,
+      catchup: this.catchupSubscriptions,
+    };
+  }
+  async subscribeToPersistentSubscription(
+    stream: string,
+    group: string,
+    onEvent: (sub, payload) => void,
+    autoAck: boolean = false,
+    bufferSize: number = 10,
+    onSubscriptionStart: (sub) => void = undefined,
+    onSubscriptionDropped: (sub, reason, error) => void = undefined,
+  ): Promise<EventStorePersistentSubscription> {
+    try {
+      return await this.connection
+        .connectToPersistentSubscription(
+          stream,
+          group,
+          onEvent,
+          (subscription, reason, error) => {
+            this.persistentSubscriptions[
+              `${stream}-${group}`
+            ].isConnected = false;
+            this.persistentSubscriptions[`${stream}-${group}`].status =
+              reason + ' ' + error;
+            if (onSubscriptionDropped) {
+              onSubscriptionDropped(subscription, reason, error);
+            }
+          },
+          undefined,
+          bufferSize,
+          autoAck,
+        )
+        .then(subscription => {
+          this.logger.log(
+            `Connected to persistent subscription ${group} on stream ${stream}!`,
+          );
+          this.persistentSubscriptions[`${stream}-${group}`] = {
+            isConnected: true,
+            streamName: stream,
+            group: group,
+            subscription: subscription,
+            status: `Connected to persistent subscription ${group} on stream ${stream}!`,
+          };
+          if (onSubscriptionStart) {
+            onSubscriptionStart(subscription);
+          }
+          return subscription;
+        });
+    } catch (err) {
+      this.logger.error(err.message);
+    }
+  }
+  async subscribeToVolatileSubscription(
+    stream: string,
+    onEvent: (sub, payload) => void,
+    resolveLinkTos: boolean = true,
+    onSubscriptionStart: (subscription) => void = undefined,
+    onSubscriptionDropped: (sub, reason, error) => void = undefined,
+  ) {
+    this.logger.log(`Catching up and subscribing to stream ${stream}!`);
+    try {
+      const subscription = await this.connection.subscribeToStream(
+        stream,
+        resolveLinkTos,
+        onEvent,
+        (subscription, reason, error) => {
+          this.catchupSubscriptions[stream].isConnected = false;
+          if (onSubscriptionDropped) {
+            onSubscriptionDropped(subscription, reason, error);
+          }
+        },
+      );
+
+      this.volatileSubscriptions[stream] = {
+        isConnected: true,
+        streamName: stream,
+        subscription: subscription,
+        status: `Connected volatile subscription on stream ${stream}!`,
+      };
+      return subscription;
+    } catch (err) {
+      this.logger.error(err.message);
+    }
+  }
+  async subscribeToCatchupSubscription(
+    stream: string,
+    onEvent: (sub, payload) => void,
+    lastCheckpoint: number = 0,
+    resolveLinkTos: boolean = true,
+    onSubscriptionStart: (subscription) => void = undefined,
+    onSubscriptionDropped: (sub, reason, error) => void = undefined,
+  ) {
+    this.logger.log(`Catching up and subscribing to stream ${stream}!`);
+    try {
+      return await this.connection.subscribeToStreamFrom(
+        stream,
+        lastCheckpoint,
+        resolveLinkTos,
+        onEvent,
+        subscription => {
+          this.catchupSubscriptions[stream] = {
+            isConnected: true,
+            streamName: stream,
+            subscription: subscription,
+            status: `Connected catchup subscription on stream ${stream}!`,
+          };
+          if (onSubscriptionStart) {
+            onSubscriptionStart(subscription);
+          }
+        },
+        (subscription, reason, error) => {
+          this.catchupSubscriptions[stream].isConnected = false;
+          if (onSubscriptionDropped) {
+            onSubscriptionDropped(subscription, reason, error);
+          }
+        },
+      );
+    } catch (err) {
+      this.logger.error(err.message);
+    }
   }
 }

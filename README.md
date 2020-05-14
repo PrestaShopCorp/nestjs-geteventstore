@@ -75,25 +75,6 @@ export class HeroKilledDragonEvent extends EventStoreEvent {
 }
  ```
 
-Acknowledgeable and with a custom stream
-````typescript
-export class HeroKilledDragonEvent 
-  extends AcknowledgeableEventStoreEvent {
-  constructor(
-    public readonly data: {
-      heroId: string,
-      dragonId: string
-    }, options?) {
-    super(data, options);
-  }
-
-  get eventStreamId() {
-    return `hero-${this.data.heroId}`;
-  }
-
-}
-````
-
 ## Aggregate root 
 ```typescript
 export class Hero                   
@@ -145,9 +126,8 @@ Add a custom eventId in your event ``
 Guaranty idempotency even after restart  
 Guaranty events order
 
-Bonus define in eventStore the retention rules and stream access rules
+Bonus in code define in eventStore the retention rules and stream access rules
 
-Bonus start transaction on a handler, continue it some where else (alpha)
 
 ```typescript
 @CommandHandler(KillDragonCommand)
@@ -165,13 +145,12 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
       await this.repository.findOneById(+heroId),
     );
     // Use custom stream only for this process
-    await hero.setStreamConfig({
+    hero.setStreamConfig({
       // all next events will have this stream
       streamName: `hero_fight-${heroId}`,
       // Error if the stream is not new when writing
       // You can set your custom order by using this attribute in event
       expectedVersion: ExpectedVersion.NoStream,
-     
       // Set retention rules for this new stream
       metadata: {
         // stream is deleted (needs scavenge to be run)
@@ -179,21 +158,15 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
         // store only the last x events in the stream
         $maxCount: 5,
       },
-
-      (TO FINISH)
-      // id of the transaction to start
-      transaction: await publisher.startTransaction()
-      // Or continue from
-      transaction: await this.publisher.continueTransaction(transaction.id)
     });
     hero.damageEnemy(dragonId, 2);
     hero.damageEnemy(dragonId, -8);
 
     //Write and dispatch events
-    hero.commit();
+    await hero.commit();
 
     // Change stream for next events
-    await hero.setStreamConfig({
+    hero.setStreamConfig({
       streamName: `hero-${heroId}`,
       // It must be a new stream
       expectedVersion: ExpectedVersion.NoStream,
@@ -203,7 +176,6 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
   }
 }
 ```
-
 
 ## Saga
 Identical to default implementation
@@ -228,6 +200,20 @@ You win `ack()` and `nack()` if your event extends `AcknowledgeableEventStoreEve
 (only for persistent subscriptions)
 
 Nack strategies are available
+
+Acknowledgeable
+```typescript
+export class HeroKilledDragonEvent 
+  extends AcknowledgeableEventStoreEvent {
+  constructor(
+    public readonly data: {
+      heroId: string,
+      dragonId: string
+    }, options?) {
+    super(data, options);
+  }
+}
+```
  
 ```typescript
 @EventsHandler(HeroKilledDragonEvent)
@@ -360,7 +346,7 @@ export class HealthController {
   constructor(
     private health: HealthCheckService,
     private eventStoreHealthIndicator: EventStoreHealthIndicator,
-    private eventStoreBusHealthIndicator: EventStoreBusHealthIndicator,
+    private eventStoreBusHealthIndicator: EventStoreSubscriptionHealthIndicator,
   ) {
   }
 

@@ -1,6 +1,7 @@
 import {
   EventStoreCatchUpSubscription,
   EventStorePersistentSubscription,
+  EventStoreSubscription,
 } from 'node-eventstore-client';
 
 export enum NamedConsumerStrategy {
@@ -17,13 +18,15 @@ export interface ISubscriptionStatus {
     group?: string;
     subscription?:
       | EventStorePersistentSubscription
-      | EventStoreCatchUpSubscription;
+      | EventStoreCatchUpSubscription
+      | EventStoreSubscription;
   };
 }
 
 export type IEventStorePersistentSubscriptionConfig = {
   stream: string;
   group: string;
+  // TODO use node eventstore type
   options?: {
     resolveLinktos?: boolean;
     startFrom?: number;
@@ -53,6 +56,21 @@ export type IEventStorePersistentSubscriptionConfig = {
 
 export type EventStoreCatchupSubscriptionConfig = {
   stream: string;
+  lastCheckpoint?: number;
+  resolveLinkTos?: boolean;
+  onSubscriptionStart?: (
+    sub: EventStoreCatchUpSubscription,
+  ) => void | undefined;
+  onSubscriptionDropped?: (
+    sub: EventStoreCatchUpSubscription,
+    reason: string,
+    error: string,
+  ) => void | undefined;
+};
+
+export type EventStoreVolatileSubscriptionConfig = {
+  stream: string;
+  resolveLinkTos?: boolean;
   onSubscriptionStart?: (
     sub: EventStoreCatchUpSubscription,
   ) => void | undefined;

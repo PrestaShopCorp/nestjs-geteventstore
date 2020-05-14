@@ -9,14 +9,9 @@ import { DynamicModule, Global, Module } from '@nestjs/common';
 import { EventStoreBus } from './event-store.bus';
 import { EventStore } from '../event-store.class';
 import { EventStoreModule } from '../event-store.module';
-import {
-  EventStoreObserver,
-  IEventStoreBusConfig,
-  IEventStoreConfig,
-} from '..';
+import { IEventStoreBusConfig, IEventStoreConfig } from '..';
 import { Subject } from 'rxjs';
 import { EventStorePublisher } from './event-store.publisher';
-import { EventStoreBusHealthIndicator } from '../health/event-store-bus.health-indicator';
 
 @Global()
 @Module({})
@@ -51,32 +46,16 @@ export class EventStoreCqrsModule extends CqrsModule {
           inject: [CommandBus, EventStore, EventBus],
         },
         {
-          provide: EventStoreObserver,
-          useFactory: eventStore => {
-            return new EventStoreObserver(eventStore);
-          },
-          inject: [EventStore],
-        },
-        {
           provide: EventStorePublisher,
           useFactory: (eventBus, eventStore) => {
             return new EventStorePublisher(eventBus, eventStore);
           },
           inject: [EventStoreBus, EventStore],
         },
-        {
-          provide: EventStoreBusHealthIndicator,
-          useFactory: eventStoreBus => {
-            return new EventStoreBusHealthIndicator(eventStoreBus);
-          },
-          inject: [EventStoreBus],
-        },
       ],
       exports: [
         EventStoreModule,
-        EventStoreBusHealthIndicator,
         EventStorePublisher,
-        EventStoreObserver,
         CommandBus,
         QueryBus,
         EventBus,

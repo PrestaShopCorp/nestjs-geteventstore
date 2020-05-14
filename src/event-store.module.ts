@@ -3,6 +3,7 @@ import { EventStore } from './event-store.class';
 //import { EventStoreObserverModule } from './observer/event-store-observer.module';
 import { IEventStoreConfig } from './interfaces/event-store-config.interface';
 import { EventStoreHealthIndicator } from './health/event-store.health-indicator';
+import { EventStoreSubscriptionHealthIndicator } from './health/event-store-subscription.health-indicator';
 
 @Global()
 @Module({
@@ -27,8 +28,19 @@ export class EventStoreModule {
           },
           inject: [EventStore],
         },
+        {
+          provide: EventStoreSubscriptionHealthIndicator,
+          useFactory: eventStore => {
+            return new EventStoreSubscriptionHealthIndicator(eventStore);
+          },
+          inject: [EventStore],
+        },
       ],
-      exports: [EventStore, EventStoreHealthIndicator],
+      exports: [
+        EventStore,
+        EventStoreHealthIndicator,
+        EventStoreSubscriptionHealthIndicator,
+      ],
     };
   }
 

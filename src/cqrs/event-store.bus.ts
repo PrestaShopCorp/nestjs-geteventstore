@@ -33,6 +33,11 @@ const fs = require('fs');
 export class EventStoreBus
   implements IEventPublisher, OnModuleDestroy, OnModuleInit, IMessageSource {
   private readonly eventMapper: (data, options: IEventStoreEventOptions) => {};
+  private readonly onPublishFail = (
+    error: Error,
+    events: IEvent[],
+    eventStore: EventStoreBus,
+  ) => {};
   private logger = new Logger('EventStoreBus');
 
   constructor(
@@ -42,10 +47,13 @@ export class EventStoreBus
     private eventBus: EventBus,
   ) {
     this.eventMapper = config.eventMapper;
+    console.log(config);
+    if (config.onPublishFail) {
+      this.onPublishFail = config.onPublishFail;
+    }
   }
 
-  // @ts-ignore
-  async bridgeEventsTo<T extends IEvent>(subject: Subject<T>) {
+  bridgeEventsTo<T extends IEvent>(subject: Subject<T>) {
     this.subject$ = subject;
   }
 
@@ -54,8 +62,6 @@ export class EventStoreBus
    */
   async onModuleInit() {
     this.logger.debug(`Replace EventBus publisher by Eventstore publish`);
-    // FIXME typescript voodoo
-    this.subject$ = (this.eventBus as any).subject$;
     this.bridgeEventsTo((this.eventBus as any).subject$);
     this.eventBus.publish = this.publish;
 
@@ -63,8 +69,9 @@ export class EventStoreBus
   }
 
   async connect() {
-    // Nothing to connect to, don't connect
     await this.eventStore.connect();
+    this.logger.debug(`EventStore connected`);
+
     await this.assertProjections(this.config.projections || []);
     if (this.config.subscriptions) {
       await this.subscribeToCatchUpSubscriptions(
@@ -76,13 +83,13 @@ export class EventStoreBus
       await this.subscribeToPersistentSubscriptions(
         this.config.subscriptions.persistent || [],
       );
-      this.logger.debug(`Eventstore connected`);
     }
+    // Wait for everything to be up before application boot
     return Promise.resolve(this);
   }
 
   onModuleDestroy(): any {
-    this.logger.log(`disconnect eventstore`);
+    this.logger.log(`Destroy, disconnect EventStore`);
     this.eventStore.close();
   }
 
@@ -92,12 +99,17 @@ export class EventStoreBus
     return this.eventStore
       .writeEvents(event['eventStreamId'], [event], expectedVersion)
       .pipe(
-        tap(_ => {
-          // Forward to local event handler and saga
-          if (this.config.publishAlsoLocally) {
-            this.subject$.next(event);
-          }
-        }),
+        tap(
+          _ => {
+            // Forward to local event handler and saga
+            if (this.config.publishAlsoLocally) {
+              this.subject$.next(event);
+            }
+          },
+          err => {
+            this.onPublishFail(err, [event], this);
+          },
+        ),
       )
       .toPromise();
   }
@@ -111,12 +123,17 @@ export class EventStoreBus
     return this.eventStore
       .writeEvents(streamConfig.streamName, events, expectedVersion)
       .pipe(
-        tap(_ => {
-          // Forward to local event handler and saga
-          if (this.config.publishAlsoLocally) {
-            events.forEach(this.subject$.next);
-          }
-        }),
+        tap(
+          _ => {
+            // Forward to local event handler and saga
+            if (this.config.publishAlsoLocally) {
+              events.forEach(this.subject$.next);
+            }
+          },
+          err => {
+            this.onPublishFail(err, events, this);
+          },
+        ),
       )
       .toPromise();
   }
@@ -156,7 +173,7 @@ export class EventStoreBus
       subscriptions.map((config: EventStoreCatchupSubscriptionConfig) => {
         return this.eventStore.subscribeToCatchupSubscription(
           config.stream,
-          this.onEvent,
+          (subscription, payload) => this.onEvent(subscription, payload),
           config.lastCheckpoint,
           config.resolveLinkTos,
           config.onSubscriptionStart,
@@ -173,7 +190,7 @@ export class EventStoreBus
       subscriptions.map((config: EventStoreVolatileSubscriptionConfig) => {
         return this.eventStore.subscribeToVolatileSubscription(
           config.stream,
-          this.onEvent,
+          (subscription, payload) => this.onEvent(subscription, payload),
           config.resolveLinkTos,
           config.onSubscriptionStart,
           config.onSubscriptionDropped,
@@ -219,7 +236,7 @@ export class EventStoreBus
         return await this.eventStore.subscribeToPersistentSubscription(
           config.stream,
           config.group,
-          this.onEvent,
+          (subscription, payload) => this.onEvent(subscription, payload),
           config.autoAck,
           config.bufferSize,
           config.onSubscriptionStart,

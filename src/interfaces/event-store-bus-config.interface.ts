@@ -7,7 +7,7 @@ import { IEvent } from '@nestjs/cqrs';
 import { IEventStoreEventOptions } from './event.interface';
 import { IEventStoreProjection } from './projection.interface';
 import { Logger } from '@nestjs/common';
-import { Observable } from 'rxjs';
+import { EventStoreBus } from '..';
 
 export interface IEventStoreBusConfig {
   projections?: IEventStoreProjection[];
@@ -16,17 +16,22 @@ export interface IEventStoreBusConfig {
     volatile?: EventStoreVolatileSubscriptionConfig[];
     persistent?: IEventStorePersistentSubscriptionConfig[];
   };
+  //
   eventMapper?: (data: any, options: IEventStoreEventOptions) => IEvent | false;
   // Handle publish error default do nothing
-  onPublishFail?: (error: Error, event: IEvent) => Observable<any>;
+  onPublishFail?: (
+    error: Error,
+    events: IEvent[],
+    eventStore: EventStoreBus,
+  ) => void;
   // After saving to event store, forward to local event handler(s) and saga(s)
-  // useful when using micro services
+  // useful when using micro services for event handling and saga
   publishAlsoLocally?: boolean;
 }
-export type AllEvents = {
-  IEvent;
-};
-export const defaultEventMapper = (allEvents: AllEvents) => {
+
+// TODO fine the proper syntax for allEvents param
+export const defaultEventMapper = (allEvents: any) => {
+  Logger.log(`Will build events from ${allEvents}`);
   return (data, options: IEventStoreEventOptions) => {
     let className = `${options.eventType}Event`;
     if (allEvents[className]) {

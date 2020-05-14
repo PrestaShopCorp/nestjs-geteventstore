@@ -37,7 +37,10 @@ export class EventStore {
 
   async connect() {
     this.connection = createConnection(
-      { defaultUserCredentials: this.config.credentials },
+      {
+        ...this.config.options,
+        defaultUserCredentials: this.config.credentials,
+      },
       this.config.tcp,
       this.config.tcpConnectionName,
     );
@@ -122,6 +125,9 @@ export class EventStore {
           group,
           onEvent,
           (subscription, reason, error) => {
+            this.logger.warn(
+              `Connected to persistent subscription ${group} on stream ${stream} dropped ${reason} : ${error}`,
+            );
             this.persistentSubscriptions[
               `${stream}-${group}`
             ].isConnected = false;

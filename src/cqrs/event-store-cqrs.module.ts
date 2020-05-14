@@ -34,14 +34,12 @@ export class EventStoreCqrsModule extends CqrsModule {
         {
           provide: EventStoreBus,
           useFactory: async (commandBus, eventStore, eventBus) => {
-            // @ts-ignore
-            const bus = new EventStoreBus(
+            return new EventStoreBus(
               eventStore,
               new Subject<IEvent>(),
               eventStoreBusConfig,
               eventBus,
             );
-            return bus.connect();
           },
           inject: [CommandBus, EventStore, EventBus],
         },

@@ -1,17 +1,24 @@
-// export public api from here
-// for example:
-// export * from './decorators';
-export * from './event-store/event-store.module';
-export * from './event-store/event-store.class';
-export * from './event-store/eventstore-cqrs';
-export * from './event-store/shared/aggregate-event.interface';
-export * from './event-store/event-store.observer';
-export * from './event-store/event-store-observer.module';
-export * from './event-store/event-store.interceptor';
-export * from './event-store/eventstore-cqrs/event-store.bus';
-export * from './event-store/eventstore-cqrs/event-bus.provider';
-export * from './interfaces/IEventStoreConfig';
-export * from './interfaces/EventStoreBusConfig';
-export * from './interfaces/EventTypes';
-export * from './interfaces/SubscriptionTypes';
-export * from './interfaces/EventStoreProjection';
+export * from './interfaces/event-store-bus-config.interface';
+export * from './interfaces/event-store-config.interface';
+export * from './interfaces/event.interface';
+export * from './interfaces/stream-config.interface';
+export * from './interfaces/subscription.interface';
+export * from './interfaces/projection.interface';
+export * from './interfaces/helpers.const';
+
+export * from './event-store.module';
+export * from './event-store.class';
+
+export * from './health/event-store.health-indicator';
+export * from './health/event-store-subscription.health-indicator';
+//export * from './health/event-store-observer.health-indicator';
+
+export * from './cqrs/event-store-cqrs.module';
+export * from './cqrs/event-store.bus';
+export * from './cqrs/event-store.publisher';
+export * from './cqrs/event-store.aggregate-root';
+
+export * from './observer/event-store.observer';
+export * from './observer/event-store-observer.module';
+
+//export * from './interceptor/event-store.interceptor';

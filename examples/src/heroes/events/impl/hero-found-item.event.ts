@@ -1,25 +1,26 @@
-import { ExpectedVersion, IAggregateEvent } from '../../../../../src';
-import { v4 } from 'uuid';
+import {
+  EventStoreEvent,
+  ExpectedVersion,
+  IExpectedVersionEvent,
+} from '../../../../../src';
 
-export class HeroFoundItemEvent implements IAggregateEvent {
+export class HeroFoundItemEvent extends EventStoreEvent
+  implements IExpectedVersionEvent {
   constructor(
     public readonly data: {
-      heroId: string,
-      itemId: string
-    }) {
+      heroId: string;
+      itemId: string;
+    },
+    options?,
+  ) {
+    super(data, options);
   }
 
-  get streamName() {
+  get eventStreamId(): string {
     return `hero-${this.data.heroId}`;
   }
-  get metadata() {
-    return {
-      version: 1,
-      created_at: new Date(),
-    };
+
+  get expectedVersion() {
+    return ExpectedVersion.EmptyStream;
   }
-  get id() {
-    return  v4()
-  }
-  get expectedVersion() {return ExpectedVersion.EmptyStream}
 }

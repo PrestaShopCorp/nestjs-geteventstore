@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Param, Put} from '@nestjs/common';
+import { Body, Controller, Get, Param, Put } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { KillDragonCommand } from './commands/impl/kill-dragon.command';
 import { KillDragonDto } from './interfaces/kill-dragon-dto.interface';

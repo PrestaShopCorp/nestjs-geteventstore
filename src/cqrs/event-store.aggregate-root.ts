@@ -25,7 +25,7 @@ export abstract class EventStoreAggregateRoot extends AggregateRoot {
   }
 
   async continueTransaction(
-    transaction: EventStoreTransaction,
+    transactionId: number,
   ): Promise<EventStoreTransaction> {
     // TODO log if not replaced
     return;

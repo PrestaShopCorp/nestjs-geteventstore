@@ -58,18 +58,17 @@ export class EventStorePublisher {
       async startTransaction(
         expectedVersion: number = ExpectedVersion.Any,
       ): Promise<EventStoreTransaction> {
-        return await eventStore.connection.startTransaction(
-          this.streamConfig.streamName,
-          expectedVersion,
-        );
+        return await eventStore.connection
+          .startTransaction(this.streamConfig.streamName, expectedVersion)
+          .then((transaction: EventStoreTransaction) => {
+            return transaction;
+          });
       }
 
       async continueTransaction(
-        transaction: EventStoreTransaction,
+        transactionId: number,
       ): Promise<EventStoreTransaction> {
-        return eventStore.connection.continueTransaction(
-          transaction.transactionId,
-        );
+        return eventStore.connection.continueTransaction(transactionId);
       }
     };
   }
@@ -78,6 +77,7 @@ export class EventStorePublisher {
     const logger = this.logger;
     const eventBus = this.eventBus;
     const eventStore = this.eventStore;
+    let transactionPublisher;
 
     object.commit = async () => {
       if (object.streamConfig) {
@@ -109,17 +109,17 @@ export class EventStorePublisher {
     object.startTransaction = async (
       expectedVersion: number = ExpectedVersion.Any,
     ): Promise<EventStoreTransaction> => {
-      return await eventStore.connection.startTransaction(
-        object.streamConfig.streamName,
-        expectedVersion,
-      );
+      return await eventStore.connection
+        .startTransaction(object.streamConfig.streamName, expectedVersion)
+        .then((transaction: EventStoreTransaction) => {
+          transactionPublisher = transaction;
+          return transaction;
+        });
     };
     object.continueTransaction = async (
-      transaction: EventStoreTransaction,
+      transactionId: number,
     ): Promise<EventStoreTransaction> => {
-      return eventStore.connection.continueTransaction(
-        transaction.transactionId,
-      );
+      return eventStore.connection.continueTransaction(transactionId);
     };
     return object;
   }

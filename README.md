@@ -62,7 +62,7 @@ export class HeroKilledDragonEvent implements IEvent{
 }
  ```
 
-Basic one with options (event id, ...) 
+Basic one with options (event id, custom stream, expectedVersion and all metadata from eventstore) 
 ```typescript
 export class HeroKilledDragonEvent extends EventStoreEvent {
   constructor(
@@ -172,7 +172,7 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
       expectedVersion: ExpectedVersion.NoStream,
     });
     hero.killEnemy(dragonId);
-    hero.commit();
+    await hero.commit();
   }
 }
 ```

@@ -5,13 +5,13 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Observable, Subject } from 'rxjs';
-import { EventStoreEvent, EventStoreObserver } from '..';
+import { EventStore, EventStoreEvent } from '..';
 import * as express from 'express';
 import { filter, map } from 'rxjs/operators';
 
 @Injectable()
 export class EventStoreInterceptor implements NestInterceptor {
-  constructor(private readonly eventStoreOberver: EventStoreObserver) {}
+  constructor(private readonly eventStore: EventStore) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     // Extract correlation from request
@@ -35,7 +35,9 @@ export class EventStoreInterceptor implements NestInterceptor {
           return ev;
         }),
       )
-      .subscribe(this.eventStoreOberver);
+      .subscribe(ev => {
+        this.eventStore.writeEvents(ev.eventStreamId, [ev]);
+      });
 
     // Run next step and send it to everyone
     next.handle().subscribe(handlerSubject$);

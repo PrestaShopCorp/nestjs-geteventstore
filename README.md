@@ -12,8 +12,7 @@ yarn
 yarn start
 ```
 
-# Eventstore config
-
+# Config
 ```typescript
 @Module({
   imports: [
@@ -45,6 +44,41 @@ yarn start
 export class AppModule {}
 
 ```
+
+# Controller Interceptor  
+With this syntax all the output of your services are sent to eventstore
+
+By default only last event will be sent back to http.  
+
+```typescript
+@UseInterceptors(EventStoreInterceptor)
+@Controller()
+export class MyController {
+    @Post('/test')
+    postMyRoute(
+      @Body() body: MyDTO,
+    ): Observable {
+      return this.myService.doThisAction(body);
+    }
+}
+```
+
+Stream target must be defined from your events, and they must extends `EventStoreEvent`
+
+```typescript
+export class HeroKilledDragonEvent extends EventStoreEvent {
+  constructor(
+    public readonly data: {
+      heroId: string,
+      dragonId: string
+    }, options?) {
+    super(data, options);
+  }
+  get eventStreamId() {
+    return `hero-${this.data.heroId}`;
+  }
+}
+ ```
 
 # CQRS
 
@@ -357,64 +391,6 @@ export class HealthController {
       async () => this.eventStoreHealthIndicator.check(),
       async () => this.eventStoreBusHealthIndicator.check(),
     ]);
-  }
-}
-```
-
-## ErrorInterceptor
-// TODO subscribe to eventbus subject to send error to any tools 
-
-## Query bus
-// TODO code to query the state in the projection
-// TO create new query to eventstore ?
-
-## Local Buffering
-// TODO : adapt to tcp client and onConnected
-// Work with http client and eventstore observer
-
-
-# HTTP/GRPC/...
-
-It can also be used without CQRS 
-
-### Using it as an interceptor
-With this syntax all the output of your services are sent to eventstore
-
-By default only last event will be sent back to http.  
-
-```typescript
-@UseInterceptors(EventStoreInterceptor)
-@Controller()
-export class MyController {
-    @Post('/test')
-    postMyRoute(
-      @Body() body: MyDTO,
-    ): Observable {
-      return this.myService.doThisAction(body);
-    }
-}
-```
-
-### Using it in a queue or custom script
-```typescript
-@Injectable()
-@Processor
-export class MyQueue  {
-  constructor(
-    @Inject(EVENT_STORE_OBSERVER_TOKEN)
-    private readonly eventStoreOberver: EventStoreObserver,
-    private readonly myService: myService,
-  ) {
-  }
-  @Process('superJob')
-  async superbJob(job: Job<WithDataDto>) {
-    const dispatcher$ = new Subject();
-    dispatcher$.subscribe(this.eventStoreOberver);
-    
-    this.myService.doThis(job.data)
-      .subscribe(dispatcher$);
-
-    return await dispatcher$.toPromise();
   }
 }
 ```

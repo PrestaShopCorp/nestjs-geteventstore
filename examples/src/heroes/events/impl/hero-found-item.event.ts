@@ -16,7 +16,7 @@ export class HeroFoundItemEvent extends EventStoreEvent
     super(data, options);
   }
 
-  get eventStreamId(): string {
+  getStream(): string {
     return `hero-${this.data.heroId}`;
   }
 

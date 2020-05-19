@@ -21,6 +21,7 @@ export interface IAggregateEvent extends IEvent {
   metadata?: any;
   eventId?: string;
   expectedVersion?: number | ExpectedVersion;
+  getStream(): string;
 }
 
 export interface IExpectedVersionEvent {
@@ -48,6 +49,7 @@ export abstract class EventStoreEvent implements IAggregateEvent {
    * If event is resolved u
    */
   protected readonly originalEventId: string;
+  readonly eventStreamId: string;
 
   protected constructor(
     public readonly data: any,
@@ -62,9 +64,10 @@ export abstract class EventStoreEvent implements IAggregateEvent {
     this.created = options.created;
     this.eventNumber = options.eventNumber;
     this.originalEventId = options.originalEventId;
+    this.eventStreamId = options.eventStreamId;
   }
 
-  abstract get eventStreamId(): string;
+  abstract getStream(): string;
 
   getStreamCategory() {
     return this.eventStreamId.split('-')[0];

@@ -11,7 +11,7 @@ export class HeroKilledDragonEvent extends AcknowledgeableEventStoreEvent {
     super(data, options);
   }
 
-  get eventStreamId() {
+  getStream() {
     return `hero-${this.data.heroId}`;
   }
 }

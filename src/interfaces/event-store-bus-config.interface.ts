@@ -17,7 +17,7 @@ export interface IEventStoreBusConfig {
     persistent?: IEventStorePersistentSubscriptionConfig[];
   };
   //
-  eventMapper?: (data: any, options: IEventStoreEventOptions) => IEvent | false;
+  eventMapper: (data: any, options: IEventStoreEventOptions) => IEvent | false;
   // Handle publish error default do nothing
   onPublishFail?: (
     error: Error,

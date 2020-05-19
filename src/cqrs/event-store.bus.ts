@@ -47,7 +47,6 @@ export class EventStoreBus
     private eventBus: EventBus,
   ) {
     this.eventMapper = config.eventMapper;
-    console.log(config);
     if (config.onPublishFail) {
       this.onPublishFail = config.onPublishFail;
     }

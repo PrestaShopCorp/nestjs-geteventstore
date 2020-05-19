@@ -63,7 +63,23 @@ export class MyController {
 }
 ```
 
-Stream target must be defined from your events, and they must extends `EventStoreEvent`
+Stream target must be defined and implement method `getStream()`
+   
+```typescript
+export class HeroKilledDragonEvent implements IAggregateEvent {
+ constructor(
+   public readonly data: {
+     heroId: string,
+     dragonId: string
+   }) {
+ }
+ getStream() {
+   return `hero-${this.data.heroId}`;
+ }
+}
+```
+
+You can also extends `EventStoreEvent` to get all options 
 
 ```typescript
 export class HeroKilledDragonEvent extends EventStoreEvent {
@@ -74,7 +90,7 @@ export class HeroKilledDragonEvent extends EventStoreEvent {
     }, options?) {
     super(data, options);
   }
-  get eventStreamId() {
+  getStream() {
     return `hero-${this.data.heroId}`;
   }
 }

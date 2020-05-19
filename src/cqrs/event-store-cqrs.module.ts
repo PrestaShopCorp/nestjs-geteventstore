@@ -5,7 +5,7 @@ import {
   IEvent,
   QueryBus,
 } from '@nestjs/cqrs';
-import { DynamicModule, Global, Module } from '@nestjs/common';
+import { DynamicModule, Global, Logger, Module } from '@nestjs/common';
 import { EventStoreBus } from './event-store.bus';
 import { EventStore } from '../event-store.class';
 import { EventStoreModule } from '../event-store.module';
@@ -30,25 +30,27 @@ export class EventStoreCqrsModule extends CqrsModule {
       providers: [
         CommandBus,
         QueryBus,
+        { provide: Logger, useValue: new Logger('EventStoreCqrs') },
         EventStoreBus,
         {
           provide: EventStoreBus,
-          useFactory: async (commandBus, eventStore, eventBus) => {
+          useFactory: async (commandBus, eventStore, eventBus, logger) => {
             return new EventStoreBus(
               eventStore,
               new Subject<IEvent>(),
               eventStoreBusConfig,
               eventBus,
+              logger,
             );
           },
-          inject: [CommandBus, EventStore, EventBus],
+          inject: [CommandBus, EventStore, EventBus, Logger],
         },
         {
           provide: EventStorePublisher,
-          useFactory: (eventBus, eventStore) => {
-            return new EventStorePublisher(eventBus, eventStore);
+          useFactory: (eventBus, eventStore, logger) => {
+            return new EventStorePublisher(eventBus, eventStore, logger);
           },
-          inject: [EventStoreBus, EventStore],
+          inject: [EventStoreBus, EventStore, Logger],
         },
       ],
       exports: [

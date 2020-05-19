@@ -1,4 +1,4 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Logger, Module } from '@nestjs/common';
 import { EventStore } from './event-store.class';
 //import { EventStoreObserverModule } from './observer/event-store-observer.module';
 import { IEventStoreConfig } from './interfaces/event-store-config.interface';
@@ -14,12 +14,15 @@ export class EventStoreModule {
   static register(config: IEventStoreConfig) {
     return {
       module: EventStoreModule,
+      imports: [],
       providers: [
+        { provide: Logger, useValue: new Logger('EventStoreModule') },
         {
           provide: EventStore,
-          useFactory: () => {
-            return new EventStore(config);
+          useFactory: logger => {
+            return new EventStore(config, logger);
           },
+          inject: [Logger],
         },
         {
           provide: EventStoreHealthIndicator,
@@ -45,23 +48,23 @@ export class EventStoreModule {
   }
 
   /*static forRootAsync(options: EventStoreModuleAsyncOptions): DynamicModule {
-    return {
-      module: EventStoreModule,
-      providers: [
-        {
-          provide: EventStore,
-          useFactory: async (...args) => {
-            const { credentials, tcp, http } = await options.useFactory(
-              ...args,
-            );
-            return new EventStore(credentials, tcp, http);
-          },
-          inject: options.inject,
-        },
-        EventStoreObserverModule,
-      ],
-      exports: [EventStore, EventStoreObserverModule],
-      imports: [EventStoreObserverModule.forRootAsync(EventStore)],
-    };
-  }*/
+   return {
+   module: EventStoreModule,
+   providers: [
+   {
+   provide: EventStore,
+   useFactory: async (...args) => {
+   const { credentials, tcp, http } = await options.useFactory(
+   ...args,
+   );
+   return new EventStore(credentials, tcp, http);
+   },
+   inject: options.inject,
+   },
+   EventStoreObserverModule,
+   ],
+   exports: [EventStore, EventStoreObserverModule],
+   imports: [EventStoreObserverModule.forRootAsync(EventStore)],
+   };
+   }*/
 }

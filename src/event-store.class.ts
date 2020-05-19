@@ -19,12 +19,15 @@ export class EventStore {
   public connection: EventStoreNodeConnection;
   public readonly HTTPClient: HTTPClient;
   public isConnected: boolean = false;
-  private logger: Logger = new Logger(this.constructor.name);
   private catchupSubscriptions: ISubscriptionStatus = {};
   private volatileSubscriptions: ISubscriptionStatus = {};
   private persistentSubscriptions: ISubscriptionStatus = {};
 
-  constructor(public readonly config: IEventStoreConfig) {
+  constructor(
+    public readonly config: IEventStoreConfig,
+    private logger: Logger,
+  ) {
+    this.logger.setContext('EventStore');
     this.HTTPClient = new geteventstorePromise.HTTPClient({
       hostname: config.http.host.replace(/^https?:\/\//, ''),
       port: config.http.port,

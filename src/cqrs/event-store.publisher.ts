@@ -15,11 +15,10 @@ export interface Constructor<T> {
 @Injectable()
 // @ts-ignore
 export class EventStorePublisher {
-  public readonly logger = new Logger('EventStorePublisher');
-
   constructor(
     private readonly eventBus: EventStoreBus,
     private readonly eventStore: EventStore,
+    private logger: Logger,
   ) {}
 
   mergeClassContext<T extends Constructor<EventStoreAggregateRoot>>(

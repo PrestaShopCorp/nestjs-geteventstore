@@ -38,13 +38,13 @@ export class EventStoreBus
     events: IEvent[],
     eventStore: EventStoreBus,
   ) => {};
-  private logger = new Logger('EventStoreBus');
 
   constructor(
     private eventStore: EventStore,
     private subject$: Subject<IEvent>,
     private config: IEventStoreBusConfig,
     private eventBus: EventBus,
+    private logger: Logger,
   ) {
     this.eventMapper = config.eventMapper;
     if (config.onPublishFail) {

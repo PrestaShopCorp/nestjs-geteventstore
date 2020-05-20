@@ -22,12 +22,9 @@ export class EventStore {
   private catchupSubscriptions: ISubscriptionStatus = {};
   private volatileSubscriptions: ISubscriptionStatus = {};
   private persistentSubscriptions: ISubscriptionStatus = {};
+  private logger: Logger = new Logger(this.constructor.name);
 
-  constructor(
-    public readonly config: IEventStoreConfig,
-    private logger: Logger,
-  ) {
-    this.logger.setContext('EventStore');
+  constructor(public readonly config: IEventStoreConfig) {
     this.HTTPClient = new geteventstorePromise.HTTPClient({
       hostname: config.http.host.replace(/^https?:\/\//, ''),
       port: config.http.port,
@@ -103,6 +100,7 @@ export class EventStore {
   close() {
     this.connection.close();
   }
+
   get subscriptions(): {
     persistent: ISubscriptionStatus;
     catchup: ISubscriptionStatus;
@@ -112,6 +110,7 @@ export class EventStore {
       catchup: this.catchupSubscriptions,
     };
   }
+
   async subscribeToPersistentSubscription(
     stream: string,
     group: string,
@@ -164,6 +163,7 @@ export class EventStore {
       this.logger.error(err.message);
     }
   }
+
   async subscribeToVolatileSubscription(
     stream: string,
     onEvent: (sub, payload) => void,
@@ -196,6 +196,7 @@ export class EventStore {
       this.logger.error(err.message);
     }
   }
+
   async subscribeToCatchupSubscription(
     stream: string,
     onEvent: (sub, payload) => void,

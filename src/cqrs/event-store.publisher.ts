@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { IEvent } from '@nestjs/cqrs';
 import {
   EventStore,
@@ -18,7 +18,6 @@ export class EventStorePublisher {
   constructor(
     private readonly eventBus: EventStoreBus,
     private readonly eventStore: EventStore,
-    private logger: Logger,
   ) {}
 
   mergeClassContext<T extends Constructor<EventStoreAggregateRoot>>(
@@ -74,7 +73,6 @@ export class EventStorePublisher {
   }
 
   mergeObjectContext<T extends EventStoreAggregateRoot>(object: T): T {
-    const logger = this.logger;
     const eventBus = this.eventBus;
     const eventStore = this.eventStore;
 
@@ -98,7 +96,6 @@ export class EventStorePublisher {
       streamMetadata,
       expectedStreamMetadataVersion: number = ExpectedVersion.Any,
     ) => {
-      logger.debug(`Set stream metadata for ${object.streamConfig.streamName}`);
       return await eventStore.connection.setStreamMetadataRaw(
         object.streamConfig.streamName,
         expectedStreamMetadataVersion,

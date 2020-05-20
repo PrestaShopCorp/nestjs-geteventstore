@@ -1,22 +1,19 @@
-import {
-  CommandBus,
-  CqrsModule,
-  EventBus,
-  IEvent,
-  QueryBus,
-} from '@nestjs/cqrs';
+import { CommandBus, CqrsModule, EventBus, QueryBus } from '@nestjs/cqrs';
 import { DynamicModule, Global, Logger, Module } from '@nestjs/common';
 import { EventStoreBus } from './event-store.bus';
 import { EventStore } from '../event-store.class';
 import { EventStoreModule } from '../event-store.module';
-import { IEventStoreBusConfig, IEventStoreConfig } from '..';
-import { Subject } from 'rxjs';
-import { EventStorePublisher } from './event-store.publisher';
+import {
+  EventStoreModuleAsyncOptions,
+  EventStorePublisher,
+  IEventStoreBusConfig,
+  IEventStoreConfig,
+} from '..';
 
 @Global()
 @Module({})
 export class EventStoreCqrsModule extends CqrsModule {
-  static registerAsync(
+  static register(
     eventStoreConfig: IEventStoreConfig,
     eventStoreBusConfig: IEventStoreBusConfig,
   ): DynamicModule {
@@ -25,32 +22,52 @@ export class EventStoreCqrsModule extends CqrsModule {
       imports: [
         CqrsModule,
         EventBus,
+        Logger,
         EventStoreModule.register(eventStoreConfig),
       ],
       providers: [
         CommandBus,
         QueryBus,
-        { provide: Logger, useValue: new Logger('EventStoreCqrs') },
-        EventStoreBus,
+        EventStorePublisher,
         {
           provide: EventStoreBus,
-          useFactory: async (commandBus, eventStore, eventBus, logger) => {
-            return new EventStoreBus(
-              eventStore,
-              new Subject<IEvent>(),
-              eventStoreBusConfig,
-              eventBus,
-              logger,
-            );
+          useFactory: async (commandBus, eventStore, eventBus) => {
+            return new EventStoreBus(eventStore, eventStoreBusConfig, eventBus);
           },
-          inject: [CommandBus, EventStore, EventBus, Logger],
+          inject: [CommandBus, EventStore, EventBus],
         },
+      ],
+      exports: [
+        EventStoreModule,
+        EventStorePublisher,
+        CommandBus,
+        QueryBus,
+        EventBus,
+      ],
+    };
+  }
+  static registerAsync(
+    eventStoreConfigFactory: EventStoreModuleAsyncOptions,
+    eventStoreBusConfig: IEventStoreBusConfig,
+  ): DynamicModule {
+    return {
+      module: EventStoreCqrsModule,
+      imports: [
+        CqrsModule,
+        EventBus,
+        Logger,
+        EventStoreModule.registerAsync(eventStoreConfigFactory),
+      ],
+      providers: [
+        CommandBus,
+        QueryBus,
+        EventStorePublisher,
         {
-          provide: EventStorePublisher,
-          useFactory: (eventBus, eventStore, logger) => {
-            return new EventStorePublisher(eventBus, eventStore, logger);
+          provide: EventStoreBus,
+          useFactory: async (commandBus, eventStore, eventBus) => {
+            return new EventStoreBus(eventStore, eventStoreBusConfig, eventBus);
           },
-          inject: [EventStoreBus, EventStore, Logger],
+          inject: [CommandBus, EventStore, EventBus],
         },
       ],
       exports: [

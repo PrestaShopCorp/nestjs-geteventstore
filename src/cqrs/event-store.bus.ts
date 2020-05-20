@@ -38,13 +38,13 @@ export class EventStoreBus
     events: IEvent[],
     eventStore: EventStoreBus,
   ) => {};
+  private subject$: Subject<IEvent> = new Subject<IEvent>();
+  private logger: Logger = new Logger(this.constructor.name);
 
   constructor(
     private eventStore: EventStore,
-    private subject$: Subject<IEvent>,
     private config: IEventStoreBusConfig,
     private eventBus: EventBus,
-    private logger: Logger,
   ) {
     this.eventMapper = config.eventMapper;
     if (config.onPublishFail) {
@@ -62,8 +62,8 @@ export class EventStoreBus
   async onModuleInit() {
     this.logger.debug(`Replace EventBus publisher by Eventstore publish`);
     this.bridgeEventsTo((this.eventBus as any).subject$);
-    this.eventBus.publish = this.publish;
 
+    this.eventBus.publish = this.publish;
     return await this.connect();
   }
 

@@ -13,7 +13,7 @@ import { TerminusModule } from '@nestjs/terminus';
 @Module({
   imports: [
     TerminusModule,
-    EventStoreCqrsModule.registerAsync(
+    EventStoreCqrsModule.register(
       {
         credentials: {
           username: process.env.EVENTSTORE_CREDENTIALS_USERNAME || 'admin',

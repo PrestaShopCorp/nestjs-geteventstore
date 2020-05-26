@@ -326,7 +326,11 @@ export class EventStoreBus
           reason: string,
         ) => {
           this.logger.debug(
-            `Fail for event ${event.eventType} with id ${event.eventId} for reason ${reason}`,
+            `Nak and ${
+              Object.keys(PersistentSubscriptionNakEventAction)[action]
+            } for event ${event.eventType} with id ${
+              event.eventId
+            } : reason ${reason}`,
           );
           return subscription.fail([payload], action, reason);
         };

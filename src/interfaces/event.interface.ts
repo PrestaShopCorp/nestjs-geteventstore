@@ -67,7 +67,9 @@ export abstract class EventStoreEvent implements IAggregateEvent {
     this.eventStreamId = options.eventStreamId;
   }
 
-  abstract getStream(): string;
+  getStream(): string {
+    return this.eventStreamId;
+  }
 
   getStreamCategory() {
     return this.eventStreamId.split('-')[0];

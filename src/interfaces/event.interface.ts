@@ -55,9 +55,12 @@ export abstract class EventStoreEvent implements IAggregateEvent {
     public readonly data: any,
     options: IEventStoreEventOptions = {},
   ) {
-    this.metadata = options.metadata || {
-      created_at: new Date(),
-      version: 1,
+    this.metadata = {
+      ...{
+        created_at: new Date(),
+        version: 1,
+      },
+      ...options.metadata
     };
     this.eventId = options.eventId || v4();
     this.eventType = options.eventType || this.constructor.name;

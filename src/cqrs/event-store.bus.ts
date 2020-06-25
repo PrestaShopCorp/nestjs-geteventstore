@@ -126,7 +126,7 @@ export class EventStoreBus
           _ => {
             // Forward to local event handler and saga
             if (this.config.publishAlsoLocally) {
-              events.forEach(this.subject$.next);
+              events.forEach((event) => this.subject$.next(event));
             }
           },
           err => {

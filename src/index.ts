@@ -21,4 +21,4 @@ export * from './cqrs/event-store.aggregate-root';
 export * from './observer/event-store.observer';
 export * from './observer/event-store-observer.module';
 
-//export * from './interceptor/event-store.interceptor';
+export * from './interceptor/event-store.interceptor';

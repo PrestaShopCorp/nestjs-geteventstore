@@ -9,10 +9,14 @@ import { heroesEvents } from './events/impl';
 import { EventStoreCqrsModule, IEventStoreEventOptions } from '../../../src';
 import { HealthController } from './health.controller';
 import { TerminusModule } from '@nestjs/terminus';
+import { LoggerModule } from 'nestjs-pino-stackdriver/dist';
 
 @Module({
   imports: [
     TerminusModule,
+    LoggerModule.forRoot({
+      prettyPrint: false,
+    }),
     EventStoreCqrsModule.register(
       {
         credentials: {

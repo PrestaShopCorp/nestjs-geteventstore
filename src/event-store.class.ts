@@ -22,9 +22,12 @@ export class EventStore {
   private catchupSubscriptions: ISubscriptionStatus = {};
   private volatileSubscriptions: ISubscriptionStatus = {};
   private persistentSubscriptions: ISubscriptionStatus = {};
-  private logger: Logger = new Logger(this.constructor.name);
 
-  constructor(public readonly config: IEventStoreConfig) {
+  constructor(
+    public readonly config: IEventStoreConfig,
+    private logger: Logger,
+  ) {
+    logger.setContext(this.constructor.name);
     this.HTTPClient = new geteventstorePromise.HTTPClient({
       hostname: config.http.host.replace(/^https?:\/\//, ''),
       port: config.http.port,

@@ -18,12 +18,12 @@ export class EventStoreModule {
       module: EventStoreModule,
       imports: [],
       providers: [
-        { provide: Logger, useValue: new Logger('EventStoreModule') },
         {
           provide: EventStore,
-          useFactory: () => {
-            return new EventStore(config);
+          useFactory: logger => {
+            return new EventStore(config, logger);
           },
+          inject: [Logger],
         },
         {
           provide: EventStoreHealthIndicator,
@@ -54,13 +54,13 @@ export class EventStoreModule {
       providers: [
         {
           provide: EventStore,
-          useFactory: async configService => {
+          useFactory: async (configService, logger) => {
             const config: IEventStoreConfig = await options.useFactory(
               configService,
             );
-            return new EventStore(config);
+            return new EventStore(config, logger);
           },
-          inject: options.inject,
+          inject: [...options.inject, Logger],
         },
       ],
       exports: [EventStoreModule],

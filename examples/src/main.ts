@@ -1,11 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { EventStoredApplicationModule } from './app.module';
 import { SentryExceptionFilter } from './sentry.exception-filter';
+import { Logger } from 'nestjs-pino-stackdriver/dist';
 
 declare const module: any;
 
 async function bootstrap() {
-  const app = await NestFactory.create(EventStoredApplicationModule);
+  const app = await NestFactory.create(EventStoredApplicationModule, {
+    logger: new Logger(),
+  });
 
   if (module.hot) {
     module.hot.accept();

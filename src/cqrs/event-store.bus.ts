@@ -1,9 +1,4 @@
-import {
-  EventBus,
-  IEvent,
-  IEventPublisher,
-  IMessageSource,
-} from '@nestjs/cqrs';
+import { EventBus, IEvent, IEventPublisher } from '@nestjs/cqrs';
 import { Subject } from 'rxjs';
 import { PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
 import {
@@ -31,7 +26,7 @@ const fs = require('fs');
 
 @Injectable()
 export class EventStoreBus
-  implements IEventPublisher, OnModuleDestroy, OnModuleInit, IMessageSource {
+  implements IEventPublisher, OnModuleDestroy, OnModuleInit {
   private readonly eventMapper: (data, options: IEventStoreEventOptions) => {};
   private readonly onPublishFail = (
     error: Error,
@@ -39,13 +34,14 @@ export class EventStoreBus
     eventStore: EventStoreBus,
   ) => {};
   private subject$: Subject<IEvent> = new Subject<IEvent>();
-  private logger: Logger = new Logger(this.constructor.name);
 
   constructor(
     private eventStore: EventStore,
     private config: IEventStoreBusConfig,
     private eventBus: EventBus,
+    private logger: Logger,
   ) {
+    logger.setContext(this.constructor.name);
     this.eventMapper = config.eventMapper;
     if (config.onPublishFail) {
       this.onPublishFail = config.onPublishFail;
@@ -54,6 +50,7 @@ export class EventStoreBus
 
   bridgeEventsTo<T extends IEvent>(subject: Subject<T>) {
     this.subject$ = subject;
+    return subject;
   }
 
   /**
@@ -126,7 +123,7 @@ export class EventStoreBus
           _ => {
             // Forward to local event handler and saga
             if (this.config.publishAlsoLocally) {
-              events.forEach((event) => this.subject$.next(event));
+              events.forEach(event => this.subject$.next(event));
             }
           },
           err => {

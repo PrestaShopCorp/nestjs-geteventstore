@@ -27,7 +27,7 @@ export class EventStore {
     public readonly config: IEventStoreConfig,
     private logger: Logger,
   ) {
-    logger.setContext(this.constructor.name);
+    logger.setContext && logger.setContext(this.constructor.name);
     this.HTTPClient = new geteventstorePromise.HTTPClient({
       hostname: config.http.host.replace(/^https?:\/\//, ''),
       port: config.http.port,

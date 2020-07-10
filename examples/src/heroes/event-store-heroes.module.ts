@@ -14,9 +14,6 @@ import { LoggerModule } from 'nestjs-pino-stackdriver/dist';
 @Module({
   imports: [
     TerminusModule,
-    LoggerModule.forRoot({
-      prettyPrint: false,
-    }),
     EventStoreCqrsModule.register(
       {
         credentials: {
@@ -64,6 +61,7 @@ import { LoggerModule } from 'nestjs-pino-stackdriver/dist';
         },
       },
     ),
+    LoggerModule.forRoot(),
   ],
   controllers: [HealthController, HeroesGameController],
   providers: [

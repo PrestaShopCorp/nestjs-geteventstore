@@ -18,6 +18,7 @@ export class EventStoreModule {
       module: EventStoreModule,
       imports: [],
       providers: [
+        Logger,
         {
           provide: EventStore,
           useFactory: logger => {
@@ -52,6 +53,7 @@ export class EventStoreModule {
     return {
       module: EventStoreModule,
       providers: [
+        Logger,
         {
           provide: EventStore,
           useFactory: async (configService, logger) => {

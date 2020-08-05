@@ -25,6 +25,7 @@ export class EventStoreCqrsModule extends CqrsModule {
         EventStoreModule.register(eventStoreConfig),
       ],
       providers: [
+        Logger,
         CommandBus,
         QueryBus,
         EventStorePublisher,
@@ -62,6 +63,7 @@ export class EventStoreCqrsModule extends CqrsModule {
         EventStoreModule.registerAsync(eventStoreConfigFactory),
       ],
       providers: [
+        Logger,
         CommandBus,
         QueryBus,
         EventStorePublisher,

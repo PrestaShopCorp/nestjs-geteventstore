@@ -1,4 +1,4 @@
-import { Global, Module, Provider } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { EventStoreObserver } from './event-store.observer';
 import { EventStore } from '../event-store.class';
 
@@ -6,17 +6,16 @@ import { EventStore } from '../event-store.class';
 @Module({})
 export class EventStoreObserverModule {
   public static register() {
-    const provider: Provider = {
-      provide: EventStoreObserver,
-      useFactory: eventstore => {
-        return new EventStoreObserver(eventstore);
-      },
-      inject: [EventStore],
-    };
     return {
-      exports: [provider],
+      exports: [EventStoreObserver],
       module: EventStoreObserverModule,
-      providers: [provider],
+      providers: [{
+        provide: EventStoreObserver,
+        useFactory: (es: EventStore) => {
+          return new EventStoreObserver(es);
+        },
+        inject: [EventStore],
+      }],
     };
   }
 }

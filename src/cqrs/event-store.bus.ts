@@ -41,7 +41,7 @@ export class EventStoreBus
     private eventBus: EventBus,
     private logger: Logger,
   ) {
-    logger.setContext(this.constructor.name);
+    logger.setContext && logger.setContext(this.constructor.name);
     this.eventMapper = config.eventMapper;
     if (config.onPublishFail) {
       this.onPublishFail = config.onPublishFail;

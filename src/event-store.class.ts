@@ -114,6 +114,10 @@ export class EventStore {
     };
   }
 
+  async readEventsForward({ stream, first = 0, count = 1000 }) {
+    return await this.HTTPClient.readEventsForward(stream, first, count);
+  }
+
   async subscribeToPersistentSubscription(
     stream: string,
     group: string,

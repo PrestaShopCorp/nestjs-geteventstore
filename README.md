@@ -5,7 +5,7 @@ Event store driven NestJS and CQRS
 example is from official Nest JS example
 
 ```shell script
-docker run -p 22113: -p 11113: -d -n eventstore eventstore/eventstore
+docker run -p 22113:2113 -p 11113:1113 -d --name eventstore eventstore/eventstore --dev --enable-external-tcp --disable-external-tcp-tls --ext-ip=0.0.0.0 --int-ip=0.0.0.0
 yarn
 cd examples
 yarn

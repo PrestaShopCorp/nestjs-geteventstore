@@ -22,10 +22,15 @@ yarn start
           username: process.env.EVENTSTORE_CREDENTIALS_USERNAME || 'admin',
           password: process.env.EVENTSTORE_CREDENTIALS_PASSWORD || 'changeit',
         },
+        /*
+          To connect to a single host use tcp object and specify host and port.
+          To connect to a cluster via dns discovery use clusterDns eg. "discover://my.host:2113".
+        */
         tcp: {
           host: process.env.EVENTSTORE_TCP_HOST || 'localhost',
           port: +process.env.EVENTSTORE_TCP_PORT || 1113,
         },
+        clusterDns: "discover://my.host:2113",
         http: {
           host: process.env.EVENTSTORE_HTTP_HOST || 'http://localhost',
           port: +process.env.EVENTSTORE_HTTP_PORT || 2113,

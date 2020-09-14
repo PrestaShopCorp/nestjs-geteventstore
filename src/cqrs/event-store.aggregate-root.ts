@@ -30,4 +30,8 @@ export abstract class EventStoreAggregateRoot extends AggregateRoot {
     // TODO log if not replaced
     return;
   }
+  
+  async commit(): Promise<void> {
+    return super.commit() as unknown as Promise<void>;
+  }
 }

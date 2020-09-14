@@ -2,7 +2,6 @@ import { ConnectionSettings, TcpEndPoint } from 'node-eventstore-client';
 import { EventStore } from '../event-store.class';
 import { UserCredentials } from 'geteventstore-promise';
 import { ModuleMetadata } from '@nestjs/common/interfaces';
-import { IEventStoreBusConfig } from './event-store-bus-config.interface';
 
 export interface IHttpEndpoint extends TcpEndPoint {}
 

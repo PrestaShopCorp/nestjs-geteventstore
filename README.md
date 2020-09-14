@@ -139,6 +139,8 @@ export class Hero
   }
 }
 ```
+Here you should extends EventStoreAggregateRoot from nestjs-geteventstore lib, not the @nestjs/cqrs one!
+
 ## Command handling
 ```typescript
 @CommandHandler(DropAncientItemCommand)
@@ -160,7 +162,7 @@ export class DropAncientItemHandler
     hero.addItem(itemId);
     hero.dropItem(itemId);
 
-    hero.commit();
+    await hero.commit();
   }
 }
 ```
@@ -195,7 +197,7 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
       await this.repository.findOneById(+heroId),
     );
     // Use custom stream only for this process
-    hero.setStreamConfig({
+    await hero.setStreamConfig({
       // all next events will have this stream
       streamName: `hero_fight-${heroId}`,
       // Error if the stream is not new when writing
@@ -216,13 +218,13 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     await hero.commit();
 
     // Change stream for next events
-    hero.setStreamConfig({
+    await hero.setStreamConfig({
       streamName: `hero-${heroId}`,
       // It must be a new stream
       expectedVersion: ExpectedVersion.NoStream,
     });
     hero.killEnemy(dragonId);
-    hero.commit();
+    await hero.commit();
   }
 }
 ```

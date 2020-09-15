@@ -63,8 +63,27 @@ export class EventStoreModule {
           },
           inject: [...options.inject, Logger],
         },
+        {
+          provide: EventStoreHealthIndicator,
+          useFactory: eventStore => {
+            return new EventStoreHealthIndicator(eventStore);
+          },
+          inject: [EventStore],
+        },
+        {
+          provide: EventStoreSubscriptionHealthIndicator,
+          useFactory: eventStore => {
+            return new EventStoreSubscriptionHealthIndicator(eventStore);
+          },
+          inject: [EventStore],
+        },
       ],
-      exports: [EventStoreModule],
+      exports: [
+        EventStore,
+        EventStoreModule,
+        EventStoreHealthIndicator,
+        EventStoreSubscriptionHealthIndicator,
+      ],
     };
   }
 }

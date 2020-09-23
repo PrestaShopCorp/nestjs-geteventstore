@@ -1,6 +1,6 @@
 import { EventBus, IEvent, IEventPublisher } from '@nestjs/cqrs';
 import { Subject } from 'rxjs';
-import { PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
+import { EventStorePersistentSubscription, PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
 import {
   Injectable,
   Logger,
@@ -35,6 +35,8 @@ export class EventStoreBus
   ) => {};
   private subject$: Subject<IEvent> = new Subject<IEvent>();
 
+  private subscriptions: Record<string, EventStorePersistentSubscription>;
+
   constructor(
     private eventStore: EventStore,
     private config: IEventStoreBusConfig,
@@ -43,6 +45,7 @@ export class EventStoreBus
   ) {
     logger.setContext && logger.setContext(this.constructor.name);
     this.eventMapper = config.eventMapper;
+    this.subscriptions = {};
     if (config.onPublishFail) {
       this.onPublishFail = config.onPublishFail;
     }
@@ -229,7 +232,7 @@ export class EventStoreBus
         this.logger.log(
           `Connecting to persistent subscription "${config.group}" on stream ${config.stream}`,
         );
-        return await this.eventStore.subscribeToPersistentSubscription(
+        const subscription = await this.eventStore.subscribeToPersistentSubscription(
           config.stream,
           config.group,
           (subscription, payload) => this.onEvent(subscription, payload),
@@ -238,8 +241,19 @@ export class EventStoreBus
           config.onSubscriptionStart,
           config.onSubscriptionDropped,
         );
+        this.subscriptions[`${config.stream}-${config.group}`] = subscription;
+        return subscription;
       }),
     );
+  }
+
+  async stopPersistentSubscription(
+    subscription: IEventStorePersistentSubscriptionConfig,
+  ) {
+    if (this.subscriptions[`${subscription.stream}-${subscription.group}`]) {
+      this.subscriptions[`${subscription.stream}-${subscription.group}`].stop();
+      delete this.subscriptions[`${subscription.stream}-${subscription.group}`]
+    }
   }
 
   async onEvent(subscription, payload) {

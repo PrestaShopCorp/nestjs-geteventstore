@@ -45,6 +45,7 @@ export class EventStoreCqrsModule extends CqrsModule {
       exports: [
         EventStoreModule,
         EventStorePublisher,
+        EventStoreBus,
         CommandBus,
         QueryBus,
         EventBus,
@@ -83,6 +84,7 @@ export class EventStoreCqrsModule extends CqrsModule {
       exports: [
         EventStoreModule,
         EventStorePublisher,
+        EventStoreBus,
         CommandBus,
         QueryBus,
         EventBus,

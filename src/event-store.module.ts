@@ -16,9 +16,8 @@ export class EventStoreModule {
   static register(config: IEventStoreConfig) {
     return {
       module: EventStoreModule,
-      imports: [],
+      imports: [Logger],
       providers: [
-        Logger,
         {
           provide: EventStore,
           useFactory: logger => {
@@ -52,8 +51,8 @@ export class EventStoreModule {
   static registerAsync(options: EventStoreModuleAsyncOptions): DynamicModule {
     return {
       module: EventStoreModule,
+      imports: [Logger],
       providers: [
-        Logger,
         {
           provide: EventStore,
           useFactory: async (configService, logger) => {
@@ -64,8 +63,27 @@ export class EventStoreModule {
           },
           inject: [...options.inject, Logger],
         },
+        {
+          provide: EventStoreHealthIndicator,
+          useFactory: eventStore => {
+            return new EventStoreHealthIndicator(eventStore);
+          },
+          inject: [EventStore],
+        },
+        {
+          provide: EventStoreSubscriptionHealthIndicator,
+          useFactory: eventStore => {
+            return new EventStoreSubscriptionHealthIndicator(eventStore);
+          },
+          inject: [EventStore],
+        },
       ],
-      exports: [EventStoreModule],
+      exports: [
+        EventStore,
+        EventStoreModule,
+        EventStoreHealthIndicator,
+        EventStoreSubscriptionHealthIndicator,
+      ],
     };
   }
 }

@@ -361,37 +361,62 @@ export class AppModule {
 ```
 
 ## Projections
-You can code your eventstore projection's in javascript in the project  
 
-Using projection config and the js file 
-it asserts that projection exist and run during your app's boot. 
-
-With a projection you can route event to emit new events to another stream.
-you can also send linkTo to do symlink like  
+With a projection you can route events to emit new events to another stream.
+you can also send linkTo to do symlink like
 
 https://eventstore.com/docs/getting-started/projections/index.html  
 https://eventstore.com/docs/projections/user-defined-projections/index.html
 
+A projection example:
+
 ```javascript
 fromCategory('hero')
-// One state per id (hero-541)
-.foreachStream()
-.when({
+  // One state per id (hero-541)
+  .foreachStream()
+  .when({
     // Set default state when start
-    $init: function(){
-        return {
-            count: 0
-        }
+    $init: function() {
+      return {
+        count: 0,
+      };
     },
     // When event is received
-    ItemAddedEvent: function(s,e){
-        s.count += 1;
-    }
-})
+    ItemAddedEvent: function(s, e) {
+      s.count += 1;
+    },
+  });
 ```
 
+You can code your eventstore projection's in javascript in your project, and include them in your module:
+
+```typescript
+EventStoreCqrsModule.registerAsync(
+  {
+    useFactory: async (config: ConfigService): Promise<any> =>
+      config.get('eventstore'),
+    inject: [ConfigService],
+  },
+  {
+    projections: [
+      {
+        name: 'first',
+        file: '../projections/first.projection.js',
+        enabled: true,
+        emitEnabled: true,
+        mode: 'continuous',
+      },
+    ],
+  },
+);
+```
+
+This way it asserts your projection exist and run during your application booting process.
+
 ## Terminus health
+
 Give status send 503 on your `HealthController`
+
 ```typescript
 @Controller('health')
 export class HealthController {

@@ -1,16 +1,24 @@
-import { Logger, Module } from '@nestjs/common';
+import { LoggerModule } from 'nestjs-pino-stackdriver/dist';
+import * as util from 'util';
+
+import {
+  Logger,
+  Module,
+} from '@nestjs/common';
+import { TerminusModule } from '@nestjs/terminus';
+
+import {
+  EventStoreCqrsModule,
+  IEventStoreEventOptions,
+} from '../../../src';
 import { CommandHandlers } from './commands/handlers';
 import { EventHandlers } from './events/handlers';
+import { heroesEvents } from './events/impl';
+import { HealthController } from './health.controller';
 import { HeroesGameController } from './heroes.controller';
 import { QueryHandlers } from './queries/handlers';
 import { HeroRepository } from './repository/hero.repository';
 import { HeroesGameSagas } from './sagas/heroes.sagas';
-import { heroesEvents } from './events/impl';
-import { EventStoreCqrsModule, IEventStoreEventOptions } from '../../../src';
-import { HealthController } from './health.controller';
-import { TerminusModule } from '@nestjs/terminus';
-import { LoggerModule } from 'nestjs-pino-stackdriver/dist';
-import * as util from 'util';
 
 @Module({
   imports: [
@@ -88,7 +96,7 @@ import * as util from 'util';
               bufferSize: 1,
               // Subscription is created with this options
               options: {
-                resolveLinktos: true,
+                resolveLinkTos: true,
                 minCheckPointCount: 1,
               },
             },

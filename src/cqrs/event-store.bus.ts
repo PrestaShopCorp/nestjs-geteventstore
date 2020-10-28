@@ -21,6 +21,7 @@ import {
 } from '../';
 import { IAcknowledgeableEvent } from '..';
 import { tap } from 'rxjs/operators';
+import { PersistentSubscriptionOptions } from 'geteventstore-promise';
 
 const fs = require('fs');
 
@@ -204,6 +205,9 @@ export class EventStoreBus
           this.logger.log(
             `Check if persistent subscription "${subscription.group}" on stream ${subscription.stream} needs to be created `,
           );
+          if (subscription.options.resolveLinktos !== undefined) {
+            this.logger.warn("DEPRECATED: The resolveLinktos parameter shouln't be used anymore. The resolveLinkTos parameter should be used instead.")
+          }
           await this.eventStore.HTTPClient.persistentSubscriptions.getSubscriptionInfo(
             subscription.group,
             subscription.stream,
@@ -212,10 +216,18 @@ export class EventStoreBus
           if (!e.response || e.response.status != 404) {
             throw e;
           }
+          const options: PersistentSubscriptionOptions = {
+            ...subscription.options,
+            ...{
+              resolveLinkTos:
+                subscription.options.resolveLinkTos ||
+                subscription.options.resolveLinktos,
+            },
+          };
           await this.eventStore.HTTPClient.persistentSubscriptions.assert(
             subscription.group,
             subscription.stream,
-            subscription.options,
+            options,
           );
           this.logger.log(
             `Persistent subscription "${subscription.group}" on stream ${subscription.stream} created ! ` +

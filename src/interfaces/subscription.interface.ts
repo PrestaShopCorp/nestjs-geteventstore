@@ -1,3 +1,4 @@
+import { PersistentSubscriptionOptions } from 'geteventstore-promise';
 import {
   EventStoreCatchUpSubscription,
   EventStorePersistentSubscription,
@@ -26,22 +27,10 @@ export interface ISubscriptionStatus {
 export type IEventStorePersistentSubscriptionConfig = {
   stream: string;
   group: string;
-  // TODO use node eventstore type
-  options?: {
-    resolveLinktos?: boolean;
-    startFrom?: number;
-    extraStatistics?: boolean;
-    messageTimeout?: number;
-    maxRetryCount?: number;
-    liveBufferSize?: number;
-    readBatchSize?: number;
-    historyBufferSize?: number;
-    checkPointAfter?: number;
-    minCheckPointCount?: number;
-    maxCheckPointCount?: number;
-    maxSubscriberCount?: number;
-    namedConsumerStrategy?: NamedConsumerStrategy;
-  };
+  options?: PersistentSubscriptionOptions
+  /**
+   * @deprecated The resolveLinktos parameter shouln't be used anymore. The resolveLinkTos parameter should be used instead.
+   */ & { resolveLinktos?: boolean };
   autoAck?: boolean | undefined;
   bufferSize?: number | undefined;
   onSubscriptionStart?: (

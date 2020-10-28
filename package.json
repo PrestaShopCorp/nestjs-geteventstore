@@ -51,7 +51,7 @@
     "@nestjs/cqrs": "^6.1.0",
     "@nestjs/terminus": "^7.0.1",
     "@godaddy/terminus": "^4.4.1",
-    "geteventstore-promise": "3.2.2",
+    "geteventstore-promise": "3.2.3",
     "lodash": "^4.17.15",
     "node-eventstore-client": "0.2.18",
     "rxjs": "^6.5.4",

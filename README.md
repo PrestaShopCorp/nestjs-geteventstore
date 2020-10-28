@@ -345,7 +345,7 @@ Catchup :
               bufferSize: 1,
               // Subscription is created with this options
               options: {
-                resolveLinktos: true,
+                resolveLinkTos: true,
                 minCheckPointCount: 1,
               },
               onSubscriptionStart: (subscription) => {

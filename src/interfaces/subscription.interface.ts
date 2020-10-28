@@ -1,3 +1,4 @@
+import { PersistentSubscriptionOptions } from 'geteventstore-promise';
 import {
   EventStoreCatchUpSubscription,
   EventStorePersistentSubscription,
@@ -26,22 +27,7 @@ export interface ISubscriptionStatus {
 export type IEventStorePersistentSubscriptionConfig = {
   stream: string;
   group: string;
-  // TODO use node eventstore type
-  options?: {
-    resolveLinktos?: boolean;
-    startFrom?: number;
-    extraStatistics?: boolean;
-    messageTimeout?: number;
-    maxRetryCount?: number;
-    liveBufferSize?: number;
-    readBatchSize?: number;
-    historyBufferSize?: number;
-    checkPointAfter?: number;
-    minCheckPointCount?: number;
-    maxCheckPointCount?: number;
-    maxSubscriberCount?: number;
-    namedConsumerStrategy?: NamedConsumerStrategy;
-  };
+  options?: PersistentSubscriptionOptions;
   autoAck?: boolean | undefined;
   bufferSize?: number | undefined;
   onSubscriptionStart?: (

@@ -15,8 +15,8 @@ export enum ExpectedVersion {
   EmptyStream = 0,
 }
 
-export interface IAggregateEvent extends IEvent {
-  data: any;
+export interface IAggregateEvent<T extends any> extends IEvent {
+  data: T;
   eventStreamId?: string;
   metadata?: any;
   eventId?: string;
@@ -39,7 +39,7 @@ export interface IEventStoreEventOptions {
   expectedVersion?: number | ExpectedVersion;
 }
 
-export abstract class EventStoreEvent implements IAggregateEvent {
+export abstract class EventStoreEvent<T extends any> implements IAggregateEvent<T> {
   public metadata?: any;
   public readonly eventId?: string;
   public readonly eventType?: string;
@@ -52,7 +52,7 @@ export abstract class EventStoreEvent implements IAggregateEvent {
   readonly eventStreamId: string;
 
   protected constructor(
-    public readonly data: any,
+    public readonly data: T,
     options: IEventStoreEventOptions = {},
   ) {
     this.metadata = {
@@ -91,7 +91,7 @@ export interface IAcknowledgeableEvent {
   ) => Promise<any>;
 }
 
-export abstract class AcknowledgeableEventStoreEvent extends EventStoreEvent
+export abstract class AcknowledgeableEventStoreEvent<T extends any> extends EventStoreEvent<T>
   implements IAcknowledgeableEvent {
   ack() {
     return Promise.resolve();

@@ -44,7 +44,7 @@ export class EventStore {
         ...this.config.options,
         defaultUserCredentials: this.config.credentials,
       },
-      this.config.tcp,
+      this.config.tcp || this.config.clusterDns,
       this.config.tcpConnectionName,
     );
     this.logger.debug('Connecting to EventStore');

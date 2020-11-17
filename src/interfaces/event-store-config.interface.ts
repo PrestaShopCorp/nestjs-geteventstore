@@ -10,6 +10,7 @@ export interface IEventStoreConfig {
   tcpConnectionName?: string;
   tcp?: TcpEndPoint;
   http?: IHttpEndpoint;
+  clusterDns?: string;
   options?: ConnectionSettings;
   onTcpConnected?: (eventStore: EventStore) => void;
   onTcpDisconnected?: (eventStore: EventStore) => void;

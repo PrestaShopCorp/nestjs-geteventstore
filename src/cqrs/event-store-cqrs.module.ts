@@ -1,5 +1,5 @@
 import { CommandBus, CqrsModule, EventBus, QueryBus } from '@nestjs/cqrs';
-import { DynamicModule, Global, Logger, Module } from '@nestjs/common';
+import { DynamicModule, Global, Module } from '@nestjs/common';
 import { EventStoreBus } from './event-store.bus';
 import { EventStore } from '../event-store.class';
 import { EventStoreModule } from '../event-store.module';
@@ -22,7 +22,6 @@ export class EventStoreCqrsModule extends CqrsModule {
       imports: [
         CqrsModule,
         EventBus,
-        Logger,
         EventStoreModule.register(eventStoreConfig),
       ],
       providers: [
@@ -31,15 +30,14 @@ export class EventStoreCqrsModule extends CqrsModule {
         EventStorePublisher,
         {
           provide: EventStoreBus,
-          useFactory: async (commandBus, eventStore, eventBus, logger) => {
+          useFactory: async (commandBus, eventStore, eventBus) => {
             return new EventStoreBus(
               eventStore,
               eventStoreBusConfig,
               eventBus,
-              logger,
             );
           },
-          inject: [CommandBus, EventStore, EventBus, Logger],
+          inject: [CommandBus, EventStore, EventBus],
         },
       ],
       exports: [
@@ -60,7 +58,6 @@ export class EventStoreCqrsModule extends CqrsModule {
       imports: [
         CqrsModule,
         EventBus,
-        Logger,
         EventStoreModule.registerAsync(eventStoreConfigFactory),
       ],
       providers: [
@@ -69,15 +66,14 @@ export class EventStoreCqrsModule extends CqrsModule {
         EventStorePublisher,
         {
           provide: EventStoreBus,
-          useFactory: async (commandBus, eventStore, eventBus, logger) => {
+          useFactory: async (commandBus, eventStore, eventBus) => {
             return new EventStoreBus(
               eventStore,
               eventStoreBusConfig,
               eventBus,
-              logger,
             );
           },
-          inject: [CommandBus, EventStore, EventBus, Logger],
+          inject: [CommandBus, EventStore, EventBus],
         },
       ],
       exports: [

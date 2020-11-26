@@ -16,6 +16,7 @@ import { v4 } from 'uuid';
 import { ISubscriptionStatus } from './interfaces/subscription.interface';
 
 export class EventStore {
+  private logger: Logger = new Logger(this.constructor.name);
   public connection: EventStoreNodeConnection;
   public readonly HTTPClient: HTTPClient;
   public isConnected: boolean = false;
@@ -25,9 +26,7 @@ export class EventStore {
 
   constructor(
     public readonly config: IEventStoreConfig,
-    private logger: Logger,
   ) {
-    logger.setContext && logger.setContext(this.constructor.name);
     this.HTTPClient = new geteventstorePromise.HTTPClient({
       hostname: config.http.host.replace(/^https?:\/\//, ''),
       port: config.http.port,

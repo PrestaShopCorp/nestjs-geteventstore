@@ -17,7 +17,7 @@ export interface IEventStoreBusConfig {
     persistent?: IEventStorePersistentSubscriptionConfig[];
   };
   //
-  eventMapper: (data: any, options: IEventStoreEventOptions) => IEvent | false;
+  eventMapper?: (data: any, options: IEventStoreEventOptions) => IEvent | false;
   // Handle publish error default do nothing
   onPublishFail?: (
     error: Error,
@@ -36,7 +36,7 @@ export const defaultEventMapper = (allEvents: any) => {
     let className = `${options.eventType}Event`;
     if (allEvents[className]) {
       Logger.log(
-        `Build ${className} received from stream ${options.eventStreamId} with id ${options.eventId}`,
+        `Build ${className} received from stream ${options.eventStreamId} with id ${options.eventId} and number ${options.eventNumber}`,
       );
       return new allEvents[className](data, options);
     }

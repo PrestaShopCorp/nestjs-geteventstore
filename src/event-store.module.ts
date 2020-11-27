@@ -1,4 +1,4 @@
-import { DynamicModule, Global, Logger, Module } from '@nestjs/common';
+import { DynamicModule, Global, Module } from '@nestjs/common';
 import { EventStore } from './event-store.class';
 import {
   EventStoreModuleAsyncOptions,
@@ -16,14 +16,12 @@ export class EventStoreModule {
   static register(config: IEventStoreConfig) {
     return {
       module: EventStoreModule,
-      imports: [Logger],
       providers: [
         {
           provide: EventStore,
-          useFactory: logger => {
-            return new EventStore(config, logger);
+          useFactory: () => {
+            return new EventStore(config);
           },
-          inject: [Logger],
         },
         {
           provide: EventStoreHealthIndicator,
@@ -51,17 +49,16 @@ export class EventStoreModule {
   static registerAsync(options: EventStoreModuleAsyncOptions): DynamicModule {
     return {
       module: EventStoreModule,
-      imports: [Logger],
       providers: [
         {
           provide: EventStore,
-          useFactory: async (configService, logger) => {
+          useFactory: async (configService) => {
             const config: IEventStoreConfig = await options.useFactory(
               configService,
             );
-            return new EventStore(config, logger);
+            return new EventStore(config);
           },
-          inject: [...options.inject, Logger],
+          inject: [...options.inject],
         },
         {
           provide: EventStoreHealthIndicator,

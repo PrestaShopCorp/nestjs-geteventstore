@@ -10,8 +10,8 @@
   ],
   "license": "MIT",
   "readmeFilename": "README.md",
-  "main": "dist/index.js",
   "files": [
+    "index.*",
     "dist/**/*",
     "*.md"
   ],

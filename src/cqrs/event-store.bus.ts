@@ -28,6 +28,7 @@ const fs = require('fs');
 @Injectable()
 export class EventStoreBus
   implements IEventPublisher, OnModuleDestroy, OnModuleInit {
+  private logger: Logger = new Logger(this.constructor.name);
   private readonly eventMapper: (data, options: IEventStoreEventOptions) => {};
   private readonly onPublishFail = (
     error: Error,
@@ -40,9 +41,7 @@ export class EventStoreBus
     private eventStore: EventStore,
     private config: IEventStoreBusConfig,
     private eventBus: EventBus,
-    private logger: Logger,
   ) {
-    logger.setContext && logger.setContext(this.constructor.name);
     this.eventMapper = config.eventMapper;
     if (config.onPublishFail) {
       this.onPublishFail = config.onPublishFail;

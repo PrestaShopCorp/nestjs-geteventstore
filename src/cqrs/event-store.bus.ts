@@ -156,6 +156,7 @@ export class EventStoreBus
           projection.enabled,
           projection.checkPointsEnabled,
           projection.emitEnabled,
+          projection.trackEmittedStreams,
         );
         this.logger.log(`Projection "${projection.name}" asserted !`);
       }),
@@ -205,7 +206,9 @@ export class EventStoreBus
             `Check if persistent subscription "${subscription.group}" on stream ${subscription.stream} needs to be created `,
           );
           if (subscription.options.resolveLinktos !== undefined) {
-            this.logger.warn("DEPRECATED: The resolveLinktos parameter shouln't be used anymore. The resolveLinkTos parameter should be used instead.")
+            this.logger.warn(
+              "DEPRECATED: The resolveLinktos parameter shouln't be used anymore. The resolveLinkTos parameter should be used instead.",
+            );
           }
           await this.eventStore.HTTPClient.persistentSubscriptions.getSubscriptionInfo(
             subscription.group,

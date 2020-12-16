@@ -5,6 +5,7 @@ export type IEventStoreProjection = {
   content?: string;
   file?: string;
   mode?: ProjectionMode;
+  trackEmittedStreams?: boolean;
   enabled?: boolean;
   checkPointsEnabled?: boolean;
   emitEnabled?: boolean;

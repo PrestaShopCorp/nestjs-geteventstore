@@ -239,10 +239,10 @@
   dependencies:
     "@babel/helper-plugin-utils" "^7.8.0"
 
-"@babel/runtime@^7.12.1":
-  version "7.12.1"
-  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.12.1.tgz#b4116a6b6711d010b2dad3b7b6e43bf1b9954740"
-  integrity sha512-J5AIf3vPj3UwXaAzb5j1xM4WAQDX3EMgemF8rjCP3SoW09LfRKAXQKt6CoVYl230P6iWdRcBbnLDDdnqWxZSCA==
+"@babel/runtime@^7.12.5":
+  version "7.12.5"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.12.5.tgz#410e7e487441e1b360c29be715d870d9b985882e"
+  integrity sha512-plcc+hbExy3McchJCEQG3knOsuh3HH+Prx1P6cLIkET/0dLuQDEnrT+s27Axgc9bqfsmNUNHfscgMUdBpC9xfg==
   dependencies:
     regenerator-runtime "^0.13.4"
 
@@ -1101,10 +1101,10 @@ axios@0.19.2:
   dependencies:
     follow-redirects "1.5.10"
 
-axios@^0.20.0:
-  version "0.20.0"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-0.20.0.tgz#057ba30f04884694993a8cd07fa394cff11c50bd"
-  integrity sha512-ANA4rr2BDcmmAQLOKft2fufrtuvlqR+cXNNinUmvfeSNCOF98PZL+7M/v1zIdGo7OLjEA9J2gXJL+j4zGsl0bA==
+axios@^0.21.0:
+  version "0.21.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.0.tgz#26df088803a2350dff2c27f96fef99fe49442aca"
+  integrity sha512-fmkJBknJKoZwem3/IKSSLpkdNXZeBu5Q7GA/aRsr2btgrptmSCxi2oFjZHqGdK9DoTil9PIHlPIZw2EcRJXRvw==
   dependencies:
     follow-redirects "^1.10.0"
 
@@ -2224,13 +2224,13 @@ get-value@^2.0.3, get-value@^2.0.6:
   resolved "https://registry.yarnpkg.com/get-value/-/get-value-2.0.6.tgz#dc15ca1c672387ca76bd37ac0a395ba2042a2c28"
   integrity sha1-3BXKHGcjh8p2vTesCjlbogQqLCg=
 
-geteventstore-promise@3.2.3:
-  version "3.2.3"
-  resolved "https://registry.yarnpkg.com/geteventstore-promise/-/geteventstore-promise-3.2.3.tgz#47e2dcb346b3cd8fb6671816e290a5f38513145e"
-  integrity sha512-dIT6ArdgdypR3SCJBPT2qf/9bCaY9GAjok8pY0gTfzjbYbeNsMcY/SfkDqFtBy5aU3QLEc6scoCeddxWmuCLbw==
+geteventstore-promise@3.2.4:
+  version "3.2.4"
+  resolved "https://registry.yarnpkg.com/geteventstore-promise/-/geteventstore-promise-3.2.4.tgz#f3a7e7c223afa3a6b4dcf9d2231a4fa5e57e33f7"
+  integrity sha512-ux/x9asSKaa9IF/sKvwguNXo4Ags+ZPCmXkJzlxvxNVm4ofC1OT7PdPaXZ54Ebu2lBqnvHv+g5bfFjhNwQFwDg==
   dependencies:
-    "@babel/runtime" "^7.12.1"
-    axios "^0.20.0"
+    "@babel/runtime" "^7.12.5"
+    axios "^0.21.0"
     debug "^4.2.0"
     generic-pool "^3.7.1"
     node-eventstore-client "^0.2.18"

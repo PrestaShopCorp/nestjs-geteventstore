@@ -1,19 +1,39 @@
 name: publish
+
 on:
   push:
-    branches:
-      - master
+    tags:
+      - '*'
 
 jobs:
   publish:
     name: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - name: Get tag
+        id: get_tag
+        run: echo ::set-output name=TAG::$(echo $GITHUB_REF | cut -d / -f 3)
+      - name: Checkout project
+        uses: actions/checkout@v1
+
+      - name: Setup node version
+        uses: actions/setup-node@v1
         with:
           node-version: 12
-      - run: yarn
-      - run: npm publish --access public
+
+      - name: Install
+        run: yarn
+
+      - name: Build
+        run: yarn run build
+
+      - name: Update npm version
+        run: npm version $VERSION --no-git-tag-version --allow-same-version
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VERSION: ${{ steps.get_tag.outputs.TAG }}
+
+      - name: Publish
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

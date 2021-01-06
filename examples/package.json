@@ -16,7 +16,7 @@
     "@nestjs/terminus": "^7.0.1",
     "cli-color": "^1.4.0",
     "global": "^4.4.0",
-    "nestjs-geteventstore": "^1.5.0",
+    "nestjs-geteventstore": "^1.6.0",
     "nestjs-pino-stackdriver": "^1.0.0",
     "reflect-metadata": "^0.1.12",
     "rxjs": "^6.4.0"

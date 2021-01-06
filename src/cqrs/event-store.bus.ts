@@ -1,4 +1,4 @@
-import { EventBus, IEvent, IEventPublisher } from '@nestjs/cqrs';
+import { EventBus, IEvent } from '@nestjs/cqrs';
 import { Subject } from 'rxjs';
 import { PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
 import {

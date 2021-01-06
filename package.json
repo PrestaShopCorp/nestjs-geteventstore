@@ -1,6 +1,6 @@
 {
   "name": "nestjs-geteventstore",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Event Store connector for Nest js",
   "author": "Taimoor Alam <taimoor.alam@daypaio.com>",
   "contributors": [
@@ -39,16 +39,16 @@
   },
   "bugs": "https://github.com/prestashopCorp/nestjs-eventstore/issues",
   "peerDependencies": {
-    "@nestjs/common": "^6.0.0",
-    "@nestjs/core": "^6.0.0",
+    "@nestjs/common": "^7.0.0",
+    "@nestjs/core": "^7.0.0",
     "reflect-metadata": "^0.1.12",
     "rimraf": "^3.0.2",
     "rxjs": "^6.3.3"
   },
   "dependencies": {
-    "@nestjs/common": "^6.0.0",
-    "@nestjs/core": "^6.0.0",
-    "@nestjs/cqrs": "^6.1.0",
+    "@nestjs/common": "^7.0.0",
+    "@nestjs/core": "^7.0.0",
+    "@nestjs/cqrs": "^7.0.0",
     "@nestjs/terminus": "^7.0.1",
     "@godaddy/terminus": "^4.4.1",
     "geteventstore-promise": "3.2.4",

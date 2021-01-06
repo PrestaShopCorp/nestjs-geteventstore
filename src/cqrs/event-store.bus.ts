@@ -27,7 +27,7 @@ const fs = require('fs');
 
 @Injectable()
 export class EventStoreBus
-  implements IEventPublisher, OnModuleDestroy, OnModuleInit {
+  implements OnModuleDestroy, OnModuleInit {
   private logger: Logger = new Logger(this.constructor.name);
   private readonly eventMapper: (data, options: IEventStoreEventOptions) => {};
   private readonly onPublishFail = (
@@ -109,7 +109,7 @@ export class EventStoreBus
       )
       .toPromise();
   }
-
+ 
   async publishAll(events: IEvent[], streamConfig: IStreamConfig) {
     const expectedVersion = streamConfig.expectedVersion || ExpectedVersion.Any;
     const eventCount = events.length;

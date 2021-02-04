@@ -4,6 +4,7 @@ export * from './interfaces/event.interface';
 export * from './interfaces/stream-config.interface';
 export * from './interfaces/subscription.interface';
 export * from './interfaces/projection.interface';
+export * from './interfaces/projection-provider.interface';
 export * from './interfaces/helpers.const';
 
 export * from './event-store.module';

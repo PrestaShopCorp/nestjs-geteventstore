@@ -1,12 +1,15 @@
 import { EventBus, IEvent } from '@nestjs/cqrs';
-import { Subject } from 'rxjs';
-import { PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
+import { ModuleRef } from '@nestjs/core';
 import {
   Injectable,
   Logger,
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
+import { PersistentSubscriptionOptions } from 'geteventstore-promise';
+import { PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
+import { Subject } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { EventStore } from '../event-store.class';
 import {
   EventStoreCatchupSubscriptionConfig,
@@ -20,8 +23,7 @@ import {
   IStreamConfig,
 } from '../';
 import { IAcknowledgeableEvent } from '..';
-import { tap } from 'rxjs/operators';
-import { PersistentSubscriptionOptions } from 'geteventstore-promise';
+import { IProjectionProvider } from "../interfaces/projection-provider.interface";
 
 const fs = require('fs');
 
@@ -41,6 +43,7 @@ export class EventStoreBus
     private eventStore: EventStore,
     private config: IEventStoreBusConfig,
     private eventBus: EventBus,
+    private moduleRef: ModuleRef
   ) {
     this.eventMapper = config.eventMapper;
     if (config.onPublishFail) {
@@ -109,7 +112,7 @@ export class EventStoreBus
       )
       .toPromise();
   }
- 
+
   async publishAll(events: IEvent[], streamConfig: IStreamConfig) {
     const expectedVersion = streamConfig.expectedVersion || ExpectedVersion.Any;
     const eventCount = events.length;
@@ -148,6 +151,8 @@ export class EventStoreBus
             `Assert projection "${projection.name}" from file ${projection.file}`,
           );
           content = fs.readFileSync(projection.file, 'utf8');
+        } else if (projection.provider) {
+          content = this.moduleRef.get<IProjectionProvider>(projection.provider).run();
         }
         await this.eventStore.HTTPClient.projections.assert(
           projection.name,

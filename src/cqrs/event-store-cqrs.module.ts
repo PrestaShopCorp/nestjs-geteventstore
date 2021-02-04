@@ -9,6 +9,7 @@ import {
   IEventStoreBusConfig,
   IEventStoreConfig,
 } from '..';
+import { ModuleRef } from '@nestjs/core';
 
 @Global()
 @Module({})
@@ -30,14 +31,15 @@ export class EventStoreCqrsModule extends CqrsModule {
         EventStorePublisher,
         {
           provide: EventStoreBus,
-          useFactory: async (commandBus, eventStore, eventBus) => {
+          useFactory: async (commandBus, eventStore, eventBus, moduleRef) => {
             return new EventStoreBus(
               eventStore,
               eventStoreBusConfig,
               eventBus,
+              moduleRef
             );
           },
-          inject: [CommandBus, EventStore, EventBus],
+          inject: [CommandBus, EventStore, EventBus, ModuleRef],
         },
       ],
       exports: [
@@ -66,14 +68,15 @@ export class EventStoreCqrsModule extends CqrsModule {
         EventStorePublisher,
         {
           provide: EventStoreBus,
-          useFactory: async (commandBus, eventStore, eventBus) => {
+          useFactory: async (commandBus, eventStore, eventBus, moduleRef) => {
             return new EventStoreBus(
               eventStore,
               eventStoreBusConfig,
               eventBus,
+              moduleRef
             );
           },
-          inject: [CommandBus, EventStore, EventBus],
+          inject: [CommandBus, EventStore, EventBus, ModuleRef],
         },
       ],
       exports: [

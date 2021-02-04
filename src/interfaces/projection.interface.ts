@@ -1,5 +1,4 @@
 import { ProjectionMode } from 'geteventstore-promise';
-import {IProjectionProvider} from "./projection-provider.interface";
 
 export type IEventStoreProjection = {
   name: string;

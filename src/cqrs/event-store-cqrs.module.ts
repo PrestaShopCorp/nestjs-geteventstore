@@ -31,11 +31,7 @@ export class EventStoreCqrsModule extends CqrsModule {
         {
           provide: EventStoreBus,
           useFactory: async (commandBus, eventStore, eventBus) => {
-            return new EventStoreBus(
-              eventStore,
-              eventStoreBusConfig,
-              eventBus,
-            );
+            return new EventStoreBus(eventStore, eventStoreBusConfig, eventBus);
           },
           inject: [CommandBus, EventStore, EventBus],
         },
@@ -67,11 +63,7 @@ export class EventStoreCqrsModule extends CqrsModule {
         {
           provide: EventStoreBus,
           useFactory: async (commandBus, eventStore, eventBus) => {
-            return new EventStoreBus(
-              eventStore,
-              eventStoreBusConfig,
-              eventBus,
-            );
+            return new EventStoreBus(eventStore, eventStoreBusConfig, eventBus);
           },
           inject: [CommandBus, EventStore, EventBus],
         },

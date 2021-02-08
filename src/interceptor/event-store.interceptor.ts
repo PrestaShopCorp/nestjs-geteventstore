@@ -25,7 +25,7 @@ export class EventStoreInterceptor implements NestInterceptor {
     // only if return is an event
     handlerSubject$
       .pipe(
-        filter(req => {
+        filter((req) => {
           return req instanceof EventStoreEvent;
         }),
         map((ev: EventStoreEvent) => {
@@ -35,7 +35,7 @@ export class EventStoreInterceptor implements NestInterceptor {
           return ev;
         }),
       )
-      .subscribe(ev => {
+      .subscribe((ev) => {
         this.eventStore.writeEvents(ev.eventStreamId, [ev]);
       });
 

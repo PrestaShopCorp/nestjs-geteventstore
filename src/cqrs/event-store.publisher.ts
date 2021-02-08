@@ -41,7 +41,7 @@ export class EventStorePublisher {
             this.streamConfig,
           );
         } else {
-          this.getUncommittedEvents().forEach(event => this.publish(event));
+          this.getUncommittedEvents().forEach((event) => this.publish(event));
         }
         this.uncommit();
       }

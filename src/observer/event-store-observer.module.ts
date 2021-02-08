@@ -9,13 +9,15 @@ export class EventStoreObserverModule {
     return {
       exports: [EventStoreObserver],
       module: EventStoreObserverModule,
-      providers: [{
-        provide: EventStoreObserver,
-        useFactory: (es: EventStore) => {
-          return new EventStoreObserver(es);
+      providers: [
+        {
+          provide: EventStoreObserver,
+          useFactory: (es: EventStore) => {
+            return new EventStoreObserver(es);
+          },
+          inject: [EventStore],
         },
-        inject: [EventStore],
-      }],
+      ],
     };
   }
 }

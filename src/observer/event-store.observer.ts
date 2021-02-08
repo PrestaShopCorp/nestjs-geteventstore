@@ -42,7 +42,7 @@ export class EventStoreObserver {
 
     this._incrementRetryCount = fp.update(
       ['metadata', 'writeEventRetry'],
-      v => (v || 0) + 1,
+      (v) => (v || 0) + 1,
     );
 
     this.retryTrigger = new Subject();
@@ -87,7 +87,7 @@ export class EventStoreObserver {
       .pipe(timeout(this.writeTimeout))
       .subscribe(
         null,
-        err => {
+        (err) => {
           if (this.isRetryable(err)) {
             this.addToRetryBuffer(eventWithId, true);
           } else {
@@ -121,7 +121,7 @@ export class EventStoreObserver {
 
     from(buffer)
       .pipe(
-        map(event => {
+        map((event) => {
           // This map returns an observable because we will use it with a concatAll()
           return defer(() => {
             // If an error occurred in the batch, we don't want to call the eventstore again,
@@ -143,7 +143,7 @@ export class EventStoreObserver {
               // events to be written in the eventstore.
               tap(
                 null,
-                err => {
+                (err) => {
                   console.log(
                     `Unable to persist event to eventstore in stream ${stream} : ${JSON.stringify(
                       event,
@@ -153,7 +153,7 @@ export class EventStoreObserver {
                 },
                 null,
               ),
-              catchError(err => {
+              catchError((err) => {
                 if (this.isRetryable(err)) {
                   errorReceived = true;
                   return of(event);
@@ -177,7 +177,7 @@ export class EventStoreObserver {
         toArray(),
       )
       .subscribe(
-        events => {
+        (events) => {
           // prepend events to the buffer
           if (events.length > 0) {
             this.retryBuffer = fp.concat(events, this.retryBuffer);
@@ -190,7 +190,7 @@ export class EventStoreObserver {
           this.retryInProgress = false;
           this.retryTrigger.next(true);
         },
-        err => {
+        (err) => {
           console.log('Unexpected error in eventstore retry'); // <-- should not happen !
           console.log(`ERROR: ${err.message || err}`);
           this.retryInProgress = false;

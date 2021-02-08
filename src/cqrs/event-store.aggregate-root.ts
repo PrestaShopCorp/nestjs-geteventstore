@@ -4,17 +4,18 @@ import { EventStoreTransaction, WriteResult } from 'node-eventstore-client';
 
 export abstract class EventStoreAggregateRoot extends AggregateRoot {
   public streamConfig: IStreamConfig;
+  public streamMetadata: IStreamMetadata;
+  public isMetadataSet: boolean;
 
   async setStreamConfig(streamConfig: IStreamConfig) {
     this.streamConfig = streamConfig;
-    if (streamConfig.metadata) {
-      await this.setStreamMetadata(streamConfig.metadata);
-    }
+    this.streamMetadata = streamConfig.metadata;
+    this.isMetadataSet = false;
   }
 
   async setStreamMetadata(
     metadata: IStreamMetadata,
-    expectedStreamMetadataVersion: number = ExpectedVersion.Any,
+    expectedVersion: number = ExpectedVersion.Any,
   ): Promise<WriteResult> {
     console.log('nestjs-get-eventstore::setStreamMetadata not replaced');
     return;

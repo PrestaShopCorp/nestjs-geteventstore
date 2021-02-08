@@ -31,6 +31,10 @@ export class EventStorePublisher {
       }
 
       async commit() {
+        if (this.streamMetadata && !this.isMetadataSet) {
+          this.isMetadataSet = true;
+          await this.setStreamMetadata(this.streamMetadata);
+        }
         if (this.streamConfig) {
           await eventBus.publishAll(
             this.getUncommittedEvents(),
@@ -44,11 +48,11 @@ export class EventStorePublisher {
 
       async setStreamMetadata(
         streamMetadata,
-        expectedStreamMetadataVersion: number = ExpectedVersion.Any,
+        expectedVersion: number = ExpectedVersion.Any,
       ) {
         return await eventStore.connection.setStreamMetadataRaw(
           this.streamConfig.streamName,
-          expectedStreamMetadataVersion,
+          expectedVersion,
           streamMetadata,
         );
       }
@@ -77,6 +81,10 @@ export class EventStorePublisher {
     const eventStore = this.eventStore;
 
     object.commit = async () => {
+      if (object.streamMetadata && !object.isMetadataSet) {
+        object.isMetadataSet = true;
+        await object.setStreamMetadata(object.streamMetadata);
+      }
       if (object.streamConfig) {
         await eventBus.publishAll(
           object.getUncommittedEvents(),
@@ -94,11 +102,11 @@ export class EventStorePublisher {
     };
     object.setStreamMetadata = async (
       streamMetadata,
-      expectedStreamMetadataVersion: number = ExpectedVersion.Any,
+      expectedVersion: number = ExpectedVersion.Any,
     ) => {
       return await eventStore.connection.setStreamMetadataRaw(
         object.streamConfig.streamName,
-        expectedStreamMetadataVersion,
+        expectedVersion,
         streamMetadata,
       );
     };

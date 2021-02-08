@@ -15,7 +15,7 @@ export abstract class EventStoreAggregateRoot extends AggregateRoot {
 
   async setStreamMetadata(
     metadata: IStreamMetadata,
-    expectedVersion: number = ExpectedVersion.Any,
+    expectedStreamMetadataVersion: number = ExpectedVersion.Any,
   ): Promise<WriteResult> {
     console.log('nestjs-get-eventstore::setStreamMetadata not replaced');
     return;

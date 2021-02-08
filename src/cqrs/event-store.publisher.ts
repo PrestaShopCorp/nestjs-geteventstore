@@ -48,11 +48,11 @@ export class EventStorePublisher {
 
       async setStreamMetadata(
         streamMetadata,
-        expectedVersion: number = ExpectedVersion.Any,
+        expectedStreamMetadataVersion: number = ExpectedVersion.Any,
       ) {
         return await eventStore.connection.setStreamMetadataRaw(
           this.streamConfig.streamName,
-          expectedVersion,
+          expectedStreamMetadataVersion,
           streamMetadata,
         );
       }
@@ -102,11 +102,11 @@ export class EventStorePublisher {
     };
     object.setStreamMetadata = async (
       streamMetadata,
-      expectedVersion: number = ExpectedVersion.Any,
+      expectedStreamMetadataVersion: number = ExpectedVersion.Any,
     ) => {
       return await eventStore.connection.setStreamMetadataRaw(
         object.streamConfig.streamName,
-        expectedVersion,
+        expectedStreamMetadataVersion,
         streamMetadata,
       );
     };

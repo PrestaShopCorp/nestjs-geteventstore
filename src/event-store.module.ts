@@ -25,14 +25,14 @@ export class EventStoreModule {
         },
         {
           provide: EventStoreHealthIndicator,
-          useFactory: eventStore => {
+          useFactory: (eventStore) => {
             return new EventStoreHealthIndicator(eventStore);
           },
           inject: [EventStore],
         },
         {
           provide: EventStoreSubscriptionHealthIndicator,
-          useFactory: eventStore => {
+          useFactory: (eventStore) => {
             return new EventStoreSubscriptionHealthIndicator(eventStore);
           },
           inject: [EventStore],
@@ -62,14 +62,14 @@ export class EventStoreModule {
         },
         {
           provide: EventStoreHealthIndicator,
-          useFactory: eventStore => {
+          useFactory: (eventStore) => {
             return new EventStoreHealthIndicator(eventStore);
           },
           inject: [EventStore],
         },
         {
           provide: EventStoreSubscriptionHealthIndicator,
-          useFactory: eventStore => {
+          useFactory: (eventStore) => {
             return new EventStoreSubscriptionHealthIndicator(eventStore);
           },
           inject: [EventStore],

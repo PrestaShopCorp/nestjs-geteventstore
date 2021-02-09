@@ -26,8 +26,7 @@ import { PersistentSubscriptionOptions } from 'geteventstore-promise';
 const fs = require('fs');
 
 @Injectable()
-export class EventStoreBus
-  implements OnModuleDestroy, OnModuleInit {
+export class EventStoreBus implements OnModuleDestroy, OnModuleInit {
   private logger: Logger = new Logger(this.constructor.name);
   private readonly eventMapper: (data, options: IEventStoreEventOptions) => {};
   private readonly onPublishFail = (
@@ -96,20 +95,20 @@ export class EventStoreBus
       .writeEvents(event['eventStreamId'], [event], expectedVersion)
       .pipe(
         tap(
-          _ => {
+          (_) => {
             // Forward to local event handler and saga
             if (this.config.publishAlsoLocally) {
               this.subject$.next(event);
             }
           },
-          err => {
+          (err) => {
             this.onPublishFail(err, [event], this);
           },
         ),
       )
       .toPromise();
   }
- 
+
   async publishAll(events: IEvent[], streamConfig: IStreamConfig) {
     const expectedVersion = streamConfig.expectedVersion || ExpectedVersion.Any;
     const eventCount = events.length;
@@ -120,13 +119,13 @@ export class EventStoreBus
       .writeEvents(streamConfig.streamName, events, expectedVersion)
       .pipe(
         tap(
-          _ => {
+          (_) => {
             // Forward to local event handler and saga
             if (this.config.publishAlsoLocally) {
-              events.forEach(event => this.subject$.next(event));
+              events.forEach((event) => this.subject$.next(event));
             }
           },
-          err => {
+          (err) => {
             this.onPublishFail(err, events, this);
           },
         ),
@@ -136,7 +135,7 @@ export class EventStoreBus
 
   async assertProjections(projections: IEventStoreProjection[]) {
     await Promise.all(
-      projections.map(async projection => {
+      projections.map(async (projection) => {
         let content;
         if (projection.content) {
           this.logger.log(
@@ -200,7 +199,7 @@ export class EventStoreBus
     subscriptions: IEventStorePersistentSubscriptionConfig[],
   ) {
     await Promise.all(
-      subscriptions.map(async subscription => {
+      subscriptions.map(async (subscription) => {
         try {
           this.logger.log(
             `Check if persistent subscription "${subscription.group}" on stream ${subscription.stream} needs to be created `,
@@ -239,7 +238,7 @@ export class EventStoreBus
       }),
     );
     await Promise.all(
-      subscriptions.map(async config => {
+      subscriptions.map(async (config) => {
         this.logger.log(
           `Connecting to persistent subscription "${config.group}" on stream ${config.stream}`,
         );

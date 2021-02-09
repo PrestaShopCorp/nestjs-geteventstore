@@ -27,10 +27,9 @@ export interface ISubscriptionStatus {
 export type IEventStorePersistentSubscriptionConfig = {
   stream: string;
   group: string;
-  options?: PersistentSubscriptionOptions
-  /**
+  options?: PersistentSubscriptionOptions & /**
    * @deprecated The resolveLinktos parameter shouln't be used anymore. The resolveLinkTos parameter should be used instead.
-   */ & { resolveLinktos?: boolean };
+   */ { resolveLinktos?: boolean };
   autoAck?: boolean | undefined;
   bufferSize?: number | undefined;
   onSubscriptionStart?: (

@@ -31,13 +31,17 @@ export class EventStorePublisher {
       }
 
       async commit() {
+        if (!this.isMetadataSet && this.streamMetadata) {
+          this.isMetadataSet = true;
+          await this.setStreamMetadata(this.streamMetadata);
+        }
         if (this.streamConfig) {
           await eventBus.publishAll(
             this.getUncommittedEvents(),
             this.streamConfig,
           );
         } else {
-          this.getUncommittedEvents().forEach(event => this.publish(event));
+          this.getUncommittedEvents().forEach((event) => this.publish(event));
         }
         this.uncommit();
       }
@@ -77,6 +81,10 @@ export class EventStorePublisher {
     const eventStore = this.eventStore;
 
     object.commit = async () => {
+      if (object.streamMetadata && !object.isMetadataSet) {
+        object.isMetadataSet = true;
+        await object.setStreamMetadata(object.streamMetadata);
+      }
       if (object.streamConfig) {
         await eventBus.publishAll(
           object.getUncommittedEvents(),

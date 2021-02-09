@@ -60,7 +60,7 @@ export abstract class EventStoreEvent implements IAggregateEvent {
         created_at: new Date(),
         version: 1,
       },
-      ...(options.metadata || {})
+      ...(options.metadata || {}),
     };
     this.eventId = options.eventId || v4();
     this.eventType = options.eventType || this.constructor.name;
@@ -91,7 +91,8 @@ export interface IAcknowledgeableEvent {
   ) => Promise<any>;
 }
 
-export abstract class AcknowledgeableEventStoreEvent extends EventStoreEvent
+export abstract class AcknowledgeableEventStoreEvent
+  extends EventStoreEvent
   implements IAcknowledgeableEvent {
   ack() {
     return Promise.resolve();

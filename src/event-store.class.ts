@@ -24,9 +24,7 @@ export class EventStore {
   private volatileSubscriptions: ISubscriptionStatus = {};
   private persistentSubscriptions: ISubscriptionStatus = {};
 
-  constructor(
-    public readonly config: IEventStoreConfig,
-  ) {
+  constructor(public readonly config: IEventStoreConfig) {
     this.HTTPClient = new geteventstorePromise.HTTPClient({
       hostname: config.http.host.replace(/^https?:\/\//, ''),
       port: config.http.port,
@@ -64,7 +62,7 @@ export class EventStore {
   writeEvents(stream, events: IEvent[], expectedVersion = ExpectedVersion.Any) {
     return from(events)
       .pipe(
-        map(event =>
+        map((event) =>
           createJsonEventData(
             event['eventId'] || v4(),
             event['data'] || {},
@@ -72,7 +70,7 @@ export class EventStore {
             event['eventType'] || event.constructor.name,
           ),
         ),
-        catchError(err => {
+        catchError((err) => {
           return throwError({
             message: `Unable to convert event to EventStore event : ${err.message}`,
             response: { status: 400 },
@@ -82,12 +80,12 @@ export class EventStore {
       )
       .pipe(
         //tap(esEvents => console.log('Writing events', stream, esEvents)),
-        flatMap(esEvents =>
+        flatMap((esEvents) =>
           from(
             this.connection.appendToStream(stream, expectedVersion, esEvents),
           ),
         ),
-        catchError(err => {
+        catchError((err) => {
           if (err.response) {
             err.message = err.message + ' : ' + err.response.statusText;
           }
@@ -149,7 +147,7 @@ export class EventStore {
           bufferSize,
           autoAck,
         )
-        .then(subscription => {
+        .then((subscription) => {
           this.logger.log(
             `Connected to persistent subscription ${group} on stream ${stream}!`,
           );
@@ -218,7 +216,7 @@ export class EventStore {
         lastCheckpoint,
         resolveLinkTos,
         onEvent,
-        subscription => {
+        (subscription) => {
           this.catchupSubscriptions[stream] = {
             isConnected: true,
             streamName: stream,

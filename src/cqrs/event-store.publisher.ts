@@ -31,7 +31,7 @@ export class EventStorePublisher {
       }
 
       async commit() {
-        if (this.streamMetadata && !this.isMetadataSet) {
+        if (!this.isMetadataSet && this.streamMetadata) {
           this.isMetadataSet = true;
           await this.setStreamMetadata(this.streamMetadata);
         }

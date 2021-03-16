@@ -10,9 +10,11 @@ export interface IStreamConfig {
 }
 
 export interface IStreamMetadata {
-  // Optional Retention rules default keep for long time
+  // Retention rules default keep for long time
   $maxAge?: number;
   $maxCount?: number;
-  // Optional role access on event store
+  // Role access for the stream
   permissions?: ['$admin'];
+  // If permission are written bug or ignore
+  expectedStreamMetadataRevision?: number;
 }

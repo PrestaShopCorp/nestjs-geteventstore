@@ -26,6 +26,7 @@ import { PersistentSubscriptionOptions } from 'geteventstore-promise';
 const fs = require('fs');
 
 @Injectable()
+// TODO move to main EventStoreClass as CQRS option
 export class EventStoreBus implements OnModuleDestroy, OnModuleInit {
   private logger: Logger = new Logger(this.constructor.name);
   private readonly eventMapper: (data, options: IEventStoreEventOptions) => {};
@@ -59,6 +60,7 @@ export class EventStoreBus implements OnModuleDestroy, OnModuleInit {
     this.logger.debug(`Replace EventBus publisher by Eventstore publish`);
     this.bridgeEventsTo((this.eventBus as any).subject$);
 
+    // TODO ignore with publisher hack
     this.eventBus.publish = this.publish;
     return await this.connect();
   }
@@ -87,7 +89,7 @@ export class EventStoreBus implements OnModuleDestroy, OnModuleInit {
     this.logger.log(`Destroy, disconnect EventStore`);
     this.eventStore.close();
   }
-
+  // TODO ignore with publisher hack
   publish(event: IEvent) {
     const expectedVersion = event['expectedVersion'] || ExpectedVersion.Any;
 
@@ -95,20 +97,20 @@ export class EventStoreBus implements OnModuleDestroy, OnModuleInit {
       .writeEvents(event['eventStreamId'], [event], expectedVersion)
       .pipe(
         tap(
-          (_) => {
+          _ => {
             // Forward to local event handler and saga
             if (this.config.publishAlsoLocally) {
               this.subject$.next(event);
             }
           },
-          (err) => {
+          err => {
             this.onPublishFail(err, [event], this);
           },
         ),
       )
       .toPromise();
   }
-
+  // TODO ignore with publisher hack
   async publishAll(events: IEvent[], streamConfig: IStreamConfig) {
     const expectedVersion = streamConfig.expectedVersion || ExpectedVersion.Any;
     const eventCount = events.length;
@@ -119,13 +121,13 @@ export class EventStoreBus implements OnModuleDestroy, OnModuleInit {
       .writeEvents(streamConfig.streamName, events, expectedVersion)
       .pipe(
         tap(
-          (_) => {
+          _ => {
             // Forward to local event handler and saga
             if (this.config.publishAlsoLocally) {
-              events.forEach((event) => this.subject$.next(event));
+              events.forEach(event => this.subject$.next(event));
             }
           },
-          (err) => {
+          err => {
             this.onPublishFail(err, events, this);
           },
         ),
@@ -135,7 +137,7 @@ export class EventStoreBus implements OnModuleDestroy, OnModuleInit {
 
   async assertProjections(projections: IEventStoreProjection[]) {
     await Promise.all(
-      projections.map(async (projection) => {
+      projections.map(async projection => {
         let content;
         if (projection.content) {
           this.logger.log(
@@ -199,7 +201,7 @@ export class EventStoreBus implements OnModuleDestroy, OnModuleInit {
     subscriptions: IEventStorePersistentSubscriptionConfig[],
   ) {
     await Promise.all(
-      subscriptions.map(async (subscription) => {
+      subscriptions.map(async subscription => {
         try {
           this.logger.log(
             `Check if persistent subscription "${subscription.group}" on stream ${subscription.stream} needs to be created `,
@@ -238,7 +240,7 @@ export class EventStoreBus implements OnModuleDestroy, OnModuleInit {
       }),
     );
     await Promise.all(
-      subscriptions.map(async (config) => {
+      subscriptions.map(async config => {
         this.logger.log(
           `Connecting to persistent subscription "${config.group}" on stream ${config.stream}`,
         );

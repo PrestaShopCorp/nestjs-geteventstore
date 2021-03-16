@@ -1,15 +1,16 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
 import * as clc from 'cli-color';
 import { HeroRepository } from '../../repository/hero.repository';
 import { DropAncientItemCommand } from '../impl/drop-ancient-item.command';
-import { EventStorePublisher } from '../../../../../src/';
+import { EventStore } from 'nestjs-geteventstore';
 
 @CommandHandler(DropAncientItemCommand)
 export class DropAncientItemHandler
   implements ICommandHandler<DropAncientItemCommand> {
   constructor(
     private readonly repository: HeroRepository,
-    private readonly publisher: EventStorePublisher,
+    private readonly publisher: EventPublisher,
+    private readonly eventStore: EventStore,
   ) {}
 
   async execute(command: DropAncientItemCommand) {

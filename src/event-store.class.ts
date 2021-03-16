@@ -6,14 +6,15 @@ import {
 } from 'node-eventstore-client';
 import * as geteventstorePromise from 'geteventstore-promise';
 import { HTTPClient } from 'geteventstore-promise';
-import { from, throwError } from 'rxjs';
+import { from, of, throwError } from 'rxjs';
 import { Logger } from '@nestjs/common';
 import { catchError, flatMap, map, toArray } from 'rxjs/operators';
 import { ExpectedVersion } from './interfaces/event.interface';
-import { IEvent } from '@nestjs/cqrs';
+import { AggregateRoot, IEvent } from '@nestjs/cqrs';
 import { IEventStoreConfig } from './interfaces/event-store-config.interface';
 import { v4 } from 'uuid';
 import { ISubscriptionStatus } from './interfaces/subscription.interface';
+import { IStreamConfig } from './interfaces/stream-config.interface';
 
 export class EventStore {
   private logger: Logger = new Logger(this.constructor.name);
@@ -58,11 +59,30 @@ export class EventStore {
       this.config.onTcpDisconnected(this);
     });
   }
+  commitOn(aggregate: AggregateRoot, streamConfig: IStreamConfig) {
+    aggregate.commit = async () => {
+      const events = aggregate.getUncommittedEvents();
+      if (streamConfig.metadata) {
+        await this.connection.setStreamMetadataRaw(
+          streamConfig.streamName,
+          streamConfig.metadata.expectedStreamMetadataRevision,
+          streamConfig.metadata,
+        );
+      }
+      await this.writeEvents(
+        streamConfig.streamName,
+        events,
+        streamConfig.expectedVersion,
+      );
+      aggregate.commit();
+    };
+    return this;
+  }
 
   writeEvents(stream, events: IEvent[], expectedVersion = ExpectedVersion.Any) {
     return from(events)
       .pipe(
-        map((event) =>
+        map(event =>
           createJsonEventData(
             event['eventId'] || v4(),
             event['data'] || {},
@@ -70,7 +90,7 @@ export class EventStore {
             event['eventType'] || event.constructor.name,
           ),
         ),
-        catchError((err) => {
+        catchError(err => {
           return throwError({
             message: `Unable to convert event to EventStore event : ${err.message}`,
             response: { status: 400 },
@@ -80,12 +100,12 @@ export class EventStore {
       )
       .pipe(
         //tap(esEvents => console.log('Writing events', stream, esEvents)),
-        flatMap((esEvents) =>
+        flatMap(esEvents =>
           from(
             this.connection.appendToStream(stream, expectedVersion, esEvents),
           ),
         ),
-        catchError((err) => {
+        catchError(err => {
           if (err.response) {
             err.message = err.message + ' : ' + err.response.statusText;
           }
@@ -147,7 +167,7 @@ export class EventStore {
           bufferSize,
           autoAck,
         )
-        .then((subscription) => {
+        .then(subscription => {
           this.logger.log(
             `Connected to persistent subscription ${group} on stream ${stream}!`,
           );
@@ -216,7 +236,7 @@ export class EventStore {
         lastCheckpoint,
         resolveLinkTos,
         onEvent,
-        (subscription) => {
+        subscription => {
           this.catchupSubscriptions[stream] = {
             isConnected: true,
             streamName: stream,

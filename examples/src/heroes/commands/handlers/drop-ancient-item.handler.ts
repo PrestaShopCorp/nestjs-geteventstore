@@ -15,7 +15,6 @@ export class DropAncientItemHandler
   async execute(command: DropAncientItemCommand) {
     console.log(clc.yellowBright('Async DropAncientItemCommand...'));
     const { heroId, itemId } = command;
-    await this.publisher.setStreamConfig({ streamName: `hero-${heroId}` });
 
     // Use default aggregate config
     const hero = this.publisher.mergeObjectContext(
@@ -24,6 +23,6 @@ export class DropAncientItemHandler
     hero.addItem(itemId);
     hero.dropItem(itemId);
 
-    await hero.commit();
+    await hero.commit(`hero-${heroId}`);
   }
 }

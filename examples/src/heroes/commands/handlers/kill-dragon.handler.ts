@@ -41,10 +41,10 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     hero.damageEnemy(dragonId, 10);
     hero.damageEnemy(dragonId, 10);
     hero.damageEnemy(dragonId, 10);
-    await hero.commit(ExpectedVersion.NoStream);
+    await hero.commit(`dragon_fight-${dragonId}`, ExpectedVersion.NoStream);
 
     hero.killEnemy(dragonId);
-    await hero.commit();
+    await hero.commit(`dragon_fight-${dragonId}`);
 
     await transaction.commit();
 

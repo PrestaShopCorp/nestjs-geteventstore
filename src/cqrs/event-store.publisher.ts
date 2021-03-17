@@ -16,7 +16,6 @@ export interface Constructor<T> {
 @Injectable()
 // FIXME wait until publishAll is fixed (not used in nest CQRS)
 export class EventStorePublisher {
-  private streamName;
   constructor(
     private readonly eventBus: EventStoreBus,
     private readonly eventStore: EventStore,
@@ -31,7 +30,6 @@ export class EventStorePublisher {
    * @param streamConfig
    */
   async setStreamConfig(streamConfig: IStreamConfig) {
-    this.streamName = streamConfig.streamName;
     await this.eventStore.connection.setStreamMetadataRaw(
       streamConfig.streamName,
       ExpectedVersion.Any,
@@ -45,15 +43,16 @@ export class EventStorePublisher {
    * @param expectedVersion
    */
   async startTransaction(
+    streamName: string,
     expectedVersion: ExpectedVersion = null,
   ): Promise<EventStoreTransaction> {
-    if (this.streamName == null) {
+    if (streamName == null) {
       throw new Error(
         'No stream set, have you set eventStorePublisher.setStreamConfig() before commit ?',
       );
     }
     return await this.eventStore.connection.startTransaction(
-      this.streamName,
+      streamName,
       expectedVersion,
     );
   }
@@ -71,9 +70,8 @@ export class EventStorePublisher {
     metatype: T,
   ): T {
     const eventStore = this.eventStore;
-    const streamName = this.streamName;
     return class extends metatype {
-      async commit(expectedRevision: ExpectedVersion = null) {
+      async commit(streamName, expectedRevision: ExpectedVersion = null) {
         if (streamName == null) {
           throw new Error(
             'No stream set, have you set eventStorePublisher.setStreamConfig() before commit ?',
@@ -91,8 +89,10 @@ export class EventStorePublisher {
 
   mergeObjectContext<T extends EventStoreAggregateRoot<IEvent>>(object: T): T {
     const eventStore = this.eventStore;
-    const streamName = this.streamName;
-    object.commit = async (expectedRevision: ExpectedVersion = null) => {
+    object.commit = async (
+      streamName,
+      expectedRevision: ExpectedVersion = null,
+    ) => {
       if (streamName == null) {
         throw new Error(
           'No stream set, have you set eventStorePublisher.setStreamConfig() before commit ?',

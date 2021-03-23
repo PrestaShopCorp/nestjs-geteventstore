@@ -1,0 +1,295 @@
+import { PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
+import { v4 } from 'uuid';
+import { PersistentSubscriptionOptions } from 'geteventstore-promise';
+import { readFileSync } from 'fs';
+
+import { IAcknowledgeableEvent } from '../interfaces';
+import { EventStoreProjectionType } from './type';
+import { EventStore } from './event-store';
+import { ReadEventBus } from '../cqrs';
+import {
+  ICatchupSubscriptionConfig,
+  IEventStoreServiceConfig,
+  IPersistentSubscriptionConfig,
+  IVolatileSubscriptionConfig,
+} from './interfaces';
+
+@Injectable()
+export class EventStoreService implements OnModuleDestroy, OnModuleInit {
+  private logger: Logger = new Logger(this.constructor.name);
+
+  constructor(
+    private readonly eventStore: EventStore,
+    private readonly config: IEventStoreServiceConfig,
+    private readonly eventBus: ReadEventBus,
+  ) {}
+
+  /**
+   * Hack nest eventBus instance to override publisher
+   */
+  async onModuleInit() {
+    this.logger.debug(`Replace EventBus publisher by Eventstore publish`);
+
+    return await this.connect();
+  }
+
+  async connect() {
+    await this.eventStore.connect();
+    this.logger.debug(`EventStore connected`);
+
+    await this.assertProjections(this.config.projections || []);
+    if (this.config.subscriptions) {
+      await this.subscribeToCatchUpSubscriptions(
+        this.config.subscriptions.catchup || [],
+      );
+      await this.subscribeToVolatileSubscriptions(
+        this.config.subscriptions.volatile || [],
+      );
+      await this.subscribeToPersistentSubscriptions(
+        this.config.subscriptions.persistent || [],
+      );
+    }
+    // Wait for everything to be up before application boot
+    return Promise.resolve(this);
+  }
+
+  onModuleDestroy(): any {
+    this.logger.log(`Destroy, disconnect EventStore`);
+    this.eventStore.close();
+  }
+
+  async assertProjections(projections: EventStoreProjectionType[]) {
+    await Promise.all(
+      projections.map(async (projection) => {
+        let content;
+        if (projection.content) {
+          this.logger.log(
+            `Assert projection "${projection.name}" from content`,
+          );
+          content = projection.content;
+        } else if (projection.file) {
+          this.logger.log(
+            `Assert projection "${projection.name}" from file ${projection.file}`,
+          );
+          content = readFileSync(projection.file, 'utf8');
+        }
+        await this.eventStore.HTTPClient.projections.assert(
+          projection.name,
+          content,
+          projection.mode,
+          projection.enabled,
+          projection.checkPointsEnabled,
+          projection.emitEnabled,
+          projection.trackEmittedStreams,
+        );
+        this.logger.log(`Projection "${projection.name}" asserted !`);
+      }),
+    );
+  }
+
+  async subscribeToCatchUpSubscriptions(
+    subscriptions: ICatchupSubscriptionConfig[],
+  ) {
+    await Promise.all(
+      subscriptions.map((config: ICatchupSubscriptionConfig) => {
+        return this.eventStore.subscribeToCatchupSubscription(
+          config.stream,
+          (subscription, payload) => this.onEvent(subscription, payload),
+          config.lastCheckpoint,
+          config.resolveLinkTos,
+          config.onSubscriptionStart,
+          config.onSubscriptionDropped,
+        );
+      }),
+    );
+  }
+
+  async subscribeToVolatileSubscriptions(
+    subscriptions: IVolatileSubscriptionConfig[],
+  ) {
+    await Promise.all(
+      subscriptions.map((config: IVolatileSubscriptionConfig) => {
+        return this.eventStore.subscribeToVolatileSubscription(
+          config.stream,
+          (subscription, payload) => this.onEvent(subscription, payload),
+          config.resolveLinkTos,
+          config.onSubscriptionStart,
+          config.onSubscriptionDropped,
+        );
+      }),
+    );
+  }
+
+  async subscribeToPersistentSubscriptions(
+    subscriptions: IPersistentSubscriptionConfig[],
+  ) {
+    await Promise.all(
+      subscriptions.map(async (subscription) => {
+        try {
+          this.logger.log(
+            `Check if persistent subscription "${subscription.group}" on stream ${subscription.stream} needs to be created `,
+          );
+          if (subscription.options.resolveLinktos !== undefined) {
+            this.logger.warn(
+              "DEPRECATED: The resolveLinktos parameter shouln't be used anymore. The resolveLinkTos parameter should be used instead.",
+            );
+          }
+          await this.eventStore.HTTPClient.persistentSubscriptions.getSubscriptionInfo(
+            subscription.group,
+            subscription.stream,
+          );
+        } catch (e) {
+          if (!e.response || e.response.status != 404) {
+            throw e;
+          }
+          const options: PersistentSubscriptionOptions = {
+            ...subscription.options,
+            ...{
+              resolveLinkTos:
+                subscription.options.resolveLinkTos ||
+                subscription.options.resolveLinktos,
+            },
+          };
+          await this.eventStore.HTTPClient.persistentSubscriptions.assert(
+            subscription.group,
+            subscription.stream,
+            options,
+          );
+          this.logger.log(
+            `Persistent subscription "${subscription.group}" on stream ${subscription.stream} created ! ` +
+              JSON.stringify(subscription.options),
+          );
+        }
+      }),
+    );
+    await Promise.all(
+      subscriptions.map(async (config) => {
+        this.logger.log(
+          `Connecting to persistent subscription "${config.group}" on stream ${config.stream}`,
+        );
+        return await this.eventStore.subscribeToPersistentSubscription(
+          config.stream,
+          config.group,
+          (subscription, payload) => this.onEvent(subscription, payload),
+          config.autoAck,
+          config.bufferSize,
+          config.onSubscriptionStart,
+          config.onSubscriptionDropped,
+        );
+      }),
+    );
+  }
+
+  async onEvent(subscription, payload) {
+    const { event } = payload;
+
+    // TODO allow unresolved event
+    if (!payload.isResolved) {
+      this.logger.warn(
+        `Ignore unresolved event from stream ${payload.originalStreamId} with ID ${payload.originalEvent.eventId}`,
+      );
+      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
+        await subscription.acknowledge([payload]);
+      }
+      return;
+    }
+    // TODO handle not JSON
+    if (!event.isJson) {
+      // TODO add info on error not coded
+      this.logger.warn(
+        `Received event that could not be resolved! stream ${event.eventStreamId} type ${event.eventType} id ${event.eventId} `,
+      );
+      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
+        await subscription.acknowledge([payload]);
+      }
+      return;
+    }
+
+    // TODO throw error
+    let data = {};
+    try {
+      data = JSON.parse(event.data.toString());
+    } catch (e) {
+      this.logger.warn(
+        `Received event of type ${event.eventType} with shitty data acknowledge`,
+      );
+      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
+        await subscription.acknowledge([payload]);
+      }
+      return;
+    }
+
+    let metadata = {
+      correlation_id: v4(),
+      time: Math.floor(new Date().getTime() / 1000),
+    };
+    if (event.metadata.toString()) {
+      metadata = { ...metadata, ...JSON.parse(event.metadata.toString()) };
+    }
+
+    const finalEvent = this.eventBus.map<IAcknowledgeableEvent>(data, {
+      metadata,
+      eventStreamId: event.eventStreamId,
+      eventId: event.eventId,
+      eventNumber: event.eventNumber.low,
+      eventType: event.eventType,
+      originalEventId: payload.originalEvent.eventId || event.eventId,
+    });
+
+    if (!finalEvent) {
+      this.logger.warn(
+        `Received event of type ${event.eventType} with no declared handler acknowledge`,
+      );
+      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
+        await subscription.acknowledge([payload]);
+      }
+      return;
+    }
+    // If event wants to handle ack/nack
+    // only for persistent
+    if (subscription.hasOwnProperty('_autoAck')) {
+      if (
+        typeof finalEvent.ack == 'function' &&
+        typeof finalEvent.nack == 'function'
+      ) {
+        const ack = async () => {
+          this.logger.debug(
+            `Acknowledge event ${event.eventType} with id ${event.eventId}`,
+          );
+          return subscription.acknowledge([payload]);
+        };
+        const nack = async (
+          action: PersistentSubscriptionNakEventAction,
+          reason: string,
+        ) => {
+          this.logger.debug(
+            `Nak and ${
+              Object.keys(PersistentSubscriptionNakEventAction)[action]
+            } for event ${event.eventType} with id ${
+              event.eventId
+            } : reason ${reason}`,
+          );
+          return subscription.fail([payload], action, reason);
+        };
+
+        finalEvent.ack = ack;
+        finalEvent.nack = nack;
+      } else {
+        // Otherwise manage here
+        this.logger.debug(
+          `Auto acknowledge event ${event.eventType} with id ${event.eventId}`,
+        );
+        subscription.acknowledge([payload]);
+      }
+    }
+
+    // Dispatch to event handlers and sagas
+    this.eventBus.publish(finalEvent);
+  }
+}

@@ -1,4 +1,5 @@
 import {
+  Equals,
   IsNotEmpty,
   IsPositive,
   IsRFC3339,
@@ -15,14 +16,15 @@ export class EventMetadataDto {
    * @readonly
    * @see https://github.com/cloudevents/spec/blob/v1.0.1/spec.md#overview
    */
-  readonly specversion = 1.0;
+  @Equals(1)
+  readonly specversion;
 
   /**
-   * Typeof event: (<reverse-DNS-Name>).(<service>.)?(<command>.)?(<event-type>.)?(<event-version>)
-   * @example com.my-api.my-service-v1.my-command.my-event.v2
+   * Event version
+   * @example 1
    */
-  @Matches(/(\w+\.)(\w+\.){0,3}(\w+)/)
-  type: string;
+  @IsPositive()
+  version: number;
 
   /**
    * Timestamp of creation date
@@ -39,11 +41,11 @@ export class EventMetadataDto {
   correlation_id: string;
 
   /**
-   * Event version
-   * @example 1
+   * Typeof event: (<reverse-DNS-Name>).(<service>.)?(<command>.)?(<event-type>.)?(<event-version>)
+   * @example com.my-api.my-service-v1.my-command.my-event.v2
    */
-  @IsPositive()
-  version: number;
+  @Matches(/(\w+\.)(\w+\.){0,3}(\w+)/)
+  type: string;
 
   /**
    * Identifier of the context in which an event happened.

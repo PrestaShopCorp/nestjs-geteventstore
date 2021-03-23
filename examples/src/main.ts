@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { EventStoredApplicationModule } from './app.module';
 import { SentryExceptionFilter } from './sentry.exception-filter';
-import { Logger } from 'nestjs-pino-stackdriver/dist';
+import { Logger } from 'nestjs-pino-stackdriver';
 
 declare const module: any;
 

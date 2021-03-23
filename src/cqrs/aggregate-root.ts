@@ -6,7 +6,7 @@ const IS_AUTO_COMMIT_ENABLED = Symbol();
 export abstract class AggregateRoot<
   EventBase extends IEvent = IEvent,
   EventBusBase extends IEventBus<EventBase> = IEventBus<EventBase>
-  > {
+> {
   public [IS_AUTO_COMMIT_ENABLED] = false;
   private readonly [INTERNAL_EVENTS]: EventBase[] = [];
   private readonly _publishers: EventBusBase[];
@@ -30,21 +30,23 @@ export abstract class AggregateRoot<
 
   protected addEvent<T extends EventBase = EventBase>(event: T) {
     this[INTERNAL_EVENTS].push(event);
+    return this;
   }
 
   protected clearEvents() {
     this[INTERNAL_EVENTS].length = 0;
+    return this;
   }
 
   commit() {
     this.publishers.forEach((publisher) =>
       publisher.publishAll(this.getUncommittedEvents()),
     );
-    this.clearEvents();
+    return this.clearEvents();
   }
 
   uncommit() {
-    this.clearEvents();
+    return this.clearEvents();
   }
 
   getUncommittedEvents(): EventBase[] {

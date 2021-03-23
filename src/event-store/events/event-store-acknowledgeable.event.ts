@@ -1,9 +1,9 @@
 import { PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
-import { ReadEvent } from '../events';
-import { IAcknowledgeableEvent } from '../interfaces';
+import { EventStoreEvent } from './index';
+import { IAcknowledgeableEvent } from '../../interfaces';
 
 export abstract class EventStoreAcknowledgeableEvent
-  extends ReadEvent
+  extends EventStoreEvent
   implements IAcknowledgeableEvent {
   ack() {
     return Promise.resolve();

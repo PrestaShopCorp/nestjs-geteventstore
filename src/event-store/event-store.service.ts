@@ -19,6 +19,8 @@ import {
   IPersistentSubscriptionConfig,
   IVolatileSubscriptionConfig,
 } from './interfaces';
+import { EventMetadataDto } from '../dto';
+import { createDefaultMetadata } from './create-default-metadata.tool';
 
 @Injectable()
 export class EventStoreService implements OnModuleDestroy, OnModuleInit {
@@ -225,10 +227,11 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
       return;
     }
 
-    let metadata = {
-      correlation_id: v4(),
-      time: Math.floor(new Date().getTime() / 1000),
-    };
+    // this is going to throw error if we had not defined "source"
+    // and "type" metadata attributes in the original event
+    // @todo Vincent do we need to add defaults for those too ?
+    //    do we throw an error in that case ?
+    let metadata = createDefaultMetadata();
     if (event.metadata.toString()) {
       metadata = { ...metadata, ...JSON.parse(event.metadata.toString()) };
     }

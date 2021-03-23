@@ -2,14 +2,11 @@ import { HeroFoundItemEvent } from '../events/impl/hero-found-item.event';
 import { HeroKilledDragonEvent } from '../events/impl/hero-killed-dragon.event';
 import { HeroDropItemEvent } from '../events/impl/hero-drop-item.event';
 import { HeroDamagedEnemyEvent } from '../events/impl/hero-damaged-enemy.event';
-import { EventStoreAggregateRoot } from '../../../../src/cqrs/event-store.aggregate-root';
+import { EventStoreAggregateRoot } from '../../../../src';
 
 export class Hero extends EventStoreAggregateRoot {
-  constructor(private id) {
+  constructor(private readonly id) {
     super();
-    this.streamConfig = {
-      streamName: `hero-${id}`,
-    };
   }
 
   damageEnemy(dragonId: string, hitPoint: number) {

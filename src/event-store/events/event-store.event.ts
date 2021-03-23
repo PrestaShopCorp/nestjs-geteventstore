@@ -1,7 +1,9 @@
 import { v4 } from 'uuid';
-import { IMappedEventOptions, IReadEvent } from '../interfaces';
 
-export abstract class ReadEvent implements IReadEvent {
+import { IMappedEventOptions, IReadEvent } from '../../interfaces';
+import { createDefaultMetadata } from '../create-default-metadata.tool';
+
+export abstract class EventStoreEvent implements IReadEvent {
   public metadata: IReadEvent['metadata'];
   public readonly eventId?: IReadEvent['eventId'];
   public readonly eventType?: string;
@@ -14,10 +16,7 @@ export abstract class ReadEvent implements IReadEvent {
     options: IMappedEventOptions,
   ) {
     this.metadata = {
-      ...{
-        correlation_id: v4(),
-        version: 1,
-      },
+      ...createDefaultMetadata(),
       ...options.metadata,
     };
     this.eventId = options.eventId || v4();

@@ -4,6 +4,9 @@ import { EventMetadataDto } from '../../dto';
 type PartialExcept<T, K extends keyof T> = Pick<T, K> & Partial<Omit<T, K>>;
 export interface IWriteEvent extends IEvent {
   data: any;
-  metadata: PartialExcept<EventMetadataDto, 'correlation_id' | 'time'>;
+  metadata: PartialExcept<
+    EventMetadataDto,
+    'correlation_id' | 'time' | 'source' | 'type'
+  >;
   eventId?: string;
 }

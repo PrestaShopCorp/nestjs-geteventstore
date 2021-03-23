@@ -2,13 +2,13 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import * as clc from 'cli-color';
 import { HeroRepository } from '../../repository/hero.repository';
 import { KillDragonCommand } from '../impl/kill-dragon.command';
-import { DAY, EventStorePublisher, ExpectedVersion } from '../../../../../src/';
+import { ExpectedVersion, WriteEventBus } from '../../../../../src';
 
 @CommandHandler(KillDragonCommand)
 export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
   constructor(
     private readonly repository: HeroRepository,
-    private readonly publisher: EventStorePublisher,
+    private readonly publisher: WriteEventBus,
   ) {}
 
   async execute(command: KillDragonCommand) {
@@ -20,22 +20,9 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
       ),
     );
     // build aggregate by fetching data from database
-    // add publish capacity to the aggregate root
-    const hero = this.publisher.mergeObjectContext(
-      await this.repository.findOneById(+heroId),
-    );
-    // Use custom stream only for this process
-    await hero.setStreamConfig({
-      streamName: `dragon_killed-${dragonId}`,
-      // Bug if the stream is not new when writing
-      expectedVersion: ExpectedVersion.NoStream,
-      // Set retention rules for this new stream
-      metadata: {
-        $maxAge: 2 * DAY,
-        $maxCount: 5,
-      },
-    });
+    const hero = await this.repository.findOneById(+heroId);
 
+    hero.addPublisher(this.publisher);
     hero.damageEnemy(dragonId, 2);
     hero.damageEnemy(dragonId, -8);
     hero.damageEnemy(dragonId, 10);
@@ -44,16 +31,10 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     hero.damageEnemy(dragonId, 10);
     hero.damageEnemy(dragonId, 10);
     hero.damageEnemy(dragonId, 10);
-    await hero.commit();
+    await hero.commit(ExpectedVersion.NoStream);
 
-    // Change stream for final event
-    await hero.setStreamConfig({
-      streamName: `hero-${heroId}`,
-      // It must be a new stream
-      expectedVersion: ExpectedVersion.NoStream,
-    });
     hero.killEnemy(dragonId);
-    await hero.commit();
+    await hero.commit(ExpectedVersion.StreamExists);
 
     return command;
   }

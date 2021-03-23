@@ -11,8 +11,4 @@ export class HeroDamagedEnemyEvent extends EventStoreEvent {
   ) {
     super(data, options);
   }
-
-  getStream() {
-    return `hero-${this.data.heroId}`;
-  }
 }

@@ -1,6 +1,6 @@
-import { AcknowledgeableEventStoreEvent } from '../../../../../src';
+import { EventStoreAcknowledgeableEvent } from '../../../../../src';
 
-export class HeroKilledDragonEvent extends AcknowledgeableEventStoreEvent {
+export class HeroKilledDragonEvent extends EventStoreAcknowledgeableEvent {
   constructor(
     public readonly data: {
       heroId: string;
@@ -9,9 +9,5 @@ export class HeroKilledDragonEvent extends AcknowledgeableEventStoreEvent {
     options?,
   ) {
     super(data, options);
-  }
-
-  getStream() {
-    return `hero-${this.data.heroId}`;
   }
 }

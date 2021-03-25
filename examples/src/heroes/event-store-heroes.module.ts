@@ -1,16 +1,10 @@
 import { LoggerModule } from 'nestjs-pino-stackdriver/dist';
 import * as util from 'util';
 
-import {
-  Logger,
-  Module,
-} from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { TerminusModule } from '@nestjs/terminus';
 
-import {
-  EventStoreCqrsModule,
-  IEventStoreEventOptions,
-} from '../../../src';
+import { CqrsEventStoreModule } from '../../../src';
 import { CommandHandlers } from './commands/handlers';
 import { EventHandlers } from './events/handlers';
 import { heroesEvents } from './events/impl';
@@ -23,11 +17,12 @@ import { HeroesGameSagas } from './sagas/heroes.sagas';
 @Module({
   imports: [
     TerminusModule,
-    EventStoreCqrsModule.register(
+    CqrsEventStoreModule.register(
       {
         credentials: {
-          username: process.env.EVENTSTORE_CREDENTIALS_USERNAME || 'admin',
-          password: process.env.EVENTSTORE_CREDENTIALS_PASSWORD || 'changeit',
+          username: process.env.EVENTSTORE_CREDENTIALS_USERNAME || 'essentials',
+          password:
+            process.env.EVENTSTORE_CREDENTIALS_PASSWORD || 'firmus91(ouateS',
         },
         tcp: {
           host: process.env.EVENTSTORE_TCP_HOST || 'localhost',
@@ -76,32 +71,23 @@ import { HeroesGameSagas } from './sagas/heroes.sagas';
         onTcpConnected: () => {},
       },
       {
-        eventMapper: (data, options: IEventStoreEventOptions) => {
-          let className = `${options.eventType}`;
-          if (!heroesEvents[className]) {
-            return false;
-          }
-          Logger.debug(
-            `Build ${className} received from stream ${options.eventStreamId} with id ${options.eventId}`,
-          );
-          return new heroesEvents[className](data, options);
-        },
-        subscriptions: {
-          persistent: [
-            {
-              // Event stream category (before the -)
-              stream: '$ce-hero',
-              group: 'data',
-              autoAck: false,
-              bufferSize: 1,
-              // Subscription is created with this options
-              options: {
-                resolveLinkTos: true,
-                minCheckPointCount: 1,
-              },
-            },
-          ],
-        },
+        allowedEvents: heroesEvents,
+        // subscriptions: {
+        //   persistent: [
+        //     {
+        //       // Event stream category (before the -)
+        //       stream: '$ce-hero',
+        //       group: 'data',
+        //       autoAck: false,
+        //       bufferSize: 1,
+        //       // Subscription is created with this options
+        //       options: {
+        //         resolveLinkTos: true,
+        //         minCheckPointCount: 1,
+        //       },
+        //     },
+        //   ],
+        // },
       },
     ),
     LoggerModule.forRoot(),

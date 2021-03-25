@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { EventStorePublisher } from '../../event-store';
 
 export interface IWriteEventBusConfig {
-  serviceName: string;
+  serviceName?: string;
   // Handle publish error default do nothing
   onPublishFail?: (
     error: Error,

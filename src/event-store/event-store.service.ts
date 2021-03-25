@@ -1,26 +1,26 @@
 import { PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
 import {
+  Inject,
   Injectable,
   Logger,
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
-import { v4 } from 'uuid';
 import { PersistentSubscriptionOptions } from 'geteventstore-promise';
 import { readFileSync } from 'fs';
 
-import { IAcknowledgeableEvent } from '../interfaces';
-import { EventStoreProjectionType } from './type';
+import { EventStoreProjectionType } from '../interfaces';
 import { EventStore } from './event-store';
 import { ReadEventBus } from '../cqrs';
 import {
+  IAcknowledgeableEvent,
   ICatchupSubscriptionConfig,
   IEventStoreServiceConfig,
   IPersistentSubscriptionConfig,
   IVolatileSubscriptionConfig,
-} from './interfaces';
-import { EventMetadataDto } from '../dto';
-import { createDefaultMetadata } from './create-default-metadata.tool';
+} from '../interfaces';
+import { createDefaultMetadata } from './create-event-default-metadata.tool';
+import { CQRS_EVENT_STORE_CONFIG } from '../constants';
 
 @Injectable()
 export class EventStoreService implements OnModuleDestroy, OnModuleInit {
@@ -28,6 +28,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
 
   constructor(
     private readonly eventStore: EventStore,
+    @Inject(CQRS_EVENT_STORE_CONFIG)
     private readonly config: IEventStoreServiceConfig,
     private readonly eventBus: ReadEventBus,
   ) {}
@@ -227,11 +228,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
       return;
     }
 
-    // this is going to throw error if we had not defined "source"
-    // and "type" metadata attributes in the original event
-    // @todo Vincent do we need to add defaults for those too ?
-    //    do we throw an error in that case ?
-    let metadata = createDefaultMetadata();
+    let metadata = { ...createDefaultMetadata() };
     if (event.metadata.toString()) {
       metadata = { ...metadata, ...JSON.parse(event.metadata.toString()) };
     }

@@ -1,12 +1,12 @@
 import { Logger } from '@nestjs/common';
-import { IMappedEventOptions, IReadEventBusConfig } from '../interfaces';
+import { ReadEventOptionsType, ReadEventBusConfigType } from '../interfaces';
 
 export const defaultEventMapper = (
-  allEvents: IReadEventBusConfig['allowedEvents'],
+  allEvents: ReadEventBusConfigType['allowedEvents'],
 ) => {
   const logger = new Logger('Default Event Mapper');
   logger.log(`Will build events from ${allEvents}`);
-  return ((data, options: IMappedEventOptions) => {
+  return ((data, options: ReadEventOptionsType) => {
     let className = `${options.eventType}Event`;
     if (allEvents[className]) {
       logger.log(
@@ -15,5 +15,5 @@ export const defaultEventMapper = (
       return new allEvents[className](data, options);
     }
     return null;
-  }) as IReadEventBusConfig['eventMapper'];
+  }) as ReadEventBusConfigType['eventMapper'];
 };

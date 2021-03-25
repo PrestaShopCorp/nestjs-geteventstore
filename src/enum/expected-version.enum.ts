@@ -9,6 +9,4 @@ export enum ExpectedVersion {
   Any = -2,
   // the stream should not exist when writing.
   NoStream = -1,
-  // the stream should exist but be empty when writing.
-  EmptyStream = 0,
 }

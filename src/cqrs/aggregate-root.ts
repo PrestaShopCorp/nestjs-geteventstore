@@ -9,7 +9,7 @@ export abstract class AggregateRoot<
 > {
   public [IS_AUTO_COMMIT_ENABLED] = false;
   private readonly [INTERNAL_EVENTS]: EventBase[] = [];
-  private readonly _publishers: EventBusBase[];
+  private readonly _publishers: EventBusBase[] = [];
 
   set autoCommit(value: boolean) {
     this[IS_AUTO_COMMIT_ENABLED] = value;
@@ -19,8 +19,8 @@ export abstract class AggregateRoot<
     return this[IS_AUTO_COMMIT_ENABLED];
   }
 
-  addPublisher(subscriber: EventBusBase) {
-    this._publishers.push(subscriber);
+  addPublisher(publisher: EventBusBase) {
+    this._publishers.push(publisher);
     return this;
   }
 
@@ -39,14 +39,18 @@ export abstract class AggregateRoot<
   }
 
   commit() {
-    this.publishers.forEach((publisher) =>
-      publisher.publishAll(this.getUncommittedEvents()),
-    );
-    return this.clearEvents();
+    console.log(`publishers : ${this.publishers.length}`);
+    this.publishers.forEach((publisher) => {
+      console.log(`publish in publisher ${publisher.constructor.name}`);
+      publisher.publishAll(this.getUncommittedEvents());
+    });
+    this.clearEvents();
+    return this;
   }
 
   uncommit() {
-    return this.clearEvents();
+    this.clearEvents();
+    return this;
   }
 
   getUncommittedEvents(): EventBase[] {
@@ -58,7 +62,9 @@ export abstract class AggregateRoot<
   }
 
   apply<T extends EventBase = EventBase>(event: T, isFromHistory = false) {
+    console.log('apply');
     if (!isFromHistory) {
+      console.log('add event');
       this.addEvent(event);
     }
     this.autoCommit && this.commit();

@@ -7,26 +7,44 @@ import { EventStoreAggregateRoot } from '../../../../src';
 export class Hero extends EventStoreAggregateRoot {
   constructor(private readonly id) {
     super();
+    this.streamName = `hero-${id}`;
   }
 
   damageEnemy(dragonId: string, hitPoint: number) {
-    // logic
     this.apply(
-      new HeroDamagedEnemyEvent({
-        heroId: this.id,
-        dragonId,
-        hitPoint: hitPoint,
-      }),
+      new HeroDamagedEnemyEvent(
+        {
+          heroId: this.id,
+          dragonId,
+          hitPoint: hitPoint,
+        },
+        {
+          metadata: {
+            correlation_id: '1111',
+            type: 'type',
+            source: 'source',
+          },
+        },
+      ),
     );
   }
 
   killEnemy(dragonId: string) {
     // logic
     this.apply(
-      new HeroKilledDragonEvent({
-        heroId: this.id,
-        dragonId,
-      }),
+      new HeroKilledDragonEvent(
+        {
+          heroId: this.id,
+          dragonId,
+        },
+        {
+          metadata: {
+            correlation_id: '1111',
+            type: 'type',
+            source: 'source',
+          },
+        },
+      ),
     );
   }
 

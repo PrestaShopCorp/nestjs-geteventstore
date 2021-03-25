@@ -1,6 +1,10 @@
 import { DynamicModule, Module } from '@nestjs/common';
-import { EventStore, EventStoreHealthIndicator, EventStoreSubscriptionHealthIndicator } from './event-store';
-import { IEventStoreAsyncConfig, IEventStoreConfig } from './interfaces';
+import { EventStore } from './event-store';
+import { IEventStoreModuleAsyncConfig, IEventStoreConfig } from './interfaces';
+import {
+  EventStoreHealthIndicator,
+  EventStoreSubscriptionHealthIndicator,
+} from './health';
 
 const commonProvidersAndExports = {
   providers: [EventStoreHealthIndicator, EventStoreSubscriptionHealthIndicator],
@@ -29,7 +33,7 @@ export class EventStoreModule {
       ],
     };
   }
-  static registerAsync(options: IEventStoreAsyncConfig): DynamicModule {
+  static registerAsync(options: IEventStoreModuleAsyncConfig): DynamicModule {
     return {
       module: EventStoreModule,
       ...commonProvidersAndExports,

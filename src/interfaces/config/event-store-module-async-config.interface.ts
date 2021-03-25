@@ -1,7 +1,7 @@
 import { ModuleMetadata } from '@nestjs/common/interfaces';
 import { IEventStoreConfig } from './event-store-config.interface';
 
-export interface IEventStoreAsyncConfig
+export interface IEventStoreModuleAsyncConfig
   extends Pick<ModuleMetadata, 'imports'> {
   useFactory?: (
     ...args: any[]

@@ -20,9 +20,11 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
       ),
     );
     // build aggregate by fetching data from database
-    const hero = await this.repository.findOneById(+heroId);
+    const hero = (await this.repository.findOneById(+heroId)).addPublisher(
+      this.publisher,
+    );
 
-    hero.addPublisher(this.publisher);
+    console.log('handler damage');
     hero.damageEnemy(dragonId, 2);
     hero.damageEnemy(dragonId, -8);
     hero.damageEnemy(dragonId, 10);
@@ -31,10 +33,12 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     hero.damageEnemy(dragonId, 10);
     hero.damageEnemy(dragonId, 10);
     hero.damageEnemy(dragonId, 10);
+    console.log('commit');
     await hero.commit(ExpectedVersion.NoStream);
-
+    console.log('handler kill');
     hero.killEnemy(dragonId);
     await hero.commit(ExpectedVersion.StreamExists);
+    console.log('commit');
 
     return command;
   }

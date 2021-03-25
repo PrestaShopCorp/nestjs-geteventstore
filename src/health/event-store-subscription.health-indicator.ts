@@ -3,7 +3,7 @@ import {
   HealthIndicator,
   HealthIndicatorResult,
 } from '@nestjs/terminus';
-import { EventStore } from '../event-store';
+import { EventStore } from '../event-store/event-store';
 
 export class EventStoreSubscriptionHealthIndicator extends HealthIndicator {
   constructor(private eventStore: EventStore) {

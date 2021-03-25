@@ -1,8 +1,10 @@
-import { ExpectedVersion } from '../../event-store';
-import { IWriteEvent } from './write-event.interface';
+import { IBaseEvent } from './base-event.interface';
 
-export interface IReadEvent extends IWriteEvent {
-  eventStreamId?: string;
-  expectedVersion?: ExpectedVersion;
+export interface IReadEvent extends IBaseEvent {
+  eventStreamId: string;
+  eventNumber: number;
+  originalEventId: string;
   getStream(): string;
+  getStreamCategory(): string;
+  getStreamId(): string;
 }

@@ -11,9 +11,13 @@ import { HTTPClient } from 'geteventstore-promise';
 import { from, throwError } from 'rxjs';
 import { catchError, flatMap, map, toArray } from 'rxjs/operators';
 
-import { IEventStoreConfig, IWriteEvent } from '../interfaces';
-import { ExpectedVersion } from './enum';
-import { ISubscriptionStatus } from './interfaces';
+import {
+  IEventStoreConfig,
+  IWriteEvent,
+  ISubscriptionStatus,
+} from '../interfaces';
+import { ExpectedVersion } from '../enum';
+import { createDefaultMetadata } from './create-event-default-metadata.tool';
 
 export class EventStore {
   private logger: Logger = new Logger(this.constructor.name);
@@ -70,8 +74,8 @@ export class EventStore {
           createJsonEventData(
             event.eventId || v4(),
             event.data || {},
-            event.metadata || { version: 1, created_at: new Date() },
-            event.constructor.name,
+            event.metadata || createDefaultMetadata(),
+            event.eventType || event.constructor.name,
           ),
         ),
         catchError((err) => {

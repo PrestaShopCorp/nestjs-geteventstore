@@ -1,4 +1,4 @@
-import { EventStore } from '../event-store';
+import { EventStore } from '../event-store/event-store';
 import {
   HealthCheckError,
   HealthIndicator,

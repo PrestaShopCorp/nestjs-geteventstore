@@ -16,12 +16,12 @@ export class DropAncientItemHandler
     console.log(clc.yellowBright('Async DropAncientItemCommand...'));
 
     const { heroId, itemId } = command;
-    const hero = (await this.repository.findOneById(+heroId)).addPublisher(
-      this.publisher,
-    );
+    const hero = await this.repository.findOneById(+heroId);
+
     hero.addItem(itemId);
     hero.dropItem(itemId);
 
+    hero.addPublisher(this.publisher);
     hero.commit();
   }
 }

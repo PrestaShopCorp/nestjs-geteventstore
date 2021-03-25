@@ -19,7 +19,7 @@ import {
   IPersistentSubscriptionConfig,
   IVolatileSubscriptionConfig,
 } from '../interfaces';
-import { createDefaultMetadata } from './create-event-default-metadata.tool';
+import { createDefaultMetadata } from '../tools/create-event-default-metadata.tool';
 import { CQRS_EVENT_STORE_CONFIG } from '../constants';
 
 @Injectable()

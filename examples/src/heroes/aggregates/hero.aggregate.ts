@@ -32,19 +32,10 @@ export class Hero extends EventStoreAggregateRoot {
   killEnemy(dragonId: string) {
     // logic
     this.apply(
-      new HeroKilledDragonEvent(
-        {
-          heroId: this.id,
-          dragonId,
-        },
-        {
-          metadata: {
-            correlation_id: '1111',
-            type: 'type',
-            source: 'source',
-          },
-        },
-      ),
+      new HeroKilledDragonEvent({
+        heroId: this.id,
+        dragonId,
+      }),
     );
   }
 

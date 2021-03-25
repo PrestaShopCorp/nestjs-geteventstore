@@ -17,7 +17,7 @@ import {
   ISubscriptionStatus,
 } from '../interfaces';
 import { ExpectedVersion } from '../enum';
-import { createDefaultMetadata } from './create-event-default-metadata.tool';
+import { createDefaultMetadata } from '../tools/create-event-default-metadata.tool';
 
 export class EventStore {
   private logger: Logger = new Logger(this.constructor.name);

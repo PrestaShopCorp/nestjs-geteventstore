@@ -39,9 +39,7 @@ export abstract class AggregateRoot<
   }
 
   commit() {
-    console.log(`publishers : ${this.publishers.length}`);
     this.publishers.forEach((publisher) => {
-      console.log(`publish in publisher ${publisher.constructor.name}`);
       publisher.publishAll(this.getUncommittedEvents());
     });
     this.clearEvents();
@@ -62,9 +60,7 @@ export abstract class AggregateRoot<
   }
 
   apply<T extends EventBase = EventBase>(event: T, isFromHistory = false) {
-    console.log('apply');
     if (!isFromHistory) {
-      console.log('add event');
       this.addEvent(event);
     }
     this.autoCommit && this.commit();

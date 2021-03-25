@@ -7,6 +7,4 @@ type WriteEventOptionsType = Omit<IWriteEvent, 'data'> & {
   originalEventId: never;
 };
 
-export type EventStoreEventOptionsType =
-  | ReadEventOptionsType
-  | WriteEventOptionsType;
+export type EventOptionsType = ReadEventOptionsType | WriteEventOptionsType;

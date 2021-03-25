@@ -41,10 +41,10 @@ export class EventMetadataDto {
   correlation_id: string;
 
   /**
-   * Typeof event: (<reverse-DNS-Name>).(<service>.)?(<command>.)?(<event-type>.)?(<event-version>)
-   * @example com.my-api.my-service-v1.my-command.my-event.v2
+   * Typeof event: (<reverse-DNS-Name>).(<service>.)?(<aggregate>.)?(<aggregate-action>.)?(<event-type>.)?(<event-version>)
+   * @example com.my-api.my-service-v1.my-aggregate.my-action.my-event.v2
    */
-  @Matches(/(\w+\.)(\w+\.){0,3}(\w+)/)
+  @Matches(/(\w+\.)(\w+\.){0,4}(\w+)/)
   type: string;
 
   /**

@@ -1,9 +1,9 @@
 import { AggregateRoot as Parent } from '../cqrs';
 import { ExpectedVersion } from '../enum';
-import { IWriteEvent, IWriteEventBus } from '../interfaces';
+import { IBaseEvent, IWriteEventBus } from '../interfaces';
 
 export abstract class EventStoreAggregateRoot<
-  EventBase extends IWriteEvent = IWriteEvent,
+  EventBase extends IBaseEvent = IBaseEvent,
   EventBusBase extends IWriteEventBus = IWriteEventBus
 > extends Parent<EventBase, EventBusBase> {
   private _streamName: string;

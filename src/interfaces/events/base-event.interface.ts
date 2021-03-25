@@ -1,13 +1,9 @@
 import { IEvent } from '@nestjs/cqrs';
 import { EventMetadataDto } from '../../dto';
 
-type PartialExcept<T, K extends keyof T> = Pick<T, K> & Partial<Omit<T, K>>;
 export interface IBaseEvent extends IEvent {
   data: any;
-  metadata: PartialExcept<
-    EventMetadataDto,
-    'correlation_id' | 'time' | 'source' | 'type'
-  >;
+  metadata?: Partial<EventMetadataDto>;
   eventId?: string;
   eventType?: string;
 }

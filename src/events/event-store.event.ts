@@ -2,11 +2,11 @@ import { v4 } from 'uuid';
 
 import {
   IBaseEvent,
-  EventStoreEventOptionsType,
+  EventOptionsType,
   IReadEvent,
   IWriteEvent,
 } from '../interfaces';
-import { createDefaultMetadata } from '../event-store/create-event-default-metadata.tool';
+import { createDefaultMetadata } from '../tools/create-event-default-metadata.tool';
 
 export abstract class EventStoreEvent implements IWriteEvent, IReadEvent {
   // read and write events
@@ -19,20 +19,17 @@ export abstract class EventStoreEvent implements IWriteEvent, IReadEvent {
   public readonly eventNumber: IReadEvent['eventNumber'] | undefined;
   public readonly originalEventId: IReadEvent['originalEventId'] | undefined;
 
-  protected constructor(
-    public readonly data: any,
-    options: EventStoreEventOptionsType,
-  ) {
+  protected constructor(public readonly data: any, options?: EventOptionsType) {
     this.metadata = {
       ...createDefaultMetadata(),
-      ...options.metadata,
+      ...(options?.metadata || {}),
     };
-    this.eventId = options.eventId || v4();
-    this.eventType = options.eventType || this.constructor.name;
+    this.eventId = options?.eventId || v4();
+    this.eventType = options?.eventType || this.constructor.name;
 
-    this.eventStreamId = options.eventStreamId;
-    this.eventNumber = options.eventNumber;
-    this.originalEventId = options.originalEventId;
+    this.eventStreamId = options?.eventStreamId ?? undefined;
+    this.eventNumber = options?.eventNumber ?? undefined;
+    this.originalEventId = options?.originalEventId ?? undefined;
   }
 
   // Notice we force this helpers to return strings

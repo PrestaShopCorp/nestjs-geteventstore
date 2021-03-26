@@ -25,8 +25,14 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     // ).addPublisher((events, expectedVersion, streamName) =>
     //   this.publisher.publishAll(events, expectedVersion, streamName),
     // );
+    // build aggregate by fetching data from database && add publisher
+    // const hero = (
+    //   await this.repository.findOneById(+heroId)
+    // ).addPublisher((...args) =>
+    //   this.publisher.publishAll(...args),
+    // );
     const hero = (await this.repository.findOneById(+heroId)).addPublisher(
-      this.publisher,
+      this.publisher.publishAll.bind(this.publisher),
     );
 
     hero.damageEnemy(dragonId, 2);

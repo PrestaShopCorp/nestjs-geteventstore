@@ -1,12 +1,11 @@
 import { AggregateRoot as Parent } from '../cqrs';
 import { ExpectedVersion } from '../enum';
-import { IBaseEvent, IWriteEventBus } from '../interfaces';
+import { IBaseEvent } from '../interfaces';
 
 export abstract class EventStoreAggregateRoot<
-  EventBase extends IBaseEvent = IBaseEvent,
-  EventBusBase extends IWriteEventBus = IWriteEventBus
-> extends Parent<EventBase, EventBusBase> {
-  private _streamName: string;
+  EventBase extends IBaseEvent = IBaseEvent
+> extends Parent<EventBase> {
+  private _streamName?: string;
 
   set streamName(streamName: string) {
     this._streamName = streamName;
@@ -14,19 +13,7 @@ export abstract class EventStoreAggregateRoot<
 
   commit(expectedVersion: ExpectedVersion = ExpectedVersion.Any) {
     this.publishers.forEach((publisher) => {
-      if (typeof publisher === 'function') {
-        publisher(
-          this.getUncommittedEvents(),
-          expectedVersion,
-          this._streamName,
-        );
-      } else {
-        publisher.publishAll(
-          this.getUncommittedEvents(),
-          expectedVersion,
-          this._streamName,
-        );
-      }
+      publisher(this.getUncommittedEvents(), expectedVersion, this._streamName);
     });
     this.clearEvents();
     return this;

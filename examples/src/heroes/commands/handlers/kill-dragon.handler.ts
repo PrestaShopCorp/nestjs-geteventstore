@@ -19,10 +19,10 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
         `KillDragonCommand... for hero ${heroId} on enemy ${dragonId}`,
       ),
     );
-    // build aggregate by fetching data from database
-    const hero = (await this.repository.findOneById(+heroId)).addPublisher(
-      this.publisher,
-    );
+    // build aggregate by fetching data from database && add publisher
+    const hero = (
+      await this.repository.findOneById(+heroId)
+    ).addPublisher((...args) => this.publisher.publishAll(...args));
 
     hero.damageEnemy(dragonId, 2);
     hero.damageEnemy(dragonId, -8);

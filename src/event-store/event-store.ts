@@ -17,7 +17,7 @@ import {
   ISubscriptionStatus,
 } from '../interfaces';
 import { ExpectedVersion } from '../enum';
-import { createDefaultMetadata } from '../tools/create-event-default-metadata.tool';
+import { createEventDefaultMetadata } from '../tools/create-event-default-metadata';
 
 export class EventStore {
   private logger: Logger = new Logger(this.constructor.name);
@@ -74,7 +74,9 @@ export class EventStore {
           createJsonEventData(
             event.eventId || v4(),
             event.data || {},
-            event.metadata || createDefaultMetadata(),
+            event.metadata
+              ? { ...createEventDefaultMetadata(), ...event.metadata }
+              : createEventDefaultMetadata(),
             event.eventType || event.constructor.name,
           ),
         ),

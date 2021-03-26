@@ -19,7 +19,6 @@ import {
   IPersistentSubscriptionConfig,
   IVolatileSubscriptionConfig,
 } from '../interfaces';
-import { createDefaultMetadata } from '../tools/create-event-default-metadata.tool';
 import { CQRS_EVENT_STORE_CONFIG } from '../constants';
 
 @Injectable()
@@ -33,12 +32,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     private readonly eventBus: ReadEventBus,
   ) {}
 
-  /**
-   * Hack nest eventBus instance to override publisher
-   */
   async onModuleInit() {
-    this.logger.debug(`Replace EventBus publisher by Eventstore publish`);
-
     return await this.connect();
   }
 
@@ -228,7 +222,10 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
       return;
     }
 
-    let metadata = { ...createDefaultMetadata() };
+    // we do not add default metadata as
+    // we do not want to modify
+    // read models
+    let metadata = {};
     if (event.metadata.toString()) {
       metadata = { ...metadata, ...JSON.parse(event.metadata.toString()) };
     }

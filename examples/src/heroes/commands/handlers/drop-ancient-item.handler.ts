@@ -17,11 +17,11 @@ export class DropAncientItemHandler
 
     const { heroId, itemId } = command;
     const hero = await this.repository.findOneById(+heroId);
-
+    hero.autoCommit = true;
+    hero.addPublisher((events, expectedVersion, streamName) =>
+      this.publisher.publishAll(events, expectedVersion, streamName),
+    );
     hero.addItem(itemId);
     hero.dropItem(itemId);
-
-    hero.addPublisher(this.publisher);
-    hero.commit();
   }
 }

@@ -40,12 +40,12 @@ export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
       .toPromise();
   }
 
-  protected getStreamName(
+  protected getServiceName(
     correlationId: EventBase['metadata']['correlation_id'],
   ) {
-    const defaultName = process.argv[1]
-      ? basename(process.argv[1], extname(process.argv[1]))
-      : basename(__filename);
+    const defaultName = process.argv?.[1]
+      ? basename(process.argv?.[1], extname(process.argv?.[1]))
+      : process.argv?.[0] || 'unknown';
 
     return `${this.config.serviceName || defaultName}-${correlationId}`;
   }
@@ -56,7 +56,7 @@ export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
     customStreamName?: string,
   ) {
     const streamName =
-      customStreamName || this.getStreamName(event.metadata.correlation_id);
+      customStreamName || this.getServiceName(event.metadata.correlation_id);
     this.logger.debug(
       `Commit 1 event to stream ${streamName} with expectedVersion ${expectedVersion}`,
     );
@@ -70,7 +70,8 @@ export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
   ) {
     const eventCount = events.length;
     const streamName =
-      customStreamName || this.getStreamName(events[0].metadata.correlation_id);
+      customStreamName ||
+      this.getServiceName(events[0].metadata.correlation_id);
     this.logger.debug(
       `Commit ${eventCount} events to stream ${streamName} with expectedVersion ${expectedVersion}`,
     );

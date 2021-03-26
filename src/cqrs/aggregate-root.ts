@@ -1,14 +1,18 @@
-import { IEvent } from '@nestjs/cqrs';
+import { IEvent, IEventBus } from '@nestjs/cqrs';
 
 const INTERNAL_EVENTS = Symbol();
 const IS_AUTO_COMMIT_ENABLED = Symbol();
 
-type PublisherType<T> = (events: T[], ...args: any[]) => any;
+type PublisherType<T> = Function | T;
 
-export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
+export abstract class AggregateRoot<
+  EventBase extends IEvent = IEvent,
+  EventBusBase extends IEventBus<EventBase> = IEventBus<EventBase>,
+  PublisherBase extends PublisherType<EventBusBase> = PublisherType<EventBusBase>
+> {
   public [IS_AUTO_COMMIT_ENABLED] = false;
   private readonly [INTERNAL_EVENTS]: EventBase[] = [];
-  private readonly _publishers: PublisherType<EventBase>[] = [];
+  private readonly _publishers: PublisherType<EventBusBase>[] = [];
 
   set autoCommit(value: boolean) {
     this[IS_AUTO_COMMIT_ENABLED] = value;
@@ -18,12 +22,15 @@ export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
     return this[IS_AUTO_COMMIT_ENABLED];
   }
 
-  addPublisher(publisher: PublisherType<EventBase>) {
+  addPublisher<
+    T extends EventBase = EventBase,
+    K extends EventBusBase = EventBusBase
+  >(publisher: PublisherType<K>) {
     this._publishers.push(publisher);
     return this;
   }
 
-  get publishers(): PublisherType<EventBase>[] {
+  get publishers() {
     return this._publishers;
   }
 
@@ -39,7 +46,11 @@ export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
 
   commit() {
     this.publishers.forEach((publisher) => {
-      publisher(this.getUncommittedEvents());
+      if (typeof publisher === 'function') {
+        publisher(this.getUncommittedEvents());
+      } else {
+        publisher.publishAll(this.getUncommittedEvents());
+      }
     });
     this.clearEvents();
     return this;

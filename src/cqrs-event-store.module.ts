@@ -3,26 +3,44 @@ import { DynamicModule, Module } from '@nestjs/common';
 
 import { EventStoreModule } from './event-store.module';
 import {
-  CqrsEventStoreConfigType,
+  EventBusConfigType,
   IEventStoreModuleAsyncConfig,
   IEventStoreConfig,
+  IEventStoreServiceConfig,
 } from './interfaces';
 import { ReadEventBus, WriteEventBus } from './cqrs';
-import { CQRS_EVENT_STORE_CONFIG } from './constants';
+import {
+  EVENT_STORE_SERVICE_CONFIG,
+  READ_EVENT_BUS_CONFIG,
+  WRITE_EVENT_BUS_CONFIG,
+} from './constants';
 import { EventStoreService } from './event-store';
+import { EventBusPrepublishService } from './cqrs/event-bus-prepublish.service';
 
-const commonRegister = (cqrsEventStoreConfig: CqrsEventStoreConfigType) => {
+const commonRegister = (
+  cqrsEventStoreConfig: EventBusConfigType,
+  eventStoreServiceConfig: IEventStoreServiceConfig,
+) => {
   return {
     providers: [
       CommandBus,
       QueryBus,
       {
-        provide: CQRS_EVENT_STORE_CONFIG,
-        useValue: cqrsEventStoreConfig,
+        provide: WRITE_EVENT_BUS_CONFIG,
+        useValue: cqrsEventStoreConfig.write || {},
+      },
+      {
+        provide: READ_EVENT_BUS_CONFIG,
+        useValue: cqrsEventStoreConfig.read || {},
+      },
+      {
+        provide: EVENT_STORE_SERVICE_CONFIG,
+        useValue: eventStoreServiceConfig,
       },
       WriteEventBus,
       ReadEventBus,
       EventStoreService,
+      EventBusPrepublishService,
       {
         provide: EventBus,
         useExisting: ReadEventBus,
@@ -42,22 +60,24 @@ const commonRegister = (cqrsEventStoreConfig: CqrsEventStoreConfigType) => {
 export class CqrsEventStoreModule extends CqrsModule {
   static register(
     eventStoreConfig: IEventStoreConfig,
-    cqrsEventStoreConfig: CqrsEventStoreConfigType,
+    eventBusConfig: EventBusConfigType = {},
+    eventStoreServiceConfig: IEventStoreServiceConfig = {},
   ): DynamicModule {
     return {
       module: CqrsEventStoreModule,
       imports: [EventStoreModule.register(eventStoreConfig)],
-      ...commonRegister(cqrsEventStoreConfig),
+      ...commonRegister(eventBusConfig, eventStoreServiceConfig),
     };
   }
   static registerAsync(
     eventStoreConfigFactory: IEventStoreModuleAsyncConfig,
-    cqrsEventStoreConfig: CqrsEventStoreConfigType,
+    eventBusConfig: EventBusConfigType = {},
+    eventStoreServiceConfig: IEventStoreServiceConfig = {},
   ): DynamicModule {
     return {
       module: CqrsEventStoreModule,
       imports: [EventStoreModule.registerAsync(eventStoreConfigFactory)],
-      ...commonRegister(cqrsEventStoreConfig),
+      ...commonRegister(eventBusConfig, eventStoreServiceConfig),
     };
   }
 }

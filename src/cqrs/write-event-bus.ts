@@ -3,8 +3,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import { EventStore, EventStorePublisher } from '../event-store';
 import { IWriteEvent, IWriteEventBusConfig } from '../interfaces';
 import { ExpectedVersion } from '../enum';
-import { CQRS_EVENT_STORE_CONFIG } from '../constants';
+import { WRITE_EVENT_BUS_CONFIG } from '../constants';
 import { ModuleRef } from '@nestjs/core';
+import { EventBusPrepublishService } from './event-bus-prepublish.service';
 
 // add next, pass onError
 
@@ -13,9 +14,10 @@ export class WriteEventBus<
   EventBase extends IWriteEvent = IWriteEvent
 > extends Parent<EventBase> {
   constructor(
-    readonly eventstore: EventStore,
-    @Inject(CQRS_EVENT_STORE_CONFIG)
-    readonly config: IWriteEventBusConfig,
+    private readonly eventstore: EventStore,
+    @Inject(WRITE_EVENT_BUS_CONFIG)
+    private readonly config: IWriteEventBusConfig,
+    private readonly prepublish: EventBusPrepublishService,
     commandBus: CommandBus,
     /**
      * @todo Bug in Nest ? We need to inject ModuleRef this way because when we try to do it with the DI container we have an error:
@@ -27,25 +29,38 @@ export class WriteEventBus<
     moduleRef,
   ) {
     super(commandBus, moduleRef);
-    this.publisher = new EventStorePublisher(eventstore, config);
+    this.publisher = new EventStorePublisher<EventBase>(
+      this.eventstore,
+      this.config,
+    );
   }
-  async publish<T extends EventBase>(
+
+  async publish<T extends EventBase = EventBase>(
     event: T,
     expectedVersion?: ExpectedVersion,
     streamName?: string,
   ): Promise<any> {
-    // TODO jdm optional validator from moduleRef (through config)
-    // @ts-ignore
-    return await this.publisher.publish(event, expectedVersion, streamName);
+    if (!this.prepublish.validate(this.config, [event])) {
+      return;
+    }
+    return await this.publisher.publish<T>(
+      this.prepublish.prepare(this.config, [event]),
+      // @ts-ignore
+      expectedVersion,
+      // @ts-ignore
+      streamName,
+    );
   }
-  async publishAll<T extends EventBase>(
+  async publishAll<T extends EventBase = EventBase>(
     events: T[],
     expectedVersion?: ExpectedVersion,
     streamName?: string,
   ): Promise<any> {
-    // TODO jdm optional validator from moduleRef (through config)
+    if (!this.prepublish.validate(this.config, events)) {
+      return;
+    }
     return await this.publisher.publishAll(
-      events,
+      this.prepublish.prepare(this.config, events),
       // @ts-ignore
       expectedVersion,
       // @ts-ignore

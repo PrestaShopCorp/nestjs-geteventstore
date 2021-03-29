@@ -7,7 +7,7 @@ export const defaultEventMapper = (
   const logger = new Logger('Default Event Mapper');
   logger.log(`Will build events from ${allEvents}`);
   return ((data, options: ReadEventOptionsType) => {
-    let className = `${options.eventType}Event`;
+    let className = `${options.eventType}`;
     if (allEvents[className]) {
       logger.log(
         `Build ${className} received from stream ${options.eventStreamId} with id ${options.eventId} and number ${options.eventNumber}`,

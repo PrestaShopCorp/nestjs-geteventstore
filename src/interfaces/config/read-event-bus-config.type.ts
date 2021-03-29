@@ -1,4 +1,5 @@
 import { ReadEventOptionsType, IReadEvent } from '../events';
+import { IEventBusPrepublishConfig } from './event-bus-prepublish-config.interface';
 
 type EventMapperType = (
   data: any,
@@ -9,12 +10,14 @@ type EventConstructorType<T extends IReadEvent = IReadEvent> = new (
   ...args: any[]
 ) => T;
 
-export type ReadEventBusConfigType =
-  | {
-      eventMapper: EventMapperType;
-      allowedEvents?: never;
-    }
-  | {
-      eventMapper?: never;
-      allowedEvents: EventConstructorType[];
-    };
+export type ReadEventBusConfigType = IEventBusPrepublishConfig<IReadEvent> &
+  (
+    | {
+        eventMapper: EventMapperType;
+        allowedEvents?: never;
+      }
+    | {
+        eventMapper?: never;
+        allowedEvents: { [key: string]: EventConstructorType };
+      }
+  );

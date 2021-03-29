@@ -7,7 +7,7 @@ import {
 } from '../interfaces';
 import { defaultEventMapper } from './default-event-mapper';
 import { Inject } from '@nestjs/common';
-import { CQRS_EVENT_STORE_CONFIG } from '../constants';
+import { READ_EVENT_BUS_CONFIG } from '../constants';
 import { ModuleRef } from '@nestjs/core';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class ReadEventBus<
   EventBase extends IReadEvent = IReadEvent
 > extends Parent<EventBase> {
   constructor(
-    @Inject(CQRS_EVENT_STORE_CONFIG)
+    @Inject(READ_EVENT_BUS_CONFIG)
     private readonly config: ReadEventBusConfigType,
     commandBus: CommandBus,
     /**

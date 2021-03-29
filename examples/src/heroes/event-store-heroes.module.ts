@@ -71,23 +71,27 @@ import { HeroesGameSagas } from './sagas/heroes.sagas';
         onTcpConnected: () => {},
       },
       {
-        allowedEvents: heroesEvents,
-        // subscriptions: {
-        //   persistent: [
-        //     {
-        //       // Event stream category (before the -)
-        //       stream: '$ce-hero',
-        //       group: 'data',
-        //       autoAck: false,
-        //       bufferSize: 1,
-        //       // Subscription is created with this options
-        //       options: {
-        //         resolveLinkTos: true,
-        //         minCheckPointCount: 1,
-        //       },
-        //     },
-        //   ],
-        // },
+        read: {
+          allowedEvents: { ...heroesEvents },
+        },
+      },
+      {
+        subscriptions: {
+          persistent: [
+            {
+              // Event stream category (before the -)
+              stream: '$ce-hero',
+              group: 'data',
+              autoAck: false,
+              bufferSize: 1,
+              // Subscription is created with this options
+              options: {
+                resolveLinkTos: true,
+                minCheckPointCount: 1,
+              },
+            },
+          ],
+        },
       },
     ),
     LoggerModule.forRoot(),

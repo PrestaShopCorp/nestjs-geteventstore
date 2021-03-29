@@ -19,7 +19,7 @@ import {
   IPersistentSubscriptionConfig,
   IVolatileSubscriptionConfig,
 } from '../interfaces';
-import { CQRS_EVENT_STORE_CONFIG } from '../constants';
+import { EVENT_STORE_SERVICE_CONFIG } from '../constants';
 
 @Injectable()
 export class EventStoreService implements OnModuleDestroy, OnModuleInit {
@@ -27,7 +27,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
 
   constructor(
     private readonly eventStore: EventStore,
-    @Inject(CQRS_EVENT_STORE_CONFIG)
+    @Inject(EVENT_STORE_SERVICE_CONFIG)
     private readonly config: IEventStoreServiceConfig,
     private readonly eventBus: ReadEventBus,
   ) {}

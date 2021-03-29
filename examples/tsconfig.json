@@ -9,6 +9,8 @@
     "noLib": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "strictPropertyInitialization": false,
+    "useDefineForClassFields": true,
     "target": "es6",
     "sourceMap": true,
     "allowJs": true,

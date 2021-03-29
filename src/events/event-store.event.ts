@@ -18,7 +18,7 @@ export abstract class EventStoreEvent implements IWriteEvent, IReadEvent {
   public readonly eventNumber: IReadEvent['eventNumber'] | undefined;
   public readonly originalEventId: IReadEvent['originalEventId'] | undefined;
 
-  protected constructor(public readonly data: any, options?: EventOptionsType) {
+  constructor(public data: any, options?: EventOptionsType) {
     this.metadata = options?.metadata || {};
     this.eventId = options?.eventId || v4();
     this.eventType = options?.eventType || this.constructor.name;

@@ -16,8 +16,16 @@ export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
     return this[IS_AUTO_COMMIT_ENABLED];
   }
 
-  addPublisher(publisher: Function) {
-    this._publishers.push(publisher);
+  addPublisher<T extends Function | object = Function>(
+    publisher: T,
+    method?: keyof T,
+  ) {
+    const objectPublisher = publisher?.[method];
+    this._publishers.push(
+      !!objectPublisher && typeof objectPublisher === 'function'
+        ? objectPublisher.bind(publisher)
+        : publisher,
+    );
     return this;
   }
 

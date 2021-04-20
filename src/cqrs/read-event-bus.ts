@@ -9,6 +9,7 @@ import { defaultEventMapper } from './default-event-mapper';
 import { Inject } from '@nestjs/common';
 import { READ_EVENT_BUS_CONFIG } from '../constants';
 import { ModuleRef } from '@nestjs/core';
+import { EventBusPrepublishService } from './event-bus-prepublish.service';
 
 @Injectable()
 export class ReadEventBus<
@@ -16,7 +17,8 @@ export class ReadEventBus<
 > extends Parent<EventBase> {
   constructor(
     @Inject(READ_EVENT_BUS_CONFIG)
-    private readonly config: ReadEventBusConfigType,
+    private readonly config: ReadEventBusConfigType<EventBase>,
+    private readonly prepublish: EventBusPrepublishService<EventBase>,
     commandBus: CommandBus,
     /**
      * @todo Bug in Nest ? We need to inject ModuleRef this way because when we try to do it with the DI container we have an error:
@@ -29,13 +31,17 @@ export class ReadEventBus<
   ) {
     super(commandBus, moduleRef);
   }
-  publish<T extends EventBase>(event: T) {
-    // TODO jdm optional validator from moduleRef (through config)
-    return super.publish(event);
+  publish<T extends EventBase = EventBase>(event: T) {
+    if (!this.prepublish.validate(this.config, [event])) {
+      return;
+    }
+    return super.publish(this.prepublish.prepare(this.config, [event])[0]);
   }
-  publishAll<T extends EventBase>(events: T[]) {
-    // TODO jdm optional validator from moduleRef (through config)
-    return super.publishAll(events);
+  publishAll<T extends EventBase = EventBase>(events: T[]) {
+    if (!this.prepublish.validate(this.config, events)) {
+      return;
+    }
+    return super.publishAll(this.prepublish.prepare(this.config, events));
   }
   map<T extends EventBase>(data: any, options: ReadEventOptionsType): T {
     const eventMapper =

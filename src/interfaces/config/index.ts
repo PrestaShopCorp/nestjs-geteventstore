@@ -5,3 +5,7 @@ export * from './event-store-service-config.interface';
 export * from './event-bus-prepublish-config.interface';
 export * from './read-event-bus-config.type';
 export * from './write-event-bus-config.interface';
+export { IEventBusPrepublishValidateProvider } from './event-bus-prepublish-validate-provider.interface';
+export { IEventBusPrepublishPrepareProvider } from './event-bus-prepublish-prepare-provider.interface';
+export { EventBusPrepublishValidateCallbackType } from './event-bus-prepublish-validate-callback.type';
+export { EventBusPrepublishPrepareCallbackType } from './event-bus-prepublish-prepare-callback.type';

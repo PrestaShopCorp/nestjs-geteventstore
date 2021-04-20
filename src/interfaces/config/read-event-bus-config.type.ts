@@ -10,7 +10,9 @@ type EventConstructorType<T extends IReadEvent = IReadEvent> = new (
   ...args: any[]
 ) => T;
 
-export type ReadEventBusConfigType = IEventBusPrepublishConfig<IReadEvent> &
+export type ReadEventBusConfigType<
+  T extends IReadEvent = IReadEvent
+> = IEventBusPrepublishConfig<T> &
   (
     | {
         eventMapper: EventMapperType;

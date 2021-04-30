@@ -1,13 +1,12 @@
 import { ModuleRef } from '@nestjs/core';
+import { Injectable } from '@nestjs/common';
 import {
-  EventBusPrepublishPrepareCallbackType,
-  EventBusPrepublishValidateCallbackType,
+  EventBusPrepublishPrepareType,
   IBaseEvent,
   IEventBusPrepublishConfig,
   IEventBusPrepublishPrepareProvider,
   IEventBusPrepublishValidateProvider,
 } from '../interfaces';
-import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class EventBusPrepublishService<
@@ -27,29 +26,33 @@ export class EventBusPrepublishService<
     }
   }
 
-  validate<T extends EventBase = EventBase>(
+  async validate<T extends EventBase = EventBase>(
     config: IEventBusPrepublishConfig<T>,
     events: T[],
-  ): boolean {
+  ): Promise<boolean> {
     const { validate } = config;
     if (!validate) {
       return true;
     }
-    const provider = this.getProvider<IEventBusPrepublishValidateProvider<T>>(
-      validate,
-    );
-    const validated = !!provider
-      ? provider.validate(events)
-      : (validate as EventBusPrepublishValidateCallbackType<T>)(events);
-    if (validated instanceof Error) {
-      throw validated;
+    const validator =
+      this.getProvider<IEventBusPrepublishValidateProvider<T>>(validate) ??
+      validate;
+    const validated = await validator.validate(events);
+    // validation passed without errors
+    if (!!validated.length) {
+      return true;
     }
-    return validated;
+    // validation failed
+    if (validator.onValidationFail) {
+      await validator.onValidationFail(events, validated);
+    }
+    return false;
   }
-  prepare<T extends EventBase = EventBase>(
+
+  async prepare<T extends EventBase = EventBase>(
     config: IEventBusPrepublishConfig<T>,
     events: T[],
-  ): T[] {
+  ): Promise<T[]> {
     const { prepare } = config;
     if (!prepare) {
       return events;
@@ -59,6 +62,6 @@ export class EventBusPrepublishService<
     );
     return !!provider
       ? provider.prepare(events)
-      : (prepare as EventBusPrepublishPrepareCallbackType<T>)(events);
+      : (prepare as EventBusPrepublishPrepareType<T>)(events);
   }
 }

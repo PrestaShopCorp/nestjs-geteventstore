@@ -31,17 +31,19 @@ export class ReadEventBus<
   ) {
     super(commandBus, moduleRef);
   }
-  publish<T extends EventBase = EventBase>(event: T) {
-    if (!this.prepublish.validate(this.config, [event])) {
+  async publish<T extends EventBase = EventBase>(event: T) {
+    const preparedEvents = await this.prepublish.prepare(this.config, [event]);
+    if (!(await this.prepublish.validate(this.config, preparedEvents))) {
       return;
     }
-    return super.publish(this.prepublish.prepare(this.config, [event])[0]);
+    return super.publish(preparedEvents[0]);
   }
-  publishAll<T extends EventBase = EventBase>(events: T[]) {
-    if (!this.prepublish.validate(this.config, events)) {
+  async publishAll<T extends EventBase = EventBase>(events: T[]) {
+    const preparedEvents = await this.prepublish.prepare(this.config, events);
+    if (!(await this.prepublish.validate(this.config, preparedEvents))) {
       return;
     }
-    return super.publishAll(this.prepublish.prepare(this.config, events));
+    return super.publishAll(preparedEvents);
   }
   map<T extends EventBase>(data: any, options: ReadEventOptionsType): T {
     const eventMapper =

@@ -287,6 +287,6 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     }
 
     // Dispatch to event handlers and sagas
-    this.eventBus.publish(finalEvent);
+    await this.eventBus.publish(finalEvent);
   }
 }

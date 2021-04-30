@@ -1,5 +1,8 @@
 import { IBaseEvent } from '../events';
+import { EventBusPrepublishValidateType } from './event-bus-prepublish-validate.type';
+import { EventBusPrepublishOnValidationFailType } from './event-bus-prepublish-on-validation-fail.type';
 
 export interface IEventBusPrepublishValidateProvider<T extends IBaseEvent> {
-  validate<K extends Error = Error>(events: T[]): boolean | K;
+  validate: EventBusPrepublishValidateType<T>;
+  onValidationFail: EventBusPrepublishOnValidationFailType<T>;
 }

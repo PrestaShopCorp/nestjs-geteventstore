@@ -7,5 +7,5 @@ export * from './read-event-bus-config.type';
 export * from './write-event-bus-config.interface';
 export { IEventBusPrepublishValidateProvider } from './event-bus-prepublish-validate-provider.interface';
 export { IEventBusPrepublishPrepareProvider } from './event-bus-prepublish-prepare-provider.interface';
-export { EventBusPrepublishValidateCallbackType } from './event-bus-prepublish-validate-callback.type';
-export { EventBusPrepublishPrepareCallbackType } from './event-bus-prepublish-prepare-callback.type';
+export { EventBusPrepublishValidateType } from './event-bus-prepublish-validate.type';
+export { EventBusPrepublishPrepareType } from './event-bus-prepublish-prepare.type';

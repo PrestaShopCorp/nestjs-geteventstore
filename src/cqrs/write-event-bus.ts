@@ -40,11 +40,12 @@ export class WriteEventBus<
     expectedVersion?: ExpectedVersion,
     streamName?: string,
   ): Promise<any> {
-    if (!this.prepublish.validate(this.config, [event])) {
+    const preparedEvents = await this.prepublish.prepare(this.config, [event]);
+    if (!(await this.prepublish.validate(this.config, preparedEvents))) {
       return;
     }
     return await this.publisher.publish<T>(
-      this.prepublish.prepare(this.config, [event]),
+      preparedEvents,
       // @ts-ignore
       expectedVersion,
       // @ts-ignore
@@ -56,11 +57,13 @@ export class WriteEventBus<
     expectedVersion?: ExpectedVersion,
     streamName?: string,
   ): Promise<any> {
-    if (!this.prepublish.validate(this.config, events)) {
+    const preparedEvents = await this.prepublish.prepare(this.config, events);
+    if (!(await this.prepublish.validate(this.config, preparedEvents))) {
       return;
     }
+    console.log('prepared', preparedEvents);
     return await this.publisher.publishAll(
-      this.prepublish.prepare(this.config, events),
+      preparedEvents,
       // @ts-ignore
       expectedVersion,
       // @ts-ignore

@@ -11,10 +11,14 @@ export abstract class EventStoreAggregateRoot<
     this._streamName = streamName;
   }
 
-  commit(expectedVersion: ExpectedVersion = ExpectedVersion.Any) {
-    this.publishers.forEach((publisher) => {
-      publisher(this.getUncommittedEvents(), expectedVersion, this._streamName);
-    });
+  async commit(expectedVersion: ExpectedVersion = ExpectedVersion.Any) {
+    for (const publisher of this.publishers) {
+      await publisher(
+        this.getUncommittedEvents(),
+        expectedVersion,
+        this._streamName,
+      );
+    }
     this.clearEvents();
     return this;
   }

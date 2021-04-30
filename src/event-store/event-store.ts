@@ -5,6 +5,7 @@ import {
   createJsonEventData,
   EventStoreNodeConnection,
   EventStorePersistentSubscription,
+  EventData,
 } from 'node-eventstore-client';
 import * as geteventstorePromise from 'geteventstore-promise';
 import { HTTPClient } from 'geteventstore-promise';
@@ -70,7 +71,7 @@ export class EventStore {
   ) {
     return from(events)
       .pipe(
-        map((event) =>
+        map((event: IWriteEvent) =>
           createJsonEventData(
             event.eventId || v4(),
             event.data || {},
@@ -90,7 +91,7 @@ export class EventStore {
       )
       .pipe(
         //tap(esEvents => console.log('Writing events', stream, esEvents)),
-        flatMap((events) =>
+        flatMap((events: EventData[]) =>
           from(this.connection.appendToStream(stream, expectedVersion, events)),
         ),
         catchError((err) => {

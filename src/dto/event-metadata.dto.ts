@@ -34,7 +34,7 @@ export class EventMetadataDto {
    * <domain-extension>.<domain_name>.<service>.<event>.<event_version>
    * @example com.api.order.order_created.v2
    */
-  @Matches(/(\w+\.){4}\w+/)
+  @Matches(/(\w+\.){1,4}\w+/)
   type: string;
 
   /**
@@ -53,12 +53,6 @@ export class EventMetadataDto {
   @IsOptional()
   @IsNotEmpty()
   subject?: string;
-
-  /**
-   * Domain-specific information about the occurrence
-   */
-  @IsOptional()
-  data?: any;
 
   /**
    * @see RFC 2046

@@ -12,20 +12,11 @@ export class Hero extends EventStoreAggregateRoot {
 
   damageEnemy(dragonId: string, hitPoint: number) {
     this.apply(
-      new HeroDamagedEnemyEvent(
-        {
-          heroId: this.id,
-          dragonId,
-          hitPoint: hitPoint,
-        },
-        {
-          metadata: {
-            correlation_id: '1111',
-            type: 'type',
-            source: 'source',
-          },
-        },
-      ),
+      new HeroDamagedEnemyEvent({
+        heroId: this.id,
+        dragonId,
+        hitPoint: hitPoint,
+      }),
     );
   }
 

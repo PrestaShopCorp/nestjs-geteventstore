@@ -43,10 +43,10 @@ export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
     return this;
   }
 
-  commit() {
-    this.publishers.forEach((publisher) => {
-      publisher(this.getUncommittedEvents());
-    });
+  async commit() {
+    for (const publisher of this.publishers) {
+      await publisher(this.getUncommittedEvents());
+    }
     this.clearEvents();
     return this;
   }
@@ -64,13 +64,16 @@ export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
     history.forEach((event) => this.apply(event, true));
   }
 
-  apply<T extends EventBase = EventBase>(event: T, isFromHistory = false) {
+  async apply<T extends EventBase = EventBase>(
+    event: T,
+    isFromHistory = false,
+  ) {
     if (!isFromHistory) {
       this.addEvent(event);
     }
-    this.autoCommit && this.commit();
+    this.autoCommit && (await this.commit());
     const handler = this.getEventHandler(event);
-    handler && handler.call(this, event);
+    handler && (await handler.call(this, event));
   }
 
   private getEventHandler<T extends EventBase = EventBase>(

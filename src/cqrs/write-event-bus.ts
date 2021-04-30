@@ -61,7 +61,6 @@ export class WriteEventBus<
     if (!(await this.prepublish.validate(this.config, preparedEvents))) {
       return;
     }
-    console.log('prepared', preparedEvents);
     return await this.publisher.publishAll(
       preparedEvents,
       // @ts-ignore

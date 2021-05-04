@@ -5,6 +5,7 @@ import {
   Logger,
   OnModuleDestroy,
   OnModuleInit,
+  Optional,
 } from '@nestjs/common';
 import { PersistentSubscriptionOptions } from 'geteventstore-promise';
 import { readFileSync } from 'fs';
@@ -29,7 +30,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     private readonly eventStore: EventStore,
     @Inject(EVENT_STORE_SERVICE_CONFIG)
     private readonly config: IEventStoreServiceConfig,
-    private readonly eventBus: ReadEventBus,
+    @Optional() private readonly eventBus?: ReadEventBus,
   ) {}
 
   async onModuleInit() {
@@ -184,8 +185,16 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
   }
 
   async onEvent(subscription, payload) {
+    // use configured onEvent
+    if (this.config.onEvent) {
+      return await this.onEvent(subscription, payload);
+    }
+    // do nothing, as we have not defined an event bus
+    if (!this.eventBus) {
+      return;
+    }
+    // use default onEvent
     const { event } = payload;
-
     // TODO allow unresolved event
     if (!payload.isResolved) {
       this.logger.warn(

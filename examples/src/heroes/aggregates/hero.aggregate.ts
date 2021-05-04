@@ -44,7 +44,7 @@ export class Hero extends EventStoreAggregateRoot {
     this.apply(
       new HeroDropItemEvent({
         heroId: this.id,
-        itemId: 'string',
+        itemId,
       }),
     );
   }

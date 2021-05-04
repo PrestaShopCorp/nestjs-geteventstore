@@ -5,7 +5,7 @@ export const defaultEventMapper = (
   allEvents: ReadEventBusConfigType['allowedEvents'],
 ) => {
   const logger = new Logger('Default Event Mapper');
-  logger.log(`Will build events from ${allEvents}`);
+  logger.log(`Will build events from ${Object.keys(allEvents).join(', ')}`);
   return ((data, options: ReadEventOptionsType) => {
     let className = `${options.eventType}`;
     if (allEvents[className]) {

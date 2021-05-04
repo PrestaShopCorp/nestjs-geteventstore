@@ -1,9 +1,9 @@
 import { IBaseEvent } from '../events';
-import { EventBusPrepublishPrepareType } from './event-bus-prepublish-prepare.type';
+import { EventBusPrepublishPrepareCallbackType } from './event-bus-prepublish-prepare-callback.type';
 
 export interface IEventBusPrepublishPrepareProvider<
   T extends IBaseEvent,
   K extends IBaseEvent = T
 > {
-  prepare: EventBusPrepublishPrepareType<T, K>;
+  prepare: EventBusPrepublishPrepareCallbackType<T, K>;
 }

@@ -11,7 +11,7 @@
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
     "useDefineForClassFields": true,
-    "target": "es6",
+    "target": "ES2020",
     "sourceMap": true,
     "allowJs": true,
     "outDir": "./dist"

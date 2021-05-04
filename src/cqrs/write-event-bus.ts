@@ -1,5 +1,5 @@
 import { CommandBus, EventBus as Parent } from '@nestjs/cqrs';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EventStore, EventStorePublisher } from '../event-store';
 import { IWriteEvent, IWriteEventBusConfig } from '../interfaces';
 import { ExpectedVersion } from '../enum';
@@ -13,6 +13,7 @@ import { EventBusPrepublishService } from './event-bus-prepublish.service';
 export class WriteEventBus<
   EventBase extends IWriteEvent = IWriteEvent
 > extends Parent<EventBase> {
+  private logger = new Logger(this.constructor.name);
   constructor(
     private readonly eventstore: EventStore,
     @Inject(WRITE_EVENT_BUS_CONFIG)
@@ -58,9 +59,11 @@ export class WriteEventBus<
     streamName?: string,
   ): Promise<any> {
     const preparedEvents = await this.prepublish.prepare(this.config, events);
+    this.logger.debug(`prepared ${preparedEvents.length} events`);
     if (!(await this.prepublish.validate(this.config, preparedEvents))) {
       return;
     }
+    this.logger.debug(`validated ${preparedEvents.length} events`);
     return await this.publisher.publishAll(
       preparedEvents,
       // @ts-ignore

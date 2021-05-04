@@ -1,7 +1,7 @@
 import { ModuleRef } from '@nestjs/core';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import {
-  EventBusPrepublishPrepareType,
+  EventBusPrepublishPrepareCallbackType,
   IBaseEvent,
   IEventBusPrepublishConfig,
   IEventBusPrepublishPrepareProvider,
@@ -12,15 +12,16 @@ import {
 export class EventBusPrepublishService<
   EventBase extends IBaseEvent = IBaseEvent
 > {
+  private readonly logger = new Logger(this.constructor.name);
   constructor(private readonly moduleRef: ModuleRef) {}
 
-  private getProvider<
+  private async getProvider<
     T =
       | IEventBusPrepublishPrepareProvider<EventBase>
       | IEventBusPrepublishValidateProvider<EventBase>
-  >(name): T {
+  >(name): Promise<T> {
     try {
-      return this.moduleRef.get(name);
+      return await this.moduleRef.resolve(name);
     } catch (e) {
       return undefined;
     }
@@ -34,9 +35,11 @@ export class EventBusPrepublishService<
     if (!validate) {
       return true;
     }
+    this.logger.debug('validating events...');
     const validator =
-      this.getProvider<IEventBusPrepublishValidateProvider<T>>(validate) ??
-      validate;
+      (await this.getProvider<IEventBusPrepublishValidateProvider<T>>(
+        validate,
+      )) ?? (validate as IEventBusPrepublishValidateProvider<T>);
     const validated = await validator.validate(events);
     // validation passed without errors
     if (!!validated.length) {
@@ -57,11 +60,12 @@ export class EventBusPrepublishService<
     if (!prepare) {
       return events;
     }
-    const provider = this.getProvider<IEventBusPrepublishPrepareProvider<T>>(
-      prepare,
-    );
+    this.logger.debug('preparing events...');
+    const provider = await this.getProvider<
+      IEventBusPrepublishPrepareProvider<T>
+    >(prepare);
     return !!provider
       ? provider.prepare(events)
-      : (prepare as EventBusPrepublishPrepareType<T>)(events);
+      : (prepare as EventBusPrepublishPrepareCallbackType<T>)(events);
   }
 }

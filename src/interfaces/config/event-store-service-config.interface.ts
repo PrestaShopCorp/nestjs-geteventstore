@@ -12,4 +12,5 @@ export interface IEventStoreServiceConfig {
     volatile?: IVolatileSubscriptionConfig[];
     persistent?: IPersistentSubscriptionConfig[];
   };
+  onEvent?: (sub, payload) => void;
 }

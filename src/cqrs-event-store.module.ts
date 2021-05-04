@@ -7,6 +7,8 @@ import {
   IEventStoreModuleAsyncConfig,
   IEventStoreConfig,
   IEventStoreServiceConfig,
+  ReadEventBusConfigType,
+  IWriteEventBusConfig,
 } from './interfaces';
 import { ReadEventBus, WriteEventBus } from './cqrs';
 import {
@@ -16,68 +18,148 @@ import {
 } from './constants';
 import { EventStoreService } from './event-store';
 import { EventBusPrepublishService } from './cqrs/event-bus-prepublish.service';
+import { WriteEventsPrepublishService } from './cloudevents';
+import { ContextModule, ContextName } from 'nestjs-context';
 
-const commonRegister = (
-  cqrsEventStoreConfig: EventBusConfigType,
-  eventStoreServiceConfig: IEventStoreServiceConfig,
+const isEventStoreConfig = (
+  config: IEventStoreModuleAsyncConfig | IEventStoreConfig,
+): config is IEventStoreConfig => {
+  return !!config['credentials'];
+};
+
+type EventStoreModuleConfig = IEventStoreModuleAsyncConfig | IEventStoreConfig;
+
+const defaultWriteBusConfig = {
+  context: ContextName.HTTP,
+  validate: WriteEventsPrepublishService,
+  prepare: WriteEventsPrepublishService,
+} as IWriteEventBusConfig;
+
+const common = (
+  config: EventStoreModuleConfig,
+  serviceConfig: IEventStoreServiceConfig = {},
 ) => {
   return {
+    imports: [
+      isEventStoreConfig(config)
+        ? EventStoreModule.register(config)
+        : EventStoreModule.registerAsync(config),
+    ],
     providers: [
-      CommandBus,
-      QueryBus,
-      {
-        provide: WRITE_EVENT_BUS_CONFIG,
-        useValue: cqrsEventStoreConfig.write || {},
-      },
-      {
-        provide: READ_EVENT_BUS_CONFIG,
-        useValue: cqrsEventStoreConfig.read || {},
-      },
       {
         provide: EVENT_STORE_SERVICE_CONFIG,
-        useValue: eventStoreServiceConfig,
+        useValue: serviceConfig,
       },
-      WriteEventBus,
-      ReadEventBus,
       EventStoreService,
-      EventBusPrepublishService,
-      {
-        provide: EventBus,
-        useExisting: ReadEventBus,
-      },
     ],
-    exports: [
-      CommandBus,
-      QueryBus,
-      EventStoreModule,
-      ReadEventBus,
-      WriteEventBus,
-    ],
+    exports: [EventStoreModule],
   };
 };
 
 @Module({})
 export class CqrsEventStoreModule extends CqrsModule {
-  static register(
-    eventStoreConfig: IEventStoreConfig,
-    eventBusConfig: EventBusConfigType = {},
-    eventStoreServiceConfig: IEventStoreServiceConfig = {},
-  ): DynamicModule {
+  static registerSubscriptions(
+    eventStoreConfig: EventStoreModuleConfig,
+    subscriptions: IEventStoreServiceConfig['subscriptions'],
+    eventBusConfig: ReadEventBusConfigType,
+  ) {
+    return this.registerReadBus(
+      eventStoreConfig,
+      eventBusConfig,
+      subscriptions,
+    );
+  }
+  static registerProjections(
+    eventStoreConfig: EventStoreModuleConfig,
+    projections: IEventStoreServiceConfig['projections'],
+  ) {
+    const modules = [common(eventStoreConfig, { projections })];
     return {
       module: CqrsEventStoreModule,
-      imports: [EventStoreModule.register(eventStoreConfig)],
-      ...commonRegister(eventBusConfig, eventStoreServiceConfig),
+      imports: modules.map((module) => module.imports).flat(),
+      provides: modules.map((module) => module.providers).flat(),
+      exports: modules.map((module) => module.exports).flat(),
     };
   }
-  static registerAsync(
-    eventStoreConfigFactory: IEventStoreModuleAsyncConfig,
-    eventBusConfig: EventBusConfigType = {},
-    eventStoreServiceConfig: IEventStoreServiceConfig = {},
+  static registerWriteBus(
+    eventStoreConfig: EventStoreModuleConfig,
+    eventBusConfig: IWriteEventBusConfig,
   ): DynamicModule {
+    const modules = [common(eventStoreConfig)];
+    const config = { ...defaultWriteBusConfig, ...eventBusConfig };
     return {
       module: CqrsEventStoreModule,
-      imports: [EventStoreModule.registerAsync(eventStoreConfigFactory)],
-      ...commonRegister(eventBusConfig, eventStoreServiceConfig),
+      imports: [
+        ContextModule.registerWithDefaults(),
+        ...modules.map((module) => module.imports).flat(),
+      ],
+      providers: [
+        ...modules.map((module) => module.providers).flat(),
+        WriteEventsPrepublishService,
+        EventBusPrepublishService,
+        CommandBus,
+        {
+          provide: WRITE_EVENT_BUS_CONFIG,
+          useValue: config,
+        },
+        WriteEventBus,
+      ],
+      exports: [
+        ...modules.map((module) => module.exports).flat(),
+        CommandBus,
+        WriteEventBus,
+      ],
+    };
+  }
+  static registerReadBus(
+    eventStoreConfig: EventStoreModuleConfig,
+    eventBusConfig: ReadEventBusConfigType,
+    subscriptions: IEventStoreServiceConfig['subscriptions'] = {},
+  ): DynamicModule {
+    const modules = [common(eventStoreConfig, { subscriptions })];
+    return {
+      module: CqrsEventStoreModule,
+      imports: modules.map((module) => module.imports).flat(),
+      providers: [
+        ...modules.map((module) => module.providers).flat(),
+        EventBusPrepublishService,
+        QueryBus,
+        {
+          provide: READ_EVENT_BUS_CONFIG,
+          useValue: eventBusConfig,
+        },
+        ReadEventBus,
+        {
+          provide: EventBus,
+          useExisting: ReadEventBus,
+        },
+      ],
+      exports: [
+        ...modules.map((module) => module.exports).flat(),
+        QueryBus,
+        ReadEventBus,
+        EventBus,
+      ],
+    };
+  }
+  static register(
+    eventStoreConfig: IEventStoreConfig,
+    eventStoreServiceConfig: IEventStoreServiceConfig = {},
+    eventBusConfig: EventBusConfigType = {},
+  ): DynamicModule {
+    // Attention: modules order is important here, as ES service is registered
+    //  at the end (and projections + subscriptions are passed in config)
+    const modules = [
+      this.registerWriteBus(eventStoreConfig, eventBusConfig.write),
+      this.registerReadBus(eventStoreConfig, eventBusConfig.read),
+      common(eventStoreConfig, eventStoreServiceConfig),
+    ];
+
+    return {
+      module: CqrsEventStoreModule,
+      imports: modules.map((module) => module.imports).flat(),
+      providers: modules.map((module) => module.providers).flat(),
+      exports: modules.map((module) => module.exports).flat(),
     };
   }
 }

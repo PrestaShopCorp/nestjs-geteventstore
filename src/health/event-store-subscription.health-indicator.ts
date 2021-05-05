@@ -1,10 +1,12 @@
+import { Injectable } from '@nestjs/common';
 import {
   HealthCheckError,
   HealthIndicator,
   HealthIndicatorResult,
 } from '@nestjs/terminus';
-import { EventStore } from '../event-store/event-store';
+import { EventStore } from '../event-store';
 
+@Injectable()
 export class EventStoreSubscriptionHealthIndicator extends HealthIndicator {
   constructor(private eventStore: EventStore) {
     super();

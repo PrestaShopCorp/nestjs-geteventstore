@@ -35,7 +35,7 @@ const defaultWriteBusConfig = {
   prepare: WriteEventsPrepublishService,
 } as IWriteEventBusConfig;
 
-const common = (
+const registerEventStore = (
   config: EventStoreModuleConfig,
   serviceConfig: IEventStoreServiceConfig = {},
 ) => {
@@ -73,7 +73,7 @@ export class CqrsEventStoreModule extends CqrsModule {
     eventStoreConfig: EventStoreModuleConfig,
     projections: IEventStoreServiceConfig['projections'],
   ) {
-    const modules = [common(eventStoreConfig, { projections })];
+    const modules = [registerEventStore(eventStoreConfig, { projections })];
     return {
       module: CqrsEventStoreModule,
       imports: modules.map((module) => module.imports).flat(),
@@ -85,7 +85,7 @@ export class CqrsEventStoreModule extends CqrsModule {
     eventStoreConfig: EventStoreModuleConfig,
     eventBusConfig: IWriteEventBusConfig,
   ): DynamicModule {
-    const modules = [common(eventStoreConfig)];
+    const modules = [registerEventStore(eventStoreConfig)];
     const config = { ...defaultWriteBusConfig, ...eventBusConfig };
     return {
       module: CqrsEventStoreModule,
@@ -116,7 +116,7 @@ export class CqrsEventStoreModule extends CqrsModule {
     eventBusConfig: ReadEventBusConfigType,
     subscriptions: IEventStoreServiceConfig['subscriptions'] = {},
   ): DynamicModule {
-    const modules = [common(eventStoreConfig, { subscriptions })];
+    const modules = [registerEventStore(eventStoreConfig, { subscriptions })];
     return {
       module: CqrsEventStoreModule,
       imports: modules.map((module) => module.imports).flat(),
@@ -152,7 +152,7 @@ export class CqrsEventStoreModule extends CqrsModule {
     const modules = [
       this.registerWriteBus(eventStoreConfig, eventBusConfig.write),
       this.registerReadBus(eventStoreConfig, eventBusConfig.read),
-      common(eventStoreConfig, eventStoreServiceConfig),
+      registerEventStore(eventStoreConfig, eventStoreServiceConfig),
     ];
 
     return {

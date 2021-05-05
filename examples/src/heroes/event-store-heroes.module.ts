@@ -79,7 +79,6 @@ const subscriptions = {
     },
   ],
 };
-
 const projections = [
   {
     name: 'hero-dragon',
@@ -90,7 +89,6 @@ const projections = [
     emitEnabled: true,
   },
 ];
-
 const eventBusConfig = {
   read: {
     allowedEvents: { ...heroesEvents },

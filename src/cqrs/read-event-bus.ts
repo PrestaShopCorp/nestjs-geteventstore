@@ -20,14 +20,7 @@ export class ReadEventBus<
     private readonly config: ReadEventBusConfigType<EventBase>,
     private readonly prepublish: EventBusPrepublishService<EventBase>,
     commandBus: CommandBus,
-    /**
-     * @todo Bug in Nest ? We need to inject ModuleRef this way because when we try to do it with the DI container we have an error:
-     *    Argument of type 'import("/nestjs-geteventstore/node_modules/@nestjs/core/injector/module-ref").ModuleRef'
-     *    is not assignable to parameter of type 'import("/nestjs-geteventstore/examples/node_modules/@nestjs/core/injector/module-ref").ModuleRef'.
-     *    Property 'container' is protected but type 'ModuleRef' is not a class derived from 'ModuleRef'.
-     */
-    @Inject(ModuleRef)
-    moduleRef,
+    moduleRef: ModuleRef,
   ) {
     super(commandBus, moduleRef);
   }

@@ -7,7 +7,7 @@ import { EventStoreAggregateRoot } from '../../../../src';
 export class Hero extends EventStoreAggregateRoot {
   constructor(private readonly id) {
     super();
-    this.streamName = `hero-${id}`;
+    // this.streamName = `hero-${id}`;
   }
 
   damageEnemy(dragonId: string, hitPoint: number) {

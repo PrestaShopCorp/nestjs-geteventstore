@@ -1,17 +1,8 @@
-import { AcknowledgeableEventStoreEvent } from '../../../../../src';
+import { EventStoreAcknowledgeableEvent } from '../../../../../src';
 
-export class HeroKilledDragonEvent extends AcknowledgeableEventStoreEvent {
-  constructor(
-    public readonly data: {
-      heroId: string;
-      dragonId: string;
-    },
-    options?,
-  ) {
-    super(data, options);
-  }
-
-  getStream() {
-    return `hero-${this.data.heroId}`;
-  }
+export class HeroKilledDragonEvent extends EventStoreAcknowledgeableEvent {
+  public declare readonly data: {
+    heroId: string;
+    dragonId: string;
+  };
 }

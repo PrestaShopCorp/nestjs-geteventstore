@@ -19,7 +19,7 @@ yarn install
 ## Start
 ```
 docker run -d -p 2113:2113 -p 1113:1113 -e EVENSTORE_RUN_PROJECTIONS=System --name geteventstore eventstore/eventstore
-yarn start
+yarn start // or yarn start:<cqrs | eventstore | subscription | write>
 ```
 
 ## Usage 

@@ -8,9 +8,9 @@ import {
 @Controller('health')
 export class HealthController {
   constructor(
-    private health: HealthCheckService,
-    private eventStoreHealthIndicator: EventStoreHealthIndicator,
-    private eventStoreSubscriptionHealthIndicator: EventStoreSubscriptionHealthIndicator,
+    private readonly health: HealthCheckService,
+    private readonly eventStoreHealthIndicator: EventStoreHealthIndicator,
+    private readonly eventStoreSubscriptionHealthIndicator: EventStoreSubscriptionHealthIndicator,
   ) {}
 
   @Get()

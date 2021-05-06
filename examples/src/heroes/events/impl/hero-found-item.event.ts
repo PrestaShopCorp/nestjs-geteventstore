@@ -1,11 +1,6 @@
-import {
-  EventStoreEvent,
-  ExpectedVersion,
-  IExpectedVersionEvent,
-} from '../../../../../src';
+import { EventStoreEvent } from '../../../../../src';
 
-export class HeroFoundItemEvent extends EventStoreEvent
-  implements IExpectedVersionEvent {
+export class HeroFoundItemEvent extends EventStoreEvent {
   constructor(
     public readonly data: {
       heroId: string;
@@ -14,13 +9,5 @@ export class HeroFoundItemEvent extends EventStoreEvent
     options?,
   ) {
     super(data, options);
-  }
-
-  getStream(): string {
-    return `hero-${this.data.heroId}`;
-  }
-
-  get expectedVersion() {
-    return ExpectedVersion.EmptyStream;
   }
 }

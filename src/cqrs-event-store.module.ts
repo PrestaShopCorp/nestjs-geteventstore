@@ -143,7 +143,7 @@ export class CqrsEventStoreModule extends CqrsModule {
     };
   }
   static register(
-    eventStoreConfig: IEventStoreConfig,
+    eventStoreConfig: EventStoreModuleConfig,
     eventStoreServiceConfig: IEventStoreServiceConfig = {},
     eventBusConfig: EventBusConfigType = {},
   ): DynamicModule {

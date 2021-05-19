@@ -1,4 +1,5 @@
 import { IEvent } from '@nestjs/cqrs';
+import { InvalidPublisherException } from '../exceptions/invalid-publisher.exception';
 
 const INTERNAL_EVENTS = Symbol();
 const IS_AUTO_COMMIT_ENABLED = Symbol();
@@ -18,15 +19,18 @@ export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
 
   addPublisher<T extends Function | object = Function>(
     publisher: T,
-    method?: keyof T,
+    method: keyof T = 'publishAll' as keyof T,
   ) {
     const objectPublisher = publisher?.[method];
-    this._publishers.push(
+    const addedPublisher =
       !!objectPublisher && typeof objectPublisher === 'function'
         ? objectPublisher.bind(publisher)
-        : publisher,
-    );
-    return this;
+        : publisher;
+    if (typeof addedPublisher === 'function') {
+      this._publishers.push(addedPublisher);
+      return this;
+    }
+    throw new InvalidPublisherException(publisher, method);
   }
 
   get publishers() {

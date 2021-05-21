@@ -247,4 +247,8 @@ export class EventStore {
       this.logger.error(err.message);
     }
   }
+
+  async getProjectionState(name: string, partition? : string) {
+    return await this.HTTPClient.projections.getState(name, { partition });
+  }
 }

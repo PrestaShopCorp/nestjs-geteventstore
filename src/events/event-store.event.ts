@@ -13,7 +13,8 @@ export abstract class EventStoreEvent
 
   constructor(public data: any, options?: EventOptionsType) {
     super();
-    this.metadata = options?.metadata || ({} as any); // any = read, write will be validated
+    // metadata is added automatically in write events, so we cast to any
+    this.metadata = options?.metadata || ({} as any);
     this.eventId = options?.eventId || v4();
     this.eventType = options?.eventType || this.constructor.name;
     this.eventStreamId = options?.eventStreamId ?? undefined;

@@ -1,12 +1,17 @@
 {
   "name": "nestjs-geteventstore",
-  "version": "1.6.1",
-  "description": "Event Store connector for Nest js",
-  "author": "Taimoor Alam <taimoor.alam@daypaio.com>",
+  "version": "2.1.0",
+  "description": "Event Store connector for NestJS-Cqrs",
+  "author": "Vincent Vermersch <vincent.vermersch@prestashop.com >",
   "contributors": [
     "vinceveve",
-    "maz-dev",
-    "lui"
+    "jdharandas",
+    "monocursive",
+    "xGouley",
+    "jokesterfr",
+    "MaxencePerrinPrestashop",
+    "prxmat",
+    "maniolias"
   ],
   "license": "MIT",
   "readmeFilename": "README.md",
@@ -39,32 +44,44 @@
   },
   "bugs": "https://github.com/prestashopCorp/nestjs-eventstore/issues",
   "peerDependencies": {
-    "@nestjs/common": "^7.6.11",
-    "@nestjs/core": "^7.6.11",
+    "@nestjs/common": "*",
+    "@nestjs/core": "*",
+    "@nestjs/cqrs": "*",
+    "@nestjs/terminus": "*",
+    "class-transformer": "*",
+    "class-validator": "*",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^6.6.3"
   },
+  "peerDependenciesMeta": {
+    "@nesjs/cqrs": {
+      "optional": true
+    }
+  },
   "dependencies": {
-    "@godaddy/terminus": "^4.6.0",
-    "@nestjs/common": "^7.6.11",
-    "@nestjs/core": "^7.6.11",
-    "@nestjs/cqrs": "^7.0.1",
-    "@nestjs/terminus": "^7.1.0",
     "geteventstore-promise": "3.2.5",
     "lodash": "^4.17.20",
+    "nestjs-context": "^0.2.0",
     "node-eventstore-client": "0.2.18",
-    "rxjs": "^6.5.4",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@nestjs/common": "^7.6.15",
+    "@nestjs/core": "^7.6.15",
+    "@nestjs/cqrs": "^7.0.1",
     "@nestjs/platform-express": "^7.6.11",
+    "@nestjs/terminus": "^7.1.2",
     "@nestjs/testing": "^7.6.11",
     "@types/jest": "^26.0.20",
     "@types/node": "^14.14.25",
     "@types/supertest": "^2.0.10",
+    "class-transformer": "^0.4.0",
+    "class-validator": "^0.13.1",
     "jest": "^26.6.3",
     "prettier": "^2.2.1",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.0.0",
     "supertest": "6.1.3",
     "ts-jest": "^26.5.0",
     "ts-node": "^9.1.1",

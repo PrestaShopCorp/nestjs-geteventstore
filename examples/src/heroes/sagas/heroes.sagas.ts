@@ -13,9 +13,9 @@ export class HeroesGameSagas {
   @Saga()
   dragonKilled = (events$: Observable<any>): Observable<ICommand> => {
     return events$.pipe(
-      filter(ev => ev instanceof HeroKilledDragonEvent),
+      filter((ev) => ev instanceof HeroKilledDragonEvent),
       delay(400),
-      map(event => {
+      map((event: HeroKilledDragonEvent) => {
         console.log(
           clc.redBright('Inside [HeroesGameSagas] Saga after a little sleep'),
         );

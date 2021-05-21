@@ -1,13 +1,20 @@
-import { DynamicModule, Global, Module } from '@nestjs/common';
-import { EventStore } from './event-store.class';
+import { DynamicModule, Module } from '@nestjs/common';
+import { EventStore } from './event-store';
+import { IEventStoreModuleAsyncConfig, IEventStoreConfig } from './interfaces';
 import {
-  EventStoreModuleAsyncOptions,
-  IEventStoreConfig,
-} from './interfaces/event-store-config.interface';
-import { EventStoreHealthIndicator } from './health/event-store.health-indicator';
-import { EventStoreSubscriptionHealthIndicator } from './health/event-store-subscription.health-indicator';
+  EventStoreHealthIndicator,
+  EventStoreSubscriptionHealthIndicator,
+} from './health';
 
-@Global()
+const commonProvidersAndExports = {
+  providers: [EventStoreHealthIndicator, EventStoreSubscriptionHealthIndicator],
+  exports: [
+    EventStore,
+    EventStoreHealthIndicator,
+    EventStoreSubscriptionHealthIndicator,
+  ],
+};
+
 @Module({
   providers: [EventStore],
   exports: [EventStore],
@@ -16,39 +23,20 @@ export class EventStoreModule {
   static register(config: IEventStoreConfig) {
     return {
       module: EventStoreModule,
+      ...commonProvidersAndExports,
       providers: [
         {
           provide: EventStore,
-          useFactory: () => {
-            return new EventStore(config);
-          },
+          useValue: new EventStore(config),
         },
-        {
-          provide: EventStoreHealthIndicator,
-          useFactory: (eventStore) => {
-            return new EventStoreHealthIndicator(eventStore);
-          },
-          inject: [EventStore],
-        },
-        {
-          provide: EventStoreSubscriptionHealthIndicator,
-          useFactory: (eventStore) => {
-            return new EventStoreSubscriptionHealthIndicator(eventStore);
-          },
-          inject: [EventStore],
-        },
-      ],
-      exports: [
-        EventStore,
-        EventStoreHealthIndicator,
-        EventStoreSubscriptionHealthIndicator,
+        ...commonProvidersAndExports.providers,
       ],
     };
   }
-
-  static registerAsync(options: EventStoreModuleAsyncOptions): DynamicModule {
+  static registerAsync(options: IEventStoreModuleAsyncConfig): DynamicModule {
     return {
       module: EventStoreModule,
+      ...commonProvidersAndExports,
       providers: [
         {
           provide: EventStore,
@@ -60,26 +48,7 @@ export class EventStoreModule {
           },
           inject: [...options.inject],
         },
-        {
-          provide: EventStoreHealthIndicator,
-          useFactory: (eventStore) => {
-            return new EventStoreHealthIndicator(eventStore);
-          },
-          inject: [EventStore],
-        },
-        {
-          provide: EventStoreSubscriptionHealthIndicator,
-          useFactory: (eventStore) => {
-            return new EventStoreSubscriptionHealthIndicator(eventStore);
-          },
-          inject: [EventStore],
-        },
-      ],
-      exports: [
-        EventStore,
-        EventStoreModule,
-        EventStoreHealthIndicator,
-        EventStoreSubscriptionHealthIndicator,
+        ...commonProvidersAndExports.providers,
       ],
     };
   }

@@ -2,6 +2,6 @@ import { EventMetadataDto } from '../dto';
 
 export const createEventDefaultMetadata = () =>
   ({
-    time: Math.floor(new Date().getTime() / 1000),
+    time: new Date().toISOString(),
     version: 1,
   } as Partial<EventMetadataDto>);

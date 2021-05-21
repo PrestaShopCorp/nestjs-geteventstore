@@ -12,18 +12,19 @@ export class Hero extends EventStoreAggregateRoot {
   }
 
   damageEnemy(dragonId: string, hitPoint: number) {
-    this.apply(
+    return this.apply(
       new HeroDamagedEnemyEvent({
         heroId: this.id,
+        // comment dragonId if you want to test validation,
         dragonId,
         hitPoint: hitPoint,
-      }),
+      } as any),
     );
   }
 
   killEnemy(dragonId: string) {
     // logic
-    this.apply(
+    return this.apply(
       new HeroKilledDragonEvent({
         heroId: this.id,
         dragonId,
@@ -33,7 +34,7 @@ export class Hero extends EventStoreAggregateRoot {
 
   addItem(itemId: string) {
     // logic
-    this.apply(
+    return this.apply(
       new HeroFoundItemEvent({
         heroId: this.id,
         itemId,
@@ -42,7 +43,7 @@ export class Hero extends EventStoreAggregateRoot {
   }
 
   dropItem(itemId: string) {
-    this.apply(
+    return this.apply(
       new HeroDropItemEvent({
         heroId: this.id,
         itemId,

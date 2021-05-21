@@ -1,6 +1,6 @@
 import { Logger, Injectable, Inject } from '@nestjs/common';
-import { validate } from 'class-validator';
 import { plainToClass } from 'class-transformer';
+import { validate } from 'class-validator';
 import {
   Context,
   CONTEXT_BIN,
@@ -15,7 +15,6 @@ import {
   IWriteEventBusConfig,
 } from '../interfaces';
 import { EventStoreEvent } from '../events';
-import { WriteEventDto } from '../dto/write-event.dto';
 import { EventMetadataDto } from '../dto';
 import { createEventDefaultMetadata } from '../tools/create-event-default-metadata';
 import { WRITE_EVENT_BUS_CONFIG } from '../constants';
@@ -42,8 +41,12 @@ export class WriteEventsPrepublishService<
   // transform to dto each event and validate it
   async validate(events: T[]) {
     let errors = [];
-    for (const event of plainToClass(WriteEventDto, events)) {
-      errors = [errors, ...(await validate(event))];
+    for (const event of events) {
+      this.logger.debug(`Validating ${event.constructor.name}`);
+      // @todo JDM class-transformer is not converting data property !
+      //    (metadata is working, so it might be related to inheritance)
+      const validateEvent: any = plainToClass(event.constructor as any, event);
+      errors = [...errors, ...(await validate(validateEvent))];
     }
     return errors;
   }
@@ -78,13 +81,12 @@ export class WriteEventsPrepublishService<
   async prepare(events: T[]) {
     const preparedEvents = [];
     for (const event of events) {
-      preparedEvents.push({
-        ...event,
-        metadata: {
-          ...(event.metadata ?? {}),
-          ...this.getCloudEventMetadata(event),
-        },
-      });
+      const preparedEvent = event;
+      preparedEvent.metadata = {
+        ...(event.metadata ?? {}),
+        ...this.getCloudEventMetadata(event),
+      };
+      preparedEvents.push(preparedEvent);
     }
     return preparedEvents;
   }

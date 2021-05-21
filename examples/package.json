@@ -18,6 +18,8 @@
     "@nestjs/cqrs": "^7.0.1",
     "@nestjs/platform-express": "^6.0.0",
     "@nestjs/terminus": "^7.0.1",
+    "class-transformer": "^0.4.0",
+    "class-validator": "^0.13.1",
     "cli-color": "^1.4.0",
     "global": "^4.4.0",
     "nestjs-context": "^0.1.1",

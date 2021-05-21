@@ -6,6 +6,7 @@ import {
   IsRFC3339,
   Matches,
   IsUrl,
+  IsString,
 } from 'class-validator';
 
 /**
@@ -27,7 +28,7 @@ export class EventMetadataDto {
    * @example 1524379940
    */
   @IsRFC3339()
-  time: number;
+  time: string;
 
   /**
    * Typeof event. Note that "-" are not allowed, use "_" instead
@@ -43,14 +44,19 @@ export class EventMetadataDto {
    * @example http://api-live.net/order/create
    * @example /order/create
    */
-  @IsNotEmpty()
-  @IsUrl()
+  @IsUrl({
+    require_host: false,
+    require_protocol: false,
+    require_tld: false,
+    allow_protocol_relative_urls: true,
+  })
   source: string;
 
   /**
    * Identifier in source context sub-structure, if any
    */
   @IsOptional()
+  @IsString()
   @IsNotEmpty()
   subject?: string;
 
@@ -58,6 +64,7 @@ export class EventMetadataDto {
    * @see RFC 2046
    */
   @IsOptional()
+  @IsString()
   @IsNotEmpty()
   datacontenttype?: string;
 
@@ -82,6 +89,7 @@ export class EventMetadataDto {
    * Business process unique id
    * @example 15d5f8d5-869e-4107-9961-5035495fe416
    */
+  @IsString()
   @IsNotEmpty()
   correlation_id: string;
 }

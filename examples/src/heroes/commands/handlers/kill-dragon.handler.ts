@@ -25,18 +25,18 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     // );
     const hero = (
       await this.repository.findOneById(+heroId)
-    ).addPublisher<WriteEventBus>(this.publisher, 'publishAll');
+    ).addPublisher<WriteEventBus>(this.publisher);
 
-    hero.damageEnemy(dragonId, 2);
-    hero.damageEnemy(dragonId, -8);
-    hero.damageEnemy(dragonId, 10);
-    hero.damageEnemy(dragonId, 10);
-    hero.damageEnemy(dragonId, -1);
-    hero.damageEnemy(dragonId, 10);
-    hero.damageEnemy(dragonId, 10);
-    hero.damageEnemy(dragonId, 10);
+    await hero.damageEnemy(dragonId, 2);
+    await hero.damageEnemy(dragonId, -8);
+    await hero.damageEnemy(dragonId, 10);
+    await hero.damageEnemy(dragonId, 10);
+    await hero.damageEnemy(dragonId, -1);
+    await hero.damageEnemy(dragonId, 10);
+    await hero.damageEnemy(dragonId, 10);
+    await hero.damageEnemy(dragonId, 10);
     await hero.commit(ExpectedVersion.NoStream);
-    hero.killEnemy(dragonId);
+    await hero.killEnemy(dragonId);
     await hero.commit(ExpectedVersion.StreamExists);
 
     return command;

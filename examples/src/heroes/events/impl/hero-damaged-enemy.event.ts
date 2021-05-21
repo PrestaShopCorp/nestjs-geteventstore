@@ -1,14 +1,10 @@
+import { ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import { EventStoreEvent } from '../../../../../src';
+import { HeroDamagedEnemyDto } from '../../dto/hero-damaged-enemy.dto';
 
 export class HeroDamagedEnemyEvent extends EventStoreEvent {
-  constructor(
-    public readonly data: {
-      heroId: string;
-      dragonId: string;
-      hitPoint: number;
-    },
-    options?,
-  ) {
-    super(data, options);
-  }
+  @ValidateNested()
+  @Type(() => HeroDamagedEnemyDto)
+  public declare data: HeroDamagedEnemyDto;
 }

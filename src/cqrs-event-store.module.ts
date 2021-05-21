@@ -83,7 +83,7 @@ export class CqrsEventStoreModule extends CqrsModule {
   }
   static registerWriteBus(
     eventStoreConfig: EventStoreModuleConfig,
-    eventBusConfig: IWriteEventBusConfig,
+    eventBusConfig: IWriteEventBusConfig = {},
   ): DynamicModule {
     const modules = [registerEventStore(eventStoreConfig)];
     const config = { ...defaultWriteBusConfig, ...eventBusConfig };

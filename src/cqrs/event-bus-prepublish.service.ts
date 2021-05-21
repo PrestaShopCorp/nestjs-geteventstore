@@ -42,7 +42,7 @@ export class EventBusPrepublishService<
       )) ?? (validate as IEventBusPrepublishValidateProvider<T>);
     const validated = await validator.validate(events);
     // validation passed without errors
-    if (!!validated.length) {
+    if (!validated.length) {
       return true;
     }
     // validation failed

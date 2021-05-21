@@ -51,12 +51,13 @@ export class WriteEventBus<
     expectedVersion?: ExpectedVersion,
     streamName?: string,
   ): Promise<any> {
+    this.logger.debug(`preparing ${events.length} events`);
     const preparedEvents = await this.prepublish.prepare(this.config, events);
-    this.logger.debug(`prepared ${preparedEvents.length} events`);
+    this.logger.debug(`validating ${preparedEvents.length} events`);
     if (!(await this.prepublish.validate(this.config, preparedEvents))) {
       return;
     }
-    this.logger.debug(`validated ${preparedEvents.length} events`);
+    this.logger.debug(`prepared && validated ${preparedEvents.length} events`);
     return await this.publisher.publishAll(
       preparedEvents,
       // @ts-ignore

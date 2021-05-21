@@ -11,19 +11,20 @@ export class Hero extends EventStoreAggregateRoot {
     this.streamName = `hero-${id}`;
   }
 
-  damageEnemy(dragonId: string, hitPoint: number) {
-    this.apply(
+  async damageEnemy(dragonId: string, hitPoint: number) {
+    return this.apply(
       new HeroDamagedEnemyEvent({
         heroId: this.id,
+        // comment dragonId if you want to test validation,
         dragonId,
         hitPoint: hitPoint,
-      }),
+      } as any),
     );
   }
 
-  killEnemy(dragonId: string) {
+  async killEnemy(dragonId: string) {
     // logic
-    this.apply(
+    return this.apply(
       new HeroKilledDragonEvent({
         heroId: this.id,
         dragonId,
@@ -31,9 +32,9 @@ export class Hero extends EventStoreAggregateRoot {
     );
   }
 
-  addItem(itemId: string) {
+  async addItem(itemId: string) {
     // logic
-    this.apply(
+    return this.apply(
       new HeroFoundItemEvent({
         heroId: this.id,
         itemId,
@@ -41,8 +42,8 @@ export class Hero extends EventStoreAggregateRoot {
     );
   }
 
-  dropItem(itemId: string) {
-    this.apply(
+  async dropItem(itemId: string) {
+    return this.apply(
       new HeroDropItemEvent({
         heroId: this.id,
         itemId,

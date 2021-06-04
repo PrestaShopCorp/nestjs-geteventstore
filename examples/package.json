@@ -1,6 +1,6 @@
 {
   "name": "nest-cqrs-example",
-  "version": "2.3.0",
+  "version": "1.0.0",
   "description": "Nest CQRS module usage example",
   "license": "MIT",
   "scripts": {

@@ -14,7 +14,7 @@ export class WriteEventDto {
 
   @ValidateNested()
   @Type(() => EventMetadataDto)
-  metadata: EventMetadataDto;
+  metadata: Partial<EventMetadataDto>; // we add partial to allow metadata auto-generation
 
   @ValidateNested()
   data: any;

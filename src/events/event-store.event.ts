@@ -14,7 +14,7 @@ export abstract class EventStoreEvent
   constructor(public data: any, options?: EventOptionsType) {
     super();
     // metadata is added automatically in write events, so we cast to any
-    this.metadata = options?.metadata || ({} as any);
+    this.metadata = options?.metadata || {};
     this.eventId = options?.eventId || v4();
     this.eventType = options?.eventType || this.constructor.name;
     this.eventStreamId = options?.eventStreamId ?? undefined;

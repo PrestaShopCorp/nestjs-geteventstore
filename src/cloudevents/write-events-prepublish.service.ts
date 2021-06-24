@@ -81,6 +81,7 @@ export class WriteEventsPrepublishService<
   async prepare(events: T[]) {
     const preparedEvents = [];
     for (const event of events) {
+      this.logger.debug(`Preparing ${event.constructor.name}`);
       const preparedEvent = event;
       preparedEvent.metadata = {
         ...(event.metadata ?? {}),

@@ -90,7 +90,7 @@ export class CqrsEventStoreModule extends CqrsModule {
     return {
       module: CqrsEventStoreModule,
       imports: [
-        ContextModule.registerWithDefaults(),
+        ContextModule.register(),
         ...modules.map((module) => module.imports).flat(),
       ],
       providers: [

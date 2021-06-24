@@ -1,5 +1,5 @@
 import { CommandBus, EventBus as Parent } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   ReadEventOptionsType,
   IReadEvent,
@@ -15,6 +15,7 @@ import { EventBusPrepublishService } from './event-bus-prepublish.service';
 export class ReadEventBus<
   EventBase extends IReadEvent = IReadEvent
 > extends Parent<EventBase> {
+  private logger = new Logger(this.constructor.name);
   constructor(
     @Inject(READ_EVENT_BUS_CONFIG)
     private readonly config: ReadEventBusConfigType<EventBase>,
@@ -25,6 +26,7 @@ export class ReadEventBus<
     super(commandBus, moduleRef);
   }
   async publish<T extends EventBase = EventBase>(event: T) {
+    this.logger.debug('Publish in read bus');
     const preparedEvents = await this.prepublish.prepare(this.config, [event]);
     if (!(await this.prepublish.validate(this.config, preparedEvents))) {
       return;
@@ -32,6 +34,7 @@ export class ReadEventBus<
     return super.publish(preparedEvents[0]);
   }
   async publishAll<T extends EventBase = EventBase>(events: T[]) {
+    this.logger.debug('Publish all in read bus');
     const preparedEvents = await this.prepublish.prepare(this.config, events);
     if (!(await this.prepublish.validate(this.config, preparedEvents))) {
       return;

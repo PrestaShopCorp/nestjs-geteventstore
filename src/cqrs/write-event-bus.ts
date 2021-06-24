@@ -34,10 +34,12 @@ export class WriteEventBus<
     expectedVersion?: ExpectedVersion,
     streamName?: string,
   ): Promise<any> {
+    this.logger.debug('Publish in read bus');
     const preparedEvents = await this.prepublish.prepare(this.config, [event]);
     if (!(await this.prepublish.validate(this.config, preparedEvents))) {
       return;
     }
+    this.logger.debug(`Publishing ${event.constructor.name} in ${streamName}`);
     return await this.publisher.publish<T>(
       preparedEvents,
       // @ts-ignore
@@ -51,13 +53,11 @@ export class WriteEventBus<
     expectedVersion?: ExpectedVersion,
     streamName?: string,
   ): Promise<any> {
-    this.logger.debug(`preparing ${events.length} events`);
+    this.logger.debug('Publish All in write bus');
     const preparedEvents = await this.prepublish.prepare(this.config, events);
-    this.logger.debug(`validating ${preparedEvents.length} events`);
     if (!(await this.prepublish.validate(this.config, preparedEvents))) {
       return;
     }
-    this.logger.debug(`prepared && validated ${preparedEvents.length} events`);
     return await this.publisher.publishAll(
       preparedEvents,
       // @ts-ignore

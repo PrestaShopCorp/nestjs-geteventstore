@@ -1,5 +1,5 @@
 import { ModuleRef } from '@nestjs/core';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   EventBusPrepublishPrepareCallbackType,
   IBaseEvent,
@@ -12,7 +12,6 @@ import {
 export class EventBusPrepublishService<
   EventBase extends IBaseEvent = IBaseEvent
 > {
-  private readonly logger = new Logger(this.constructor.name);
   constructor(private readonly moduleRef: ModuleRef) {}
 
   private async getProvider<
@@ -35,7 +34,6 @@ export class EventBusPrepublishService<
     if (!validate) {
       return true;
     }
-    this.logger.debug('validating events...');
     const validator =
       (await this.getProvider<IEventBusPrepublishValidateProvider<T>>(
         validate,
@@ -60,7 +58,6 @@ export class EventBusPrepublishService<
     if (!prepare) {
       return events;
     }
-    this.logger.debug('preparing events...');
     const provider = await this.getProvider<
       IEventBusPrepublishPrepareProvider<T>
     >(prepare);

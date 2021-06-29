@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { IEvent } from '@nestjs/cqrs';
 import { InvalidPublisherException } from '../exceptions/invalid-publisher.exception';
 
@@ -5,6 +6,7 @@ const INTERNAL_EVENTS = Symbol();
 const IS_AUTO_COMMIT_ENABLED = Symbol();
 
 export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
+  protected logger = new Logger(this.constructor.name);
   public [IS_AUTO_COMMIT_ENABLED] = false;
   private readonly [INTERNAL_EVENTS]: EventBase[] = [];
   private readonly _publishers: Function[] = [];
@@ -48,6 +50,11 @@ export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
   }
 
   async commit() {
+    this.logger.debug(
+      `Aggregate will commit ${this.getUncommittedEvents().length} in ${
+        this.publishers.length
+      } publishers`,
+    );
     for (const publisher of this.publishers) {
       await publisher(this.getUncommittedEvents());
     }
@@ -72,6 +79,11 @@ export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
     event: T,
     isFromHistory = false,
   ) {
+    this.logger.debug(
+      `Applying ${event.constructor.name} with${
+        !!this.autoCommit ? '' : 'out'
+      } autocommit`,
+    );
     if (!isFromHistory) {
       this.addEvent(event);
     }

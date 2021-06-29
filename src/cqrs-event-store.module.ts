@@ -90,7 +90,9 @@ export class CqrsEventStoreModule extends CqrsModule {
     return {
       module: CqrsEventStoreModule,
       imports: [
-        ContextModule.registerWithDefaults(),
+        // @todo this is giving us some problems in subscriptions with SAGA !!!
+        //    it does not take into account the @Global and generate 2 diff contexts
+        // ContextModule.register(),
         ...modules.map((module) => module.imports).flat(),
       ],
       providers: [
@@ -150,8 +152,12 @@ export class CqrsEventStoreModule extends CqrsModule {
     // Attention: modules order is important here, as ES service is registered
     //  at the end (and projections + subscriptions are passed in config)
     const modules = [
-      this.registerWriteBus(eventStoreConfig, eventBusConfig.write),
-      this.registerReadBus(eventStoreConfig, eventBusConfig.read),
+      ...(eventBusConfig.write
+        ? [this.registerWriteBus(eventStoreConfig, eventBusConfig.write)]
+        : []),
+      ...(eventBusConfig.read
+        ? [this.registerReadBus(eventStoreConfig, eventBusConfig.read)]
+        : []),
       registerEventStore(eventStoreConfig, eventStoreServiceConfig),
     ];
 

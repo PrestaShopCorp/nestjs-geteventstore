@@ -12,6 +12,11 @@ export abstract class EventStoreAggregateRoot<
   }
 
   async commit(expectedVersion: ExpectedVersion = ExpectedVersion.Any) {
+    this.logger.debug(
+      `Aggregate will commit ${this.getUncommittedEvents().length} events in ${
+        this.publishers.length
+      } publishers`,
+    );
     for (const publisher of this.publishers) {
       await publisher(
         this.getUncommittedEvents(),

@@ -23,6 +23,7 @@ export class WriteEventBus<
     moduleRef: ModuleRef,
   ) {
     super(commandBus, moduleRef);
+    this.logger.debug('Registering Write EventBus for EventStore...');
     this.publisher = new EventStorePublisher<EventBase>(
       this.eventstore,
       this.config,

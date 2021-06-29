@@ -24,6 +24,7 @@ export class ReadEventBus<
     moduleRef: ModuleRef,
   ) {
     super(commandBus, moduleRef);
+    this.logger.debug('Registering Read EventBus for EventStore...');
   }
   async publish<T extends EventBase = EventBase>(event: T) {
     this.logger.debug('Publish in read bus');

@@ -1,6 +1,18 @@
-# compiled output
-/dist
+# Dependency Managers
 /node_modules
+/package-lock.json
+npm-debug.log
+
+/.yarn/*
+!/.yarn/patches
+!/.yarn/plugins
+!/.yarn/releases
+!/.yarn/sdks
+!/.yarn/versions
+/.pnp.*
+
+# Compiled output
+/dist
 
 # Logs
 logs

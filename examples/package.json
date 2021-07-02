@@ -12,36 +12,30 @@
     "start:projection": "ts-node-dev src/bin/projection.ts"
   },
   "dependencies": {
-    "@godaddy/terminus": "^4.4.1",
-    "@nestjs/common": "^7.0.0",
-    "@nestjs/core": "^7.0.0",
+    "@nestjs/common": "^7.6.18",
+    "@nestjs/core": "^7.6.18",
     "@nestjs/cqrs": "^7.0.1",
-    "@nestjs/platform-express": "^6.0.0",
+    "@nestjs/platform-express": "^7.6.18",
     "@nestjs/terminus": "^7.0.1",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
     "cli-color": "^1.4.0",
-    "global": "^4.4.0",
-    "nestjs-context": "^0.1.1",
-    "nestjs-geteventstore": "^1.6.0",
-    "nestjs-pino-stackdriver": "^1.0.0",
+    "nestjs-context": "^0.11.1",
+    "nestjs-geteventstore": "^2.3.2",
+    "nestjs-pino-stackdriver": "^2.1.0",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.0.0"
+    "rxjs": "^6.6.7"
   },
   "devDependencies": {
     "@compodoc/compodoc": "^1.1.11",
     "@types/express": "^4.16.1",
     "@types/node": "^11.9.4",
-    "dot-prop": ">=4.2.1",
-    "nodemon": "^1.18.10",
     "prettier": "^1.12.1",
-    "serialize-javascript": ">=3.1.0",
-    "start-server-webpack-plugin": "^2.2.5",
-    "ts-loader": "^7.0.4",
     "ts-node": "^8.0.2",
     "ts-node-dev": "^1.1.6",
-    "typescript": "^3.3.3",
-    "webpack": "^4.43.0",
-    "webpack-node-externals": "^1.7.2"
+    "typescript": "^3.3.3"
+  },
+  "resolutions": {
+    "nestjs-geteventstore": "portal:/home/rzial/Documentos/Prestashop/nestjs-geteventstore"
   }
 }

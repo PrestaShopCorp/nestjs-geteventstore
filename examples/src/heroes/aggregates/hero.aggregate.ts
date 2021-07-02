@@ -17,7 +17,7 @@ export class Hero extends EventStoreAggregateRoot {
         heroId: this.id,
         // comment dragonId if you want to test validation,
         dragonId,
-        hitPoint: hitPoint,
+        hitPoint,
       } as any),
     );
   }

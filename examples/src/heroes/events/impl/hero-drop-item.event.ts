@@ -1,13 +1,12 @@
 import { EventStoreEvent } from '../../../../../src';
 
-export class HeroDropItemEvent extends EventStoreEvent {
-  constructor(
-    public readonly data: {
-      heroId: string;
-      itemId: string;
-    },
-    options?,
-  ) {
+interface DataType {
+  heroId: string;
+  itemId: string;
+}
+
+export class HeroDropItemEvent extends EventStoreEvent<DataType> {
+  constructor(public readonly data: DataType, options?) {
     super(data, options);
   }
 }

@@ -22,10 +22,12 @@ import { isIPv4 } from 'net';
 
 @Injectable()
 export class WriteEventsPrepublishService<
-  T extends IBaseEvent = EventStoreEvent
+  S = any,
+  T extends IBaseEvent = EventStoreEvent<S>,
 > implements
     IEventBusPrepublishValidateProvider<T>,
-    IEventBusPrepublishPrepareProvider<T> {
+    IEventBusPrepublishPrepareProvider<T>
+{
   private readonly logger = new Logger(this.constructor.name);
   constructor(
     private readonly context: Context,

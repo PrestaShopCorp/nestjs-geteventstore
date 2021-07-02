@@ -2,7 +2,7 @@ import { ValidateNested, IsNotEmpty, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { EventMetadataDto } from './event-metadata.dto';
 
-export class WriteEventDto {
+export class WriteEventDto<T> {
   // TODO Vincent IsUuid ?
   @IsNotEmpty()
   @IsString()
@@ -17,5 +17,5 @@ export class WriteEventDto {
   metadata: Partial<EventMetadataDto>; // we add partial to allow metadata auto-generation
 
   @ValidateNested()
-  data: any;
+  data: T;
 }

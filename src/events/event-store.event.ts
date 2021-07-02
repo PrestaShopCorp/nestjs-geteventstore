@@ -3,15 +3,16 @@ import { v4 } from 'uuid';
 import { EventOptionsType, IReadEvent, IWriteEvent } from '../interfaces';
 import { WriteEventDto } from '../dto/write-event.dto';
 
-export abstract class EventStoreEvent
-  extends WriteEventDto
-  implements IWriteEvent, IReadEvent {
+export abstract class EventStoreEvent<T>
+  extends WriteEventDto<T>
+  implements IWriteEvent, IReadEvent
+{
   // just for read events
   public readonly eventStreamId: IReadEvent['eventStreamId'] | undefined;
   public readonly eventNumber: IReadEvent['eventNumber'] | undefined;
   public readonly originalEventId: IReadEvent['originalEventId'] | undefined;
 
-  constructor(public data: any, options?: EventOptionsType) {
+  constructor(public data: T, options?: EventOptionsType) {
     super();
     // metadata is added automatically in write events, so we cast to any
     this.metadata = options?.metadata || {};

@@ -49,7 +49,13 @@ export class WriteEventsPrepublishService<
       // @todo JDM class-transformer is not converting data property !
       //    (metadata is working, so it might be related to inheritance)
       const validateEvent: any = plainToClass(event.constructor as any, event);
-      errors = [...errors, ...(await validate(validateEvent))];
+      errors = [
+        ...errors,
+        ...(await validate(validateEvent, {
+          whitelist: true,
+          forbidNonWhitelisted: true,
+        })),
+      ];
     }
     return errors;
   }

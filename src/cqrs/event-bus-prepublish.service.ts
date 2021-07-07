@@ -29,10 +29,10 @@ export class EventBusPrepublishService<
   async validate<T extends EventBase = EventBase>(
     config: IEventBusPrepublishConfig<T>,
     events: T[],
-  ): Promise<boolean> {
+  ): Promise<Error[]> {
     const { validate } = config;
     if (!validate) {
-      return true;
+      return [];
     }
     const validator =
       (await this.getProvider<IEventBusPrepublishValidateProvider<T>>(
@@ -41,13 +41,13 @@ export class EventBusPrepublishService<
     const validated = await validator.validate(events);
     // validation passed without errors
     if (!validated.length) {
-      return true;
+      return [];
     }
     // validation failed
     if (validator.onValidationFail) {
       await validator.onValidationFail(events, validated);
     }
-    return false;
+    return validated;
   }
 
   async prepare<T extends EventBase = EventBase>(

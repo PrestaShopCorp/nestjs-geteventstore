@@ -16,8 +16,9 @@ import {
 } from '../interfaces';
 import { EventStoreEvent } from '../events';
 import { EventMetadataDto } from '../dto';
-import { createEventDefaultMetadata } from '../tools/create-event-default-metadata';
 import { WRITE_EVENT_BUS_CONFIG } from '../constants';
+import { createEventDefaultMetadata } from '../tools/create-event-default-metadata';
+import { isIPv4 } from 'net';
 
 @Injectable()
 export class WriteEventsPrepublishService<
@@ -55,7 +56,10 @@ export class WriteEventsPrepublishService<
     try {
       const { version: defaultVersion, time } = createEventDefaultMetadata();
       const version = event?.metadata?.version ?? defaultVersion;
-      const hostname = this.context.get(CONTEXT_HOSTNAME);
+      const hostnameRaw = this.context.get(CONTEXT_HOSTNAME);
+      const hostname = isIPv4(hostnameRaw)
+        ? `${hostnameRaw.split(/[.]/).join('-')}.ip`
+        : hostnameRaw;
       const hostnameArr = hostname.split('.');
       const eventType = `${hostnameArr[1] ? hostnameArr[1] + '.' : ''}${
         hostnameArr[0]
@@ -84,8 +88,8 @@ export class WriteEventsPrepublishService<
       this.logger.debug(`Preparing ${event.constructor.name}`);
       const preparedEvent = event;
       preparedEvent.metadata = {
-        ...(event.metadata ?? {}),
         ...this.getCloudEventMetadata(event),
+        ...(event.metadata ?? {}),
       };
       preparedEvents.push(preparedEvent);
     }

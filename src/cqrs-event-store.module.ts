@@ -19,7 +19,7 @@ import {
 import { EventStoreService } from './event-store';
 import { EventBusPrepublishService } from './cqrs/event-bus-prepublish.service';
 import { WriteEventsPrepublishService } from './cloudevents';
-import { ContextModule, ContextName } from 'nestjs-context';
+import { ContextName } from 'nestjs-context';
 
 const isEventStoreConfig = (
   config: IEventStoreModuleAsyncConfig | IEventStoreConfig,

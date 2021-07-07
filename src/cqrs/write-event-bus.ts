@@ -6,6 +6,7 @@ import { ExpectedVersion } from '../enum';
 import { WRITE_EVENT_BUS_CONFIG } from '../constants';
 import { ModuleRef } from '@nestjs/core';
 import { EventBusPrepublishService } from './event-bus-prepublish.service';
+import { InvalidEventException } from '../exceptions/invalid-event.exception';
 
 // add next, pass onError
 
@@ -37,8 +38,12 @@ export class WriteEventBus<
   ): Promise<any> {
     this.logger.debug('Publish in read bus');
     const preparedEvents = await this.prepublish.prepare(this.config, [event]);
-    if (!(await this.prepublish.validate(this.config, preparedEvents))) {
-      return;
+    const validated = await this.prepublish.validate(
+      this.config,
+      preparedEvents,
+    );
+    if (validated.length) {
+      throw new InvalidEventException(validated);
     }
     this.logger.debug(`Publishing ${event.constructor.name} in ${streamName}`);
     return await this.publisher.publish<T>(
@@ -56,8 +61,12 @@ export class WriteEventBus<
   ): Promise<any> {
     this.logger.debug('Publish All in write bus');
     const preparedEvents = await this.prepublish.prepare(this.config, events);
-    if (!(await this.prepublish.validate(this.config, preparedEvents))) {
-      return;
+    const validated = await this.prepublish.validate(
+      this.config,
+      preparedEvents,
+    );
+    if (validated.length) {
+      throw new InvalidEventException(validated);
     }
     return await this.publisher.publishAll(
       preparedEvents,

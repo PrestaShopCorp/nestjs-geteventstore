@@ -1,5 +1,4 @@
 import { Logger, Injectable, Inject } from '@nestjs/common';
-import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
 import {
   Context,
@@ -19,15 +18,15 @@ import { EventMetadataDto } from '../dto';
 import { WRITE_EVENT_BUS_CONFIG } from '../constants';
 import { createEventDefaultMetadata } from '../tools/create-event-default-metadata';
 import { isIPv4 } from 'net';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class WriteEventsPrepublishService<
   S = any,
-  T extends IBaseEvent = EventStoreEvent<S>,
+  T extends IBaseEvent = EventStoreEvent<S>
 > implements
     IEventBusPrepublishValidateProvider<T>,
-    IEventBusPrepublishPrepareProvider<T>
-{
+    IEventBusPrepublishPrepareProvider<T> {
   private readonly logger = new Logger(this.constructor.name);
   constructor(
     private readonly context: Context,
@@ -46,9 +45,10 @@ export class WriteEventsPrepublishService<
     let errors = [];
     for (const event of events) {
       this.logger.debug(`Validating ${event.constructor.name}`);
+      const validateEvent: any = plainToClass(event.constructor as any, event);
       errors = [
         ...errors,
-        ...(await validate(event, {
+        ...(await validate(validateEvent, {
           whitelist: true,
           forbidNonWhitelisted: true,
         })),

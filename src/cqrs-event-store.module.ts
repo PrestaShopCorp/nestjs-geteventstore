@@ -89,12 +89,7 @@ export class CqrsEventStoreModule extends CqrsModule {
     const config = { ...defaultWriteBusConfig, ...eventBusConfig };
     return {
       module: CqrsEventStoreModule,
-      imports: [
-        // @todo this is giving us some problems in subscriptions with SAGA !!!
-        //    it does not take into account the @Global and generate 2 diff contexts
-        // ContextModule.register(),
-        ...modules.map((module) => module.imports).flat(),
-      ],
+      imports: [...modules.map((module) => module.imports).flat()],
       providers: [
         ...modules.map((module) => module.providers).flat(),
         WriteEventsPrepublishService,

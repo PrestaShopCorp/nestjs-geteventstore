@@ -3,7 +3,7 @@ import { EventMetadataDto } from '../../dto';
 
 export interface IBaseEvent extends IEvent {
   data: any;
-  metadata?: Partial<EventMetadataDto>;
+  metadata?: any;
   eventId?: string;
   eventType?: string;
 }

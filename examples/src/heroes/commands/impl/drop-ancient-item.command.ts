@@ -1,3 +1,3 @@
 export class DropAncientItemCommand {
-  constructor(public readonly heroId: string, public readonly itemId: string) {}
+  constructor(public readonly heroId: number, public readonly itemId: string) {}
 }

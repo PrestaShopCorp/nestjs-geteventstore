@@ -24,11 +24,11 @@ const esConfig = {
   },
   tcp: {
     host: process.env.EVENTSTORE_TCP_HOST || 'localhost',
-    port: +process.env.EVENTSTORE_TCP_PORT || 11113,
+    port: +process.env.EVENTSTORE_TCP_PORT || 1113,
   },
   http: {
     host: process.env.EVENTSTORE_HTTP_HOST || 'http://localhost',
-    port: +process.env.EVENTSTORE_HTTP_PORT || 22113,
+    port: +process.env.EVENTSTORE_HTTP_PORT || 2113,
   },
   tcpConnectionName: 'connection-hero-event-handler-and-saga',
   options: {

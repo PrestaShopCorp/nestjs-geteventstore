@@ -1,28 +1,58 @@
-import { Allow, ValidateNested } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { v4 } from 'uuid';
 
 import { EventOptionsType, IReadEvent, IWriteEvent } from '../interfaces';
-import { WriteEventDto } from '../dto/write-event.dto';
 import { Type } from 'class-transformer';
+import { EventMetadataDto } from '../dto';
 
-export abstract class EventStoreEvent<T = any>
-  extends WriteEventDto<T>
-  implements IWriteEvent, IReadEvent
-{
+export abstract class EventStoreEvent<T = any, K = EventMetadataDto>
+  implements IWriteEvent, IReadEvent {
+  @IsNotEmpty()
+  @IsString()
+  eventId: string;
+
+  @IsNotEmpty()
+  @IsString()
+  eventType: string;
+
+  @ValidateNested()
+  @Type(({ newObject }) => {
+    return Reflect.getMetadata('design:type', newObject, 'metadata');
+  })
+  metadata: Partial<K>; // we add partial to allow metadata auto-generation
+
+  @ValidateNested()
+  @Type(({ newObject }) => {
+    // console.log(Reflect.getMetadata('design:type', newObject, 'data'));
+    return Reflect.getMetadata('design:type', newObject, 'data');
+  })
+  public data: T;
+
   // just for read events
-  @Allow()
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
   public readonly eventStreamId: IReadEvent['eventStreamId'] | undefined;
 
-  @Allow()
+  @IsOptional()
+  @IsNumber()
+  @IsNotEmpty()
   public readonly eventNumber: IReadEvent['eventNumber'] | undefined;
 
-  @Allow()
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
   public readonly originalEventId: IReadEvent['originalEventId'] | undefined;
 
-  constructor(public data: T, options?: EventOptionsType) {
-    super();
-
-    // metadata is added automatically in write events, so we cast to any
+  constructor(data: T, options?: EventOptionsType) {
+    this.data = data;
+    // metadata is added automatically in write events
     this.metadata = options?.metadata || {};
     this.eventId = options?.eventId || v4();
     this.eventType = options?.eventType || this.constructor.name;

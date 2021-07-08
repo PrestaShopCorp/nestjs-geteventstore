@@ -2,7 +2,7 @@ import { PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
 import { EventStoreEvent } from './index';
 import { IAcknowledgeableEvent } from '../interfaces';
 
-export abstract class EventStoreAcknowledgeableEvent<T>
+export abstract class EventStoreAcknowledgeableEvent<T = any>
   extends EventStoreEvent<T>
   implements IAcknowledgeableEvent
 {

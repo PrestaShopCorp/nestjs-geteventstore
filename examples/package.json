@@ -34,8 +34,5 @@
     "ts-node": "^8.0.2",
     "ts-node-dev": "^1.1.6",
     "typescript": "^3.3.3"
-  },
-  "resolutions": {
-    "nestjs-geteventstore": "portal:/home/rzial/Documentos/Prestashop/nestjs-geteventstore"
   }
 }

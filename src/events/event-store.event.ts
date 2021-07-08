@@ -5,7 +5,7 @@ import { EventOptionsType, IReadEvent, IWriteEvent } from '../interfaces';
 import { WriteEventDto } from '../dto/write-event.dto';
 import { Type } from 'class-transformer';
 
-export abstract class EventStoreEvent<T>
+export abstract class EventStoreEvent<T = any>
   extends WriteEventDto<T>
   implements IWriteEvent, IReadEvent
 {
@@ -19,16 +19,9 @@ export abstract class EventStoreEvent<T>
   @Allow()
   public readonly originalEventId: IReadEvent['originalEventId'] | undefined;
 
-  @ValidateNested()
-  @Type(({ newObject }) => {
-    return Reflect.getMetadata('design:type', newObject, 'data');
-  })
-  public declare data: T;
-
-  constructor(data: T, options?: EventOptionsType) {
+  constructor(public data: T, options?: EventOptionsType) {
     super();
 
-    this.data = data;
     // metadata is added automatically in write events, so we cast to any
     this.metadata = options?.metadata || {};
     this.eventId = options?.eventId || v4();

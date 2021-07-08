@@ -17,5 +17,8 @@ export class WriteEventDto<T> {
   metadata: Partial<EventMetadataDto>; // we add partial to allow metadata auto-generation
 
   @ValidateNested()
+  @Type(({ newObject }) => {
+    return Reflect.getMetadata('design:type', newObject, 'data');
+  })
   data: T;
 }

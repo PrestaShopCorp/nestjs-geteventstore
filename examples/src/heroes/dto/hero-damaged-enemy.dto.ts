@@ -2,8 +2,8 @@ import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class HeroDamagedEnemyDto {
   @IsNotEmpty()
-  @IsString()
-  heroId: string;
+  @IsNumber()
+  heroId: number;
 
   @IsNotEmpty()
   @IsString()

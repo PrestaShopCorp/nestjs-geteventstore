@@ -12,7 +12,7 @@ import { InvalidEventException } from '../exceptions/invalid-event.exception';
 
 @Injectable()
 export class WriteEventBus<
-  EventBase extends IWriteEvent = IWriteEvent
+  EventBase extends IWriteEvent = IWriteEvent,
 > extends Parent<EventBase> {
   private logger = new Logger(this.constructor.name);
   constructor(
@@ -36,7 +36,7 @@ export class WriteEventBus<
     expectedVersion?: ExpectedVersion,
     streamName?: string,
   ): Promise<any> {
-    this.logger.debug('Publish in read bus');
+    this.logger.debug('Publish in write bus');
     const preparedEvents = await this.prepublish.prepare(this.config, [event]);
     const validated = await this.prepublish.validate(
       this.config,
@@ -59,7 +59,7 @@ export class WriteEventBus<
     expectedVersion?: ExpectedVersion,
     streamName?: string,
   ): Promise<any> {
-    this.logger.debug('Publish All in write bus');
+    this.logger.debug('Publish all in write bus');
     const preparedEvents = await this.prepublish.prepare(this.config, events);
     const validated = await this.prepublish.validate(
       this.config,

@@ -1,12 +1,21 @@
+import { Type } from 'class-transformer';
+import { IsNumber, IsString, ValidateNested } from 'class-validator';
 import { EventStoreEvent } from '../../../../../src';
 
-interface DataType {
-  heroId: string;
+class DataType {
+  @IsNumber()
+  heroId: number;
+
+  @IsString()
   itemId: string;
 }
 
 export class HeroDropItemEvent extends EventStoreEvent<DataType> {
-  constructor(public readonly data: DataType, options?) {
+  @ValidateNested()
+  @Type(() => DataType)
+  public declare readonly data: DataType;
+
+  constructor(data: DataType, options?) {
     super(data, options);
   }
 }

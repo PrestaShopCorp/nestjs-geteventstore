@@ -1,19 +1,18 @@
+import { ModuleRef } from '@nestjs/core';
 import { CommandBus, EventBus as Parent } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   ReadEventOptionsType,
   IReadEvent,
   ReadEventBusConfigType,
 } from '../interfaces';
 import { defaultEventMapper } from './default-event-mapper';
-import { Inject } from '@nestjs/common';
 import { READ_EVENT_BUS_CONFIG } from '../constants';
-import { ModuleRef } from '@nestjs/core';
 import { EventBusPrepublishService } from './event-bus-prepublish.service';
 
 @Injectable()
 export class ReadEventBus<
-  EventBase extends IReadEvent = IReadEvent
+  EventBase extends IReadEvent = IReadEvent,
 > extends Parent<EventBase> {
   private logger = new Logger(this.constructor.name);
   constructor(

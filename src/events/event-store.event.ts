@@ -1,19 +1,34 @@
+import { Allow, ValidateNested } from 'class-validator';
 import { v4 } from 'uuid';
 
 import { EventOptionsType, IReadEvent, IWriteEvent } from '../interfaces';
 import { WriteEventDto } from '../dto/write-event.dto';
+import { Type } from 'class-transformer';
 
 export abstract class EventStoreEvent<T>
   extends WriteEventDto<T>
   implements IWriteEvent, IReadEvent
 {
   // just for read events
+  @Allow()
   public readonly eventStreamId: IReadEvent['eventStreamId'] | undefined;
+
+  @Allow()
   public readonly eventNumber: IReadEvent['eventNumber'] | undefined;
+
+  @Allow()
   public readonly originalEventId: IReadEvent['originalEventId'] | undefined;
 
-  constructor(public data: T, options?: EventOptionsType) {
+  @ValidateNested()
+  @Type(({ newObject }) => {
+    return Reflect.getMetadata('design:type', newObject, 'data');
+  })
+  public declare data: T;
+
+  constructor(data: T, options?: EventOptionsType) {
     super();
+
+    this.data = data;
     // metadata is added automatically in write events, so we cast to any
     this.metadata = options?.metadata || {};
     this.eventId = options?.eventId || v4();

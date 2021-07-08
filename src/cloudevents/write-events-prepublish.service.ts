@@ -46,12 +46,9 @@ export class WriteEventsPrepublishService<
     let errors = [];
     for (const event of events) {
       this.logger.debug(`Validating ${event.constructor.name}`);
-      // @todo JDM class-transformer is not converting data property !
-      //    (metadata is working, so it might be related to inheritance)
-      const validateEvent: any = plainToClass(event.constructor as any, event);
       errors = [
         ...errors,
-        ...(await validate(validateEvent, {
+        ...(await validate(event, {
           whitelist: true,
           forbidNonWhitelisted: true,
         })),

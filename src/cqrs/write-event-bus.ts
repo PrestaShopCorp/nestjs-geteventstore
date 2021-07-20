@@ -1,8 +1,11 @@
 import { CommandBus, EventBus as Parent } from '@nestjs/cqrs';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EventStore, EventStorePublisher } from '../event-store';
-import { IWriteEvent, IWriteEventBusConfig } from '../interfaces';
-import { ExpectedVersion } from '../enum';
+import {
+  IWriteEvent,
+  IWriteEventBusConfig,
+  PublicationContextInterface,
+} from '../interfaces';
 import { WRITE_EVENT_BUS_CONFIG } from '../constants';
 import { ModuleRef } from '@nestjs/core';
 import { EventBusPrepublishService } from './event-bus-prepublish.service';
@@ -33,10 +36,9 @@ export class WriteEventBus<
 
   async publish<T extends EventBase = EventBase>(
     event: T,
-    expectedVersion?: ExpectedVersion,
-    streamName?: string,
+    context?: PublicationContextInterface,
   ): Promise<any> {
-    this.logger.debug('Publish in read bus');
+    this.logger.debug('Publish in write bus');
     const preparedEvents = await this.prepublish.prepare(this.config, [event]);
     const validated = await this.prepublish.validate(
       this.config,
@@ -45,19 +47,15 @@ export class WriteEventBus<
     if (validated.length) {
       throw new InvalidEventException(validated);
     }
-    this.logger.debug(`Publishing ${event.constructor.name} in ${streamName}`);
     return await this.publisher.publish<T>(
       preparedEvents,
       // @ts-ignore
-      expectedVersion,
-      // @ts-ignore
-      streamName,
+      context,
     );
   }
   async publishAll<T extends EventBase = EventBase>(
     events: T[],
-    expectedVersion?: ExpectedVersion,
-    streamName?: string,
+    context?: PublicationContextInterface,
   ): Promise<any> {
     this.logger.debug('Publish All in write bus');
     const preparedEvents = await this.prepublish.prepare(this.config, events);
@@ -71,9 +69,7 @@ export class WriteEventBus<
     return await this.publisher.publishAll(
       preparedEvents,
       // @ts-ignore
-      expectedVersion,
-      // @ts-ignore
-      streamName,
+      context,
     );
   }
 }

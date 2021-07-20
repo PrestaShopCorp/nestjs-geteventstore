@@ -5,10 +5,13 @@ import { IEventPublisher } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { basename, extname } from 'path';
 
-import { IStreamConfig } from '../interfaces';
 import { ExpectedVersion } from '../enum';
 import { EventStore } from './event-store';
-import { IWriteEvent, IWriteEventBusConfig } from '../interfaces';
+import {
+  IWriteEvent,
+  IWriteEventBusConfig,
+  PublicationContextInterface,
+} from '../interfaces';
 
 export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
   implements IEventPublisher<EventBase> {
@@ -26,9 +29,27 @@ export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
 
   private writeEvents<T extends EventBase>(
     events: T[],
-    streamName: IStreamConfig['streamName'],
-    expectedVersion: ExpectedVersion = ExpectedVersion.Any,
+    context: PublicationContextInterface = {
+      streamName: this.getStreamName(events[0].metadata.correlation_id),
+    },
   ) {
+    const {
+      streamName,
+      expectedVersion = ExpectedVersion.Any,
+      streamMetadata,
+      expectedMetadataVersion = ExpectedVersion.Any,
+    } = context;
+    if (streamMetadata) {
+      this.eventStore.writeMetadata(
+        streamName,
+        expectedMetadataVersion,
+        streamMetadata,
+      );
+    }
+    const eventCount = events.length;
+    this.logger.debug(
+      `Write ${eventCount} events to stream ${streamName} with expectedVersion ${expectedVersion}`,
+    );
     return this.eventStore
       .writeEvents(streamName, events, expectedVersion)
       .pipe(
@@ -53,28 +74,15 @@ export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
 
   async publish<T extends EventBase>(
     event: T,
-    expectedVersion = ExpectedVersion.Any,
-    customStreamName?: string,
+    context?: PublicationContextInterface,
   ) {
-    const streamName =
-      customStreamName || this.getStreamName(event.metadata.correlation_id);
-    this.logger.debug(
-      `Commit 1 event to stream ${streamName} with expectedVersion ${expectedVersion}`,
-    );
-    return await this.writeEvents([event], streamName, expectedVersion);
+    return await this.writeEvents([event], context);
   }
 
   async publishAll<T extends EventBase>(
     events: T[],
-    expectedVersion = ExpectedVersion.Any,
-    customStreamName?: string,
+    context?: PublicationContextInterface,
   ) {
-    const eventCount = events.length;
-    const streamName =
-      customStreamName || this.getStreamName(events[0].metadata.correlation_id);
-    this.logger.debug(
-      `Commit ${eventCount} events to stream ${streamName} with expectedVersion ${expectedVersion}`,
-    );
-    return await this.writeEvents(events, streamName, expectedVersion);
+    return await this.writeEvents(events, context);
   }
 }

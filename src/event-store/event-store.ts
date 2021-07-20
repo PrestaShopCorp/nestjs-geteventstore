@@ -106,6 +106,28 @@ export class EventStore {
       );
   }
 
+  writeMetadata(
+    stream,
+    expectedStreamMetadataVersion = ExpectedVersion.Any,
+    streamMetadata: any,
+  ) {
+    return from(
+      this.connection.setStreamMetadataRaw(
+        stream,
+        expectedStreamMetadataVersion,
+        streamMetadata,
+      ),
+    ).pipe(
+      catchError((err) => {
+        const message = err.message.err.response ? err.response.statusText : '';
+        return throwError({
+          ...err,
+          message: `Error appending metadata to stream ${stream} : ${message}`,
+        });
+      }),
+    );
+  }
+
   close() {
     this.connection.close();
   }
@@ -248,7 +270,7 @@ export class EventStore {
     }
   }
 
-  async getProjectionState(name: string, partition? : string) {
+  async getProjectionState(name: string, partition?: string) {
     return await this.HTTPClient.projections.getState(name, { partition });
   }
 }

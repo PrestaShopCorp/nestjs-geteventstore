@@ -1,38 +1,40 @@
 import { AggregateRoot as Parent } from '../cqrs';
-import { ExpectedVersion } from '../enum';
 import { IBaseEvent, PublicationContextInterface } from '../interfaces';
+import * as constants from '@eventstore/db-client/dist/constants';
+import { AppendExpectedRevision } from '@eventstore/db-client/dist/types';
+import { StreamMetadata } from '@eventstore/db-client/dist/utils/streamMetadata';
 
 export abstract class EventStoreAggregateRoot<
-  EventBase extends IBaseEvent = IBaseEvent
+  EventBase extends IBaseEvent = IBaseEvent,
 > extends Parent<EventBase> {
   private _streamName?: string;
-  private _streamMetadata?: any;
+  private _streamMetadata?: StreamMetadata;
 
   set streamName(streamName: string) {
     this._streamName = streamName;
   }
 
-  set streamMetadata(streamMetadata) {
+  set streamMetadata(streamMetadata: StreamMetadata) {
     this._streamMetadata = streamMetadata;
   }
 
-  set maxAge(maxAge) {
+  set maxAge(maxAge: number) {
     this._streamMetadata = {
       ...this._streamMetadata,
       $maxAge: maxAge,
     };
   }
 
-  set maxCount(maxCount) {
+  set maxCount(maxCount: number) {
     this._streamMetadata = {
       ...this._streamMetadata,
       $maxCount: maxCount,
     };
   }
 
-  async commit(
-    expectedVersion: ExpectedVersion = ExpectedVersion.Any,
-    expectedMetadataVersion: ExpectedVersion = ExpectedVersion.Any,
+  public async commit(
+    expectedRevision: AppendExpectedRevision = constants.ANY,
+    expectedMetadataRevision: AppendExpectedRevision = constants.ANY,
   ) {
     this.logger.debug(
       `Aggregate will commit ${this.getUncommittedEvents().length} events in ${
@@ -40,10 +42,10 @@ export abstract class EventStoreAggregateRoot<
       } publishers`,
     );
     const context: PublicationContextInterface = {
-      expectedVersion,
+      expectedRevision,
       ...(this._streamName ? { streamName: this._streamName } : {}),
       ...(this._streamMetadata
-        ? { streamMetadata: this._streamMetadata, expectedMetadataVersion }
+        ? { streamMetadata: this._streamMetadata, expectedMetadataRevision }
         : {}),
     };
     for (const publisher of this.publishers) {

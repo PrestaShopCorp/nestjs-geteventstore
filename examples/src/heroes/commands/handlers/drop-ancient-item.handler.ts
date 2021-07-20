@@ -6,7 +6,8 @@ import { WriteEventBus } from '../../../../../src/';
 
 @CommandHandler(DropAncientItemCommand)
 export class DropAncientItemHandler
-  implements ICommandHandler<DropAncientItemCommand> {
+  implements ICommandHandler<DropAncientItemCommand>
+{
   constructor(
     private readonly repository: HeroRepository,
     private readonly publisher: WriteEventBus,
@@ -22,7 +23,7 @@ export class DropAncientItemHandler
     hero.addPublisher((events, context) =>
       this.publisher.publishAll(events, context),
     );
-    hero.addItem(itemId);
-    hero.dropItem(itemId);
+    await hero.addItem(itemId);
+    await hero.dropItem(itemId);
   }
 }

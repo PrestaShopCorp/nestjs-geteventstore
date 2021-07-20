@@ -2,7 +2,9 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import * as clc from 'cli-color';
 import { HeroRepository } from '../../repository/hero.repository';
 import { KillDragonCommand } from '../impl/kill-dragon.command';
-import { ExpectedVersion, WriteEventBus } from '../../../../../src';
+import { WriteEventBus } from '@nestjs-geteventstore/cqrs';
+import * as constants from '@eventstore/db-client/dist/constants';
+import { Hero } from '../../aggregates/hero.aggregate';
 
 @CommandHandler(KillDragonCommand)
 export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
@@ -11,7 +13,7 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     private readonly publisher: WriteEventBus,
   ) {}
 
-  async execute(command: KillDragonCommand) {
+  async execute(command: KillDragonCommand): Promise<KillDragonCommand> {
     const { heroId, dragonId } = command;
 
     console.log(
@@ -23,7 +25,7 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     // const hero = (await this.repository.findOneById(+heroId)).addPublisher(
     //   this.publisher.publishAll.bind(this.publisher),
     // );
-    const hero = (
+    const hero: Hero = (
       await this.repository.findOneById(+heroId)
     ).addPublisher<WriteEventBus>(this.publisher);
 
@@ -35,9 +37,10 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     await hero.damageEnemy(dragonId, 10);
     await hero.damageEnemy(dragonId, 10);
     await hero.damageEnemy(dragonId, 10);
-    await hero.commit(ExpectedVersion.NoStream);
+    await hero.damageEnemy(dragonId, 10);
+    // await hero.commit(constants.ANY);
     await hero.killEnemy(dragonId);
-    await hero.commit(ExpectedVersion.StreamExists);
+    await hero.commit(constants.ANY);
 
     return command;
   }

@@ -1,4 +1,3 @@
-export * from './event-store.publisher';
-export * from './event-store.service';
-export * from './event-store';
+export * from './publisher/event-store.publisher';
+export * from './services/event-store.service';
 export * from './event-store-aggregate-root';

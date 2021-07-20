@@ -1,5 +1,5 @@
-import { EventStoreAcknowledgeableEvent } from '../../../../../src';
-import { EventVersion } from '../../../../../src/decorators/event-version.decorator';
+import { EventVersion } from '@nestjs-geteventstore/decorators/event-version.decorator';
+import { EventStoreAcknowledgeableEvent } from '@nestjs-geteventstore/event-store/events';
 
 // This is the second version of this event
 @EventVersion(2)

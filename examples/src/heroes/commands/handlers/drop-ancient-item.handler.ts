@@ -18,8 +18,9 @@ export class DropAncientItemHandler
     const { heroId, itemId } = command;
     const hero = await this.repository.findOneById(+heroId);
     hero.autoCommit = true;
-    hero.addPublisher((events, expectedVersion, streamName) =>
-      this.publisher.publishAll(events, expectedVersion, streamName),
+    hero.maxAge = 600; // 10 min
+    hero.addPublisher((events, context) =>
+      this.publisher.publishAll(events, context),
     );
     hero.addItem(itemId);
     hero.dropItem(itemId);

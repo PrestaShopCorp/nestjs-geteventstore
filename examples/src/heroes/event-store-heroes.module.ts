@@ -1,6 +1,7 @@
 import { Logger, Module } from '@nestjs/common';
 import { TerminusModule } from '@nestjs/terminus';
 import { ProjectionMode } from 'geteventstore-promise';
+import { ContextModule } from 'nestjs-context';
 import { LoggerModule } from 'nestjs-pino-stackdriver/dist';
 import { resolve } from 'path';
 import * as util from 'util';
@@ -112,7 +113,7 @@ export class EventStoreHeroesModule {
         HeroesGameSagas,
       ],
       imports: [
-        ...[TerminusModule, LoggerModule.forRoot()],
+        ...[ContextModule.register(), TerminusModule, LoggerModule.forRoot()],
         CqrsEventStoreModule.register(
           esConfig,
           { subscriptions, projections },
@@ -127,7 +128,7 @@ export class EventStoreHeroesModule {
       controllers: [HealthController],
       providers: [...EventHandlers],
       imports: [
-        ...[TerminusModule, LoggerModule.forRoot()],
+        ...[ContextModule.register(), TerminusModule, LoggerModule.forRoot()],
         CqrsEventStoreModule.registerSubscriptions(
           esConfig,
           subscriptions,
@@ -142,7 +143,7 @@ export class EventStoreHeroesModule {
       controllers: [HealthController, WriteController],
       providers: [HeroRepository, ...CommandHandlers],
       imports: [
-        ...[TerminusModule, LoggerModule.forRoot()],
+        ...[ContextModule.register(), TerminusModule, LoggerModule.forRoot()],
         CqrsEventStoreModule.registerWriteBus(esConfig, eventBusConfig.write),
       ],
     };
@@ -152,7 +153,7 @@ export class EventStoreHeroesModule {
       module: EventStoreHeroesModule,
       controllers: [HealthController],
       imports: [
-        ...[TerminusModule, LoggerModule.forRoot()],
+        ...[ContextModule.register(), TerminusModule, LoggerModule.forRoot()],
         CqrsEventStoreModule.registerProjections(esConfig, projections),
       ],
     };

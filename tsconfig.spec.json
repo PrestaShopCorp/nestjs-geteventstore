@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "ES2020",
+    "sourceMap": true,
+    "rootDir": "./src",
+    "baseUrl": "./",
+    "noLib": false
+  },
+  "include": ["src/**/*.spec.ts"],
+  "exclude": ["node_modules"]
+}

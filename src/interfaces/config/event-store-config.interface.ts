@@ -6,9 +6,9 @@ export interface IHttpEndpoint extends TcpEndPoint {}
 
 export interface IEventStoreConfig {
   credentials: UserCredentials;
-  tcpConnectionName?: string;
+  tcpConnectionName: string;
   tcp?: TcpEndPoint;
-  http?: IHttpEndpoint;
+  http: IHttpEndpoint;
   clusterDns?: string;
   options?: ConnectionSettings;
   onTcpConnected?: (eventStore: EventStore) => void;

@@ -11,7 +11,7 @@ import {
     WriteResult,
 } from 'node-eventstore-client';
 import * as geteventstorePromise from 'geteventstore-promise';
-import {HTTPClient, HTTPReadResult} from 'geteventstore-promise';
+import {HTTPClient} from 'geteventstore-promise';
 import {from, Observable, throwError} from 'rxjs';
 import {catchError, flatMap, map, toArray} from 'rxjs/operators';
 
@@ -144,9 +144,9 @@ export class EventStore {
         };
     }
 
-    public async readEventsForward({stream, first = 0, count = 1000}): Promise<HTTPReadResult> {
-        return await this.HTTPClient.readEventsForward(stream, first, count);
-    }
+    // public async readEventsForward({stream, first = 0, count = 1000}): Promise<HTTPReadResult> {
+    //     return await this.HTTPClient.readEventsForward(stream, first, count);
+    // }
 
     public async subscribeToPersistentSubscription(
         stream: string,
@@ -272,7 +272,7 @@ export class EventStore {
         }
     }
 
-    public async getProjectionState(name: string, partition?: string) {
-        return await this.HTTPClient.projections.getState(name, {partition});
-    }
+    // public async getProjectionState(name: string, partition?: string) {
+    //     return await this.HTTPClient.projections.getState(name, {partition});
+    // }
 }

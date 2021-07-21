@@ -1,55 +1,68 @@
-import { DynamicModule, Module } from '@nestjs/common';
-import { EventStore } from './event-store';
-import { IEventStoreModuleAsyncConfig, IEventStoreConfig } from './interfaces';
+import {DynamicModule, Module} from '@nestjs/common';
+import {EventStore, EventStoreService} from './event-store';
 import {
-  EventStoreHealthIndicator,
-  EventStoreSubscriptionHealthIndicator,
-} from './health';
-
-const commonProvidersAndExports = {
-  providers: [EventStoreHealthIndicator, EventStoreSubscriptionHealthIndicator],
-  exports: [
-    EventStore,
-    EventStoreHealthIndicator,
-    EventStoreSubscriptionHealthIndicator,
-  ],
-};
+    IEventStoreConfig,
+    IEventStoreModuleAsyncConfig,
+    IEventStoreServiceConfig
+} from './interfaces';
+import {EventStoreHealthIndicator, EventStoreSubscriptionHealthIndicator,} from './health';
+import {EVENT_STORE_SERVICE_CONFIG} from './constants';
 
 @Module({
-  providers: [EventStore],
-  exports: [EventStore],
-})
+            providers: [
+                EventStoreService,
+                EventStoreHealthIndicator,
+                EventStoreSubscriptionHealthIndicator
+            ],
+            exports: [
+                EventStore,
+                EventStoreService,
+                EventStoreHealthIndicator,
+                EventStoreSubscriptionHealthIndicator
+            ],
+        })
 export class EventStoreModule {
-  static register(config: IEventStoreConfig) {
-    return {
-      module: EventStoreModule,
-      ...commonProvidersAndExports,
-      providers: [
-        {
-          provide: EventStore,
-          useValue: new EventStore(config),
-        },
-        ...commonProvidersAndExports.providers,
-      ],
-    };
-  }
-  static registerAsync(options: IEventStoreModuleAsyncConfig): DynamicModule {
-    return {
-      module: EventStoreModule,
-      ...commonProvidersAndExports,
-      providers: [
-        {
-          provide: EventStore,
-          useFactory: async (configService) => {
-            const config: IEventStoreConfig = await options.useFactory(
-              configService,
-            );
-            return new EventStore(config);
-          },
-          inject: [...options.inject],
-        },
-        ...commonProvidersAndExports.providers,
-      ],
-    };
-  }
+    static register(
+        config: IEventStoreConfig,
+        serviceConfig: IEventStoreServiceConfig
+    ) {
+        return {
+            module: EventStoreModule,
+            providers: [
+                {
+                    provide: EVENT_STORE_SERVICE_CONFIG,
+                    useValue: serviceConfig,
+                },
+                {
+                    provide: EventStore,
+                    useValue: new EventStore(config),
+                },
+            ],
+        };
+    }
+
+    static registerAsync(
+        options: IEventStoreModuleAsyncConfig,
+        serviceConfig: IEventStoreServiceConfig
+    ): DynamicModule {
+        return {
+            module: EventStoreModule,
+            providers: [
+                {
+                    provide: EVENT_STORE_SERVICE_CONFIG,
+                    useValue: serviceConfig,
+                },
+                {
+                    provide: EventStore,
+                    useFactory: async (configService) => {
+                        const config: IEventStoreConfig = await options.useFactory(
+                            configService,
+                        );
+                        return new EventStore(config);
+                    },
+                    inject: [...options.inject],
+                },
+            ],
+        };
+    }
 }

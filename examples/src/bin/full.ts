@@ -6,7 +6,7 @@ import { EventStoreHeroesModule } from '../heroes/event-store-heroes.module';
 declare const module: any;
 
 async function bootstrap() {
-  const app = await NestFactory.create(EventStoreHeroesModule.register(), {
+  const app = await NestFactory.create(EventStoreHeroesModule, {
     logger: new Logger(),
   });
 

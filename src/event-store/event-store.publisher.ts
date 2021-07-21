@@ -1,5 +1,5 @@
 import {hostname} from 'os';
-import {empty, firstValueFrom, throwError} from 'rxjs';
+import {empty, throwError} from 'rxjs';
 import {catchError} from 'rxjs/operators';
 import {IEventPublisher} from '@nestjs/cqrs';
 import {Logger} from '@nestjs/common';
@@ -48,18 +48,16 @@ export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
         this.logger.debug(
             `Write ${eventCount} events to stream ${streamName} with expectedVersion ${expectedVersion}`,
         );
-        return firstValueFrom(
-            this.eventStoreService
-                .writeEvents(streamName, events, expectedVersion)
-                .pipe(
-                    catchError(
-                        (err) => {
-                            return (this.onPublishFail && this.onPublishFail(err, events, this)) ||
+        return this.eventStoreService
+            .writeEvents(streamName, events, expectedVersion)
+            .pipe(
+                catchError(
+                    (err) => {
+                        return (this.onPublishFail && this.onPublishFail(err, events, this)) ||
                             throwError(err);
-                        },
-                    ),
-                )
-        );
+                    },
+                ),
+            ).toPromise();
     }
 
     protected getStreamName(

@@ -6,9 +6,9 @@ import {Logger} from '@nestjs/common';
 import {basename, extname} from 'path';
 
 import {ExpectedVersion} from '../enum';
-import {EventStore} from './event-store';
 import {IWriteEvent, IWriteEventBusConfig, PublicationContextInterface,} from '../interfaces';
 import {WriteResult} from 'node-eventstore-client';
+import {EventStoreService} from './event-store.service';
 
 export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
     implements IEventPublisher<EventBase> {
@@ -17,7 +17,7 @@ export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
         empty();
 
     constructor(
-        private readonly eventStore: EventStore,
+        private readonly eventStoreService: EventStoreService,
         private readonly config: IWriteEventBusConfig,
     ) {
         if (config.onPublishFail) {
@@ -38,7 +38,7 @@ export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
             expectedMetadataVersion = ExpectedVersion.Any,
         } = context;
         if (streamMetadata) {
-            this.eventStore.writeMetadata(
+            this.eventStoreService.writeMetadata(
                 streamName,
                 expectedMetadataVersion,
                 streamMetadata,
@@ -49,7 +49,7 @@ export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
             `Write ${eventCount} events to stream ${streamName} with expectedVersion ${expectedVersion}`,
         );
         return firstValueFrom(
-            this.eventStore
+            this.eventStoreService
                 .writeEvents(streamName, events, expectedVersion)
                 .pipe(
                     catchError(

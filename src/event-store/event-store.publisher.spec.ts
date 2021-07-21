@@ -4,6 +4,7 @@ import {EventStore} from './event-store';
 import {of} from 'rxjs';
 import {ExpectedVersion} from '../enum';
 import spyOn = jest.spyOn;
+import {EventStoreService} from './event-store.service';
 
 jest.mock('./event-store');
 
@@ -12,6 +13,7 @@ describe('EventStorePublisher', () => {
 
     const eventStoreMock = EventStore as jest.MockedClass<typeof EventStore>;
     let eventStore: EventStore;
+    let eventStoreService: EventStoreService;
     let publisherConfig: IWriteEventBusConfig;
 
     beforeEach(() => {
@@ -23,7 +25,8 @@ describe('EventStorePublisher', () => {
                                         http: undefined,
                                         tcpConnectionName: ''
                                     });
-        publisher = new EventStorePublisher<IWriteEvent>(eventStore, publisherConfig);
+        eventStoreService = new EventStoreService(eventStore, {});
+        publisher = new EventStorePublisher<IWriteEvent>(eventStoreService, publisherConfig);
     });
 
     it('should be instanciated properly', () => {
@@ -75,7 +78,7 @@ describe('EventStorePublisher', () => {
         );
     });
 
-    it('should publish single event the same way than multiple events when only 1 event is given', async () => {
+    it('should publish single event the same way than multiple events when only 1 event is ', async () => {
         eventStore.writeEvents = jest.fn().mockReturnValue(of({}));
         spyOn(publisher, 'publishAll');
         await publisher.publish(

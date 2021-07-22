@@ -12,18 +12,19 @@ import {
     IVolatileSubscriptionConfig,
     IWriteEvent
 } from '../interfaces';
-import {EventStore} from './event-store';
 import {ReadEventBus} from '../cqrs';
 import {EVENT_STORE_SERVICE_CONFIG} from '../constants';
 import {ExpectedVersion} from '../enum';
 import {Observable} from 'rxjs';
+import EventStoreConnector, {EVENT_STORE_CONNECTOR} from './connector/interface/event-store-connector';
 
 @Injectable()
 export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     private logger: Logger = new Logger(this.constructor.name);
 
     constructor(
-        private readonly eventStore: EventStore,
+        @Inject(EVENT_STORE_CONNECTOR)
+        private readonly eventStore: EventStoreConnector,
         @Inject(EVENT_STORE_SERVICE_CONFIG)
         private readonly config: IEventStoreServiceConfig,
         @Optional() private readonly eventBus?: ReadEventBus,
@@ -56,7 +57,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
 
     onModuleDestroy(): any {
         this.logger.log(`Destroy, disconnect EventStore`);
-        this.eventStore.close();
+        this.eventStore.disconnect();
     }
 
     async assertProjections(projections: EventStoreProjection[]) {

@@ -1,6 +1,6 @@
-import { UserCredentials } from 'geteventstore-promise';
-import { ConnectionSettings, TcpEndPoint } from 'node-eventstore-client';
-import { EventStore } from '../../event-store';
+import {UserCredentials} from 'geteventstore-promise';
+import {ConnectionSettings, TcpEndPoint} from 'node-eventstore-client';
+import EventStoreConnector from '../../event-store/connector/interface/event-store-connector';
 
 export interface IHttpEndpoint extends TcpEndPoint {}
 
@@ -11,6 +11,6 @@ export interface IEventStoreConfig {
   http: IHttpEndpoint;
   clusterDns?: string;
   options?: ConnectionSettings;
-  onTcpConnected?: (eventStore: EventStore) => void;
-  onTcpDisconnected?: (eventStore: EventStore) => void;
+  onTcpConnected?: (eventStore: EventStoreConnector) => void;
+  onTcpDisconnected?: (eventStore: EventStoreConnector) => void;
 }

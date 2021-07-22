@@ -1,8 +1,8 @@
-import {EventStore} from './event-store';
-import {IEventStoreConfig} from '../interfaces';
+import {TcpHttpEventStore} from './tcp-http-event-store';
+import {IEventStoreConfig} from '../../../../interfaces';
 import spyOn = jest.spyOn;
 
-describe('EventStore', () => {
+describe('TcpHttpEventStore', () => {
     const config: IEventStoreConfig = {
         tcpConnectionName: 'titi',
         http: {
@@ -15,7 +15,7 @@ describe('EventStore', () => {
         }
     };
 
-    let store: EventStore;
+    let store: TcpHttpEventStore;
 
     beforeEach(() => {
         store = getTcpStore(config);
@@ -83,7 +83,7 @@ describe('EventStore', () => {
 
         it('should close connection when trigger close action', () => {
             spyOn(store.connection, 'close');
-            store.close();
+            store.disconnect();
             expect(store.connection.close).toHaveBeenCalled();
         });
 
@@ -91,14 +91,14 @@ describe('EventStore', () => {
 });
 
 const getTcpStore = (config: IEventStoreConfig) => {
-    return new EventStore({
+    return new TcpHttpEventStore({
                               ...config,
                               tcp: {port: 6666, host: 'https://hostname.com/'}
                           });
 };
 
 const getClusterDnsStore = (config: IEventStoreConfig) => {
-    return new EventStore({
+    return new TcpHttpEventStore({
                               ...config,
                               clusterDns: 'tcp://hostname:6666'
                           });

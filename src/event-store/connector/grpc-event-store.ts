@@ -11,7 +11,11 @@ import {
     WriteResult,
 } from 'node-eventstore-client';
 import * as geteventstorePromise from 'geteventstore-promise';
-import {HTTPClient, PersistentSubscriptionOptions} from 'geteventstore-promise';
+import {
+    HTTPClient,
+    PersistentSubscriptionAssertResult,
+    PersistentSubscriptionOptions
+} from 'geteventstore-promise';
 import {from, Observable, throwError} from 'rxjs';
 import {catchError, flatMap, map, toArray} from 'rxjs/operators';
 
@@ -21,28 +25,24 @@ import {
     IPersistentSubscriptionConfig,
     ISubscriptionStatus,
     IWriteEvent,
-} from '../interfaces';
-import {ExpectedVersion} from '../enum';
-import {createEventDefaultMetadata} from '../tools/create-event-default-metadata';
-import {EventStoreDBClient} from '@eventstore/db-client';
-import {Client} from '@eventstore/db-client/dist/Client';
+} from '../../interfaces';
+import {ExpectedVersion} from '../../enum';
+import {createEventDefaultMetadata} from '../../tools/create-event-default-metadata';
+import EventStoreConnector from './event-store-connector';
 
-export class EventStore {
+export class RGPCEventStore implements EventStoreConnector {
     public connection: EventStoreNodeConnection;
     public readonly HTTPClient: HTTPClient;
 
     private logger: Logger = new Logger(this.constructor.name);
 
     private _isConnected: boolean = false;
+
     private catchupSubscriptions: ISubscriptionStatus = {};
     private volatileSubscriptions: ISubscriptionStatus = {};
     private persistentSubscriptions: ISubscriptionStatus = {};
 
-    private readonly eventStoreClient: Client;
-
-    constructor(public readonly config: IEventStoreConfig) {
-        this.eventStoreClient = EventStoreDBClient.connectionString('esdb://localhost:20113?tls=false');
-        this.eventStoreClient.subscribeToStream('connection-hero-event-handler-and-saga');
+    constructor(private readonly config: IEventStoreConfig) {
 
         this.HTTPClient =
             new geteventstorePromise.HTTPClient(
@@ -54,6 +54,14 @@ export class EventStore {
                         password: config.credentials.password,
                     },
                 });
+        this.initTcpConnection();
+    }
+
+    public getConfig(): IEventStoreConfig {
+        return this.config;
+    }
+
+    private initTcpConnection() {
         this.connection = createConnection(
             {
                 ...this.config.options,
@@ -145,11 +153,11 @@ export class EventStore {
         );
     }
 
-    public close(): void {
+    public disconnect(): void {
         this.connection.close();
     }
 
-    get subscriptions(): {
+    public getSubscriptions(): {
         persistent: ISubscriptionStatus;
         catchup: ISubscriptionStatus;
     } {
@@ -291,6 +299,13 @@ export class EventStore {
     //     return await this.HTTPClient.projections.getState(name, {partition});
     // }
 
+    public async getPersistentSubscriptionInfo(subscription: IPersistentSubscriptionConfig) {
+        return this.HTTPClient.persistentSubscriptions.getSubscriptionInfo(
+            subscription.group,
+            subscription.stream,
+        );
+    }
+
     public async assertProjection(projection: EventStoreProjection, content: string) {
         return this.HTTPClient.projections.assert(
             projection.name,
@@ -303,17 +318,10 @@ export class EventStore {
         );
     }
 
-    public async getPersistentSubscriptionInfo(subscription: IPersistentSubscriptionConfig) {
-        return this.HTTPClient.persistentSubscriptions.getSubscriptionInfo(
-            subscription.group,
-            subscription.stream,
-        );
-    }
-
     public async assertPersistentSubscriptions(
         subscription: IPersistentSubscriptionConfig,
         options: PersistentSubscriptionOptions
-    ) {
+    ): Promise<PersistentSubscriptionAssertResult> {
         return this.HTTPClient.persistentSubscriptions.assert(
             subscription.group,
             subscription.stream,

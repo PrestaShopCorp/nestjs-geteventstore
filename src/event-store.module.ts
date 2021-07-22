@@ -1,12 +1,13 @@
 import {DynamicModule, Module} from '@nestjs/common';
-import {EventStore, EventStoreService} from './event-store';
+import {EventStoreService, TcpHttpEventStore} from './event-store';
 import {
     IEventStoreConfig,
     IEventStoreModuleAsyncConfig,
     IEventStoreServiceConfig
 } from './interfaces';
-import {EventStoreHealthIndicator, EventStoreSubscriptionHealthIndicator,} from './health';
+import {EventStoreHealthIndicator, EventStoreSubscriptionHealthIndicator,} from './event-store/health';
 import {EVENT_STORE_SERVICE_CONFIG} from './constants';
+import {EVENT_STORE_CONNECTOR} from './event-store/connector/interface/event-store-connector';
 
 @Module({
             providers: [
@@ -15,7 +16,6 @@ import {EVENT_STORE_SERVICE_CONFIG} from './constants';
                 EventStoreSubscriptionHealthIndicator
             ],
             exports: [
-                EventStore,
                 EventStoreService,
                 EventStoreHealthIndicator,
                 EventStoreSubscriptionHealthIndicator
@@ -34,8 +34,8 @@ export class EventStoreModule {
                     useValue: serviceConfig,
                 },
                 {
-                    provide: EventStore,
-                    useValue: new EventStore(config),
+                    provide: EVENT_STORE_CONNECTOR,
+                    useValue: new TcpHttpEventStore(config),
                 },
             ],
         };
@@ -53,12 +53,12 @@ export class EventStoreModule {
                     useValue: serviceConfig,
                 },
                 {
-                    provide: EventStore,
+                    provide: EVENT_STORE_CONNECTOR,
                     useFactory: async (configService) => {
                         const config: IEventStoreConfig = await options.useFactory(
                             configService,
                         );
-                        return new EventStore(config);
+                        return new TcpHttpEventStore(config);
                     },
                     inject: [...options.inject],
                 },

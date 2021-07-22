@@ -8,6 +8,7 @@ import {
     IEventStoreModuleAsyncConfig,
     IEventStoreServiceConfig
 } from './event-store/config';
+import {RGPCEventStore} from './event-store/connector/implementations/rgpc/grpc-event-store';
 
 @Module({
             providers: [
@@ -36,6 +37,25 @@ export class EventStoreModule {
                 {
                     provide: EVENT_STORE_CONNECTOR,
                     useValue: new TcpHttpEventStore(config),
+                },
+            ],
+        };
+    }
+
+    static registerRgpc(
+        config: IEventStoreConfig,
+        serviceConfig: IEventStoreServiceConfig
+    ) {
+        return {
+            module: EventStoreModule,
+            providers: [
+                {
+                    provide: EVENT_STORE_SERVICE_CONFIG,
+                    useValue: serviceConfig,
+                },
+                {
+                    provide: EVENT_STORE_CONNECTOR,
+                    useValue: new RGPCEventStore(config),
                 },
             ],
         };

@@ -22,7 +22,7 @@ export default interface EventStoreConnector {
 
     getConfig(): IEventStoreConfig;
 
-    connect(): Promise<void>;
+    connect(): Promise<void> | void;
 
     isConnected(): boolean;
 

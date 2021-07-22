@@ -2,11 +2,7 @@ import {CommandBus, CqrsModule, EventBus, QueryBus} from '@nestjs/cqrs';
 import {DynamicModule, Module} from '@nestjs/common';
 
 import {EventStoreModule} from './event-store.module';
-import {
-    EventBusConfigType,
-    IWriteEventBusConfig,
-    ReadEventBusConfigType,
-} from './interfaces';
+import {EventBusConfigType, IWriteEventBusConfig, ReadEventBusConfigType,} from './interfaces';
 import {ReadEventBus, WriteEventBus} from './cqrs';
 import {READ_EVENT_BUS_CONFIG, WRITE_EVENT_BUS_CONFIG,} from './constants';
 import {EventBusPrepublishService} from './cqrs/event-bus-prepublish.service';
@@ -39,7 +35,7 @@ const registerEventStore = (
     return {
         imports: [
             isEventStoreConfig(config)
-                ? EventStoreModule.register(config, serviceConfig)
+                ? EventStoreModule.registerRgpc(config, serviceConfig)
                 : EventStoreModule.registerAsync(config, serviceConfig),
         ],
         exports: [EventStoreModule],

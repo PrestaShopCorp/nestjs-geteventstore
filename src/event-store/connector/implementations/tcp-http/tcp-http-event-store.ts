@@ -21,7 +21,6 @@ import {catchError, flatMap, map, toArray} from 'rxjs/operators';
 
 import {
     EventStoreProjection,
-    IEventStoreConfig,
     IPersistentSubscriptionConfig,
     ISubscriptionStatus,
     IWriteEvent,
@@ -29,6 +28,7 @@ import {
 import {ExpectedVersion} from '../../../../enum';
 import {createEventDefaultMetadata} from '../../../../tools/create-event-default-metadata';
 import EventStoreConnector from '../../interface/event-store-connector';
+import {IEventStoreConfig} from '../../../config';
 
 export class TcpHttpEventStore implements EventStoreConnector {
     public connection: EventStoreNodeConnection;

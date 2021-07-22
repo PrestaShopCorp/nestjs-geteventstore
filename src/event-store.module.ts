@@ -1,13 +1,13 @@
 import {DynamicModule, Module} from '@nestjs/common';
 import {EventStoreService, TcpHttpEventStore} from './event-store';
+import {EventStoreHealthIndicator, EventStoreSubscriptionHealthIndicator,} from './event-store/health';
+import {EVENT_STORE_SERVICE_CONFIG} from './constants';
+import {EVENT_STORE_CONNECTOR} from './event-store/connector/interface/event-store-connector';
 import {
     IEventStoreConfig,
     IEventStoreModuleAsyncConfig,
     IEventStoreServiceConfig
-} from './interfaces';
-import {EventStoreHealthIndicator, EventStoreSubscriptionHealthIndicator,} from './event-store/health';
-import {EVENT_STORE_SERVICE_CONFIG} from './constants';
-import {EVENT_STORE_CONNECTOR} from './event-store/connector/interface/event-store-connector';
+} from './event-store/config';
 
 @Module({
             providers: [

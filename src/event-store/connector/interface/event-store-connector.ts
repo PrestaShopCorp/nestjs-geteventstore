@@ -1,6 +1,5 @@
 import {
     EventStoreProjection,
-    IEventStoreConfig,
     IPersistentSubscriptionConfig, ISubscriptionStatus,
     IWriteEvent
 } from '../../../interfaces';
@@ -15,6 +14,7 @@ import {
     PersistentSubscriptionAssertResult,
     PersistentSubscriptionOptions
 } from 'geteventstore-promise';
+import {IEventStoreConfig} from '../../config';
 
 export const EVENT_STORE_CONNECTOR = Symbol();
 

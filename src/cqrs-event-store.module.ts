@@ -4,9 +4,6 @@ import {DynamicModule, Module} from '@nestjs/common';
 import {EventStoreModule} from './event-store.module';
 import {
     EventBusConfigType,
-    IEventStoreConfig,
-    IEventStoreModuleAsyncConfig,
-    IEventStoreServiceConfig,
     IWriteEventBusConfig,
     ReadEventBusConfigType,
 } from './interfaces';
@@ -15,6 +12,11 @@ import {READ_EVENT_BUS_CONFIG, WRITE_EVENT_BUS_CONFIG,} from './constants';
 import {EventBusPrepublishService} from './cqrs/event-bus-prepublish.service';
 import {WriteEventsPrepublishService} from './cloudevents';
 import {ContextName} from 'nestjs-context';
+import {
+    IEventStoreConfig,
+    IEventStoreModuleAsyncConfig,
+    IEventStoreServiceConfig
+} from './event-store/config';
 
 const isEventStoreConfig = (
     config: IEventStoreModuleAsyncConfig | IEventStoreConfig,

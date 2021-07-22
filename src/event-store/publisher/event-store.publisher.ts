@@ -5,10 +5,10 @@ import {IEventPublisher} from '@nestjs/cqrs';
 import {Logger} from '@nestjs/common';
 import {basename, extname} from 'path';
 
-import {ExpectedVersion} from '../enum';
-import {IWriteEvent, IWriteEventBusConfig, PublicationContextInterface,} from '../interfaces';
+import {ExpectedVersion} from '../../enum';
+import {IWriteEvent, IWriteEventBusConfig, PublicationContextInterface,} from '../../interfaces';
 import {WriteResult} from 'node-eventstore-client';
-import {EventStoreService} from './event-store.service';
+import {EventStoreService} from '../event-store.service';
 
 export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
     implements IEventPublisher<EventBase> {

@@ -1,6 +1,6 @@
 import {UserCredentials} from 'geteventstore-promise';
 import {ConnectionSettings, TcpEndPoint} from 'node-eventstore-client';
-import EventStoreConnector from '../../event-store/connector/interface/event-store-connector';
+import EventStoreConnector from '../connector/interface/event-store-connector';
 
 export interface IHttpEndpoint extends TcpEndPoint {}
 

@@ -3,7 +3,7 @@ import {
   ICatchupSubscriptionConfig,
   IPersistentSubscriptionConfig,
   IVolatileSubscriptionConfig,
-} from '../subscriptions';
+} from '../../interfaces';
 
 export interface IEventStoreServiceConfig {
   projections?: EventStoreProjection[];

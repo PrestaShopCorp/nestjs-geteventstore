@@ -7,7 +7,6 @@ import {
     EventStoreProjection,
     IAcknowledgeableEvent,
     ICatchupSubscriptionConfig,
-    IEventStoreServiceConfig,
     IPersistentSubscriptionConfig,
     IVolatileSubscriptionConfig,
     IWriteEvent
@@ -17,6 +16,7 @@ import {EVENT_STORE_SERVICE_CONFIG} from '../constants';
 import {ExpectedVersion} from '../enum';
 import {Observable} from 'rxjs';
 import EventStoreConnector, {EVENT_STORE_CONNECTOR} from './connector/interface/event-store-connector';
+import {IEventStoreServiceConfig} from './config';
 
 @Injectable()
 export class EventStoreService implements OnModuleDestroy, OnModuleInit {

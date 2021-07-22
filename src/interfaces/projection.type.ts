@@ -1,6 +1,6 @@
 import { ProjectionMode } from 'geteventstore-promise';
 
-export type EventStoreProjectionType = {
+export type EventStoreProjection = {
   name: string;
   content?: string;
   file?: string;

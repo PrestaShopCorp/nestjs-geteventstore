@@ -22,9 +22,9 @@
     "class-validator": "^0.13.1",
     "cli-color": "^1.4.0",
     "global": "^4.4.0",
-    "nestjs-context": "^0.1.1",
+    "nestjs-context": "^0.12.0",
     "nestjs-geteventstore": "^1.6.0",
-    "nestjs-pino-stackdriver": "^1.0.0",
+    "nestjs-pino-stackdriver": "^2.1.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.0.0"
   },

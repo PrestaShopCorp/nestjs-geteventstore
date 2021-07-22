@@ -1,21 +1,20 @@
-import { Logger, Module } from '@nestjs/common';
-import { TerminusModule } from '@nestjs/terminus';
-import { ProjectionMode } from 'geteventstore-promise';
-import { ContextModule } from 'nestjs-context';
-import { LoggerModule } from 'nestjs-pino-stackdriver/dist';
-import { resolve } from 'path';
+import {Logger, Module} from '@nestjs/common';
+import {TerminusModule} from '@nestjs/terminus';
+import {ProjectionMode} from 'geteventstore-promise';
+import {ContextModule} from 'nestjs-context';
+import {LoggerModule} from 'nestjs-pino-stackdriver/dist';
+import {resolve} from 'path';
 import * as util from 'util';
 
-import { CqrsEventStoreModule } from '../../../src';
-import { CommandHandlers } from './commands/handlers';
-import { EventHandlers } from './events/handlers';
-import { heroesEvents } from './events/impl';
-import { HealthController } from './health.controller';
-import { HeroesGameController } from './heroes.controller';
-import { QueryHandlers } from './queries/handlers';
-import { HeroRepository } from './repository/hero.repository';
-import { HeroesGameSagas } from './sagas/heroes.sagas';
-import { WriteController } from './write.controller';
+import {CqrsEventStoreModule} from '../../../src';
+import {CommandHandlers} from './commands/handlers';
+import {EventHandlers} from './events/handlers';
+import {heroesEvents} from './events/impl';
+import {HealthController} from './health.controller';
+import {HeroesGameController} from './heroes.controller';
+import {QueryHandlers} from './queries/handlers';
+import {HeroRepository} from './repository/hero.repository';
+import {HeroesGameSagas} from './sagas/heroes.sagas';
 
 const esConfig = {
   credentials: {
@@ -24,11 +23,11 @@ const esConfig = {
   },
   tcp: {
     host: process.env.EVENTSTORE_TCP_HOST || 'localhost',
-    port: +process.env.EVENTSTORE_TCP_PORT || 11113,
+    port: +process.env.EVENTSTORE_TCP_PORT || 1113,
   },
   http: {
     host: process.env.EVENTSTORE_HTTP_HOST || 'http://localhost',
-    port: +process.env.EVENTSTORE_HTTP_PORT || 22113,
+    port: +process.env.EVENTSTORE_HTTP_PORT || 2113,
   },
   tcpConnectionName: 'connection-hero-event-handler-and-saga',
   options: {
@@ -65,97 +64,60 @@ const esConfig = {
   onTcpConnected: () => {},
 };
 const subscriptions = {
-  persistent: [
-    {
-      // Event stream category (before the -)
-      stream: '$ce-hero',
-      group: 'data',
-      autoAck: false,
-      bufferSize: 1,
-      // Subscription is created with this options
-      options: {
-        resolveLinkTos: true,
-        minCheckPointCount: 1,
-      },
-    },
-  ],
+    persistent: [
+        {
+            // Event stream category (before the -)
+            stream: '$ce-hero',
+            group: 'data',
+            autoAck: false,
+            bufferSize: 1,
+            // Subscription is created with this options
+            options: {
+                resolveLinkTos: true,
+                minCheckPointCount: 1,
+            },
+        },
+    ],
 };
 const projections = [
-  {
-    name: 'hero-dragon',
-    file: resolve(`${__dirname}/projections/hero-dragon.js`),
-    mode: 'continuous' as ProjectionMode,
-    enabled: true,
-    checkPointsEnabled: true,
-    emitEnabled: true,
-  },
+    {
+        name: 'hero-dragon',
+        file: resolve(`${__dirname}/projections/hero-dragon.js`),
+        mode: 'continuous' as ProjectionMode,
+        enabled: true,
+        checkPointsEnabled: true,
+        emitEnabled: true,
+    },
 ];
 const eventBusConfig = {
-  read: {
-    allowedEvents: { ...heroesEvents },
-  },
-  write: {
-    serviceName: 'test',
-  },
+    read: {
+        allowedEvents: {...heroesEvents},
+    },
+    write: {
+        serviceName: 'test',
+    },
 };
 
-@Module({})
+@Module({
+            controllers: [HealthController, HeroesGameController],
+            providers: [
+                HeroRepository,
+                ...CommandHandlers,
+                ...EventHandlers,
+                ...QueryHandlers,
+                HeroesGameSagas,
+            ],
+            imports: [
+                ContextModule.register(),
+                TerminusModule,
+                LoggerModule.forRoot(),
+                CqrsEventStoreModule.register(
+                    esConfig,
+                    {subscriptions, projections},
+                    eventBusConfig,
+                ),
+            ]
+
+        })
 export class EventStoreHeroesModule {
-  static register() {
-    return {
-      module: EventStoreHeroesModule,
-      controllers: [HealthController, HeroesGameController],
-      providers: [
-        HeroRepository,
-        ...CommandHandlers,
-        ...EventHandlers,
-        ...QueryHandlers,
-        HeroesGameSagas,
-      ],
-      imports: [
-        ...[ContextModule.register(), TerminusModule, LoggerModule.forRoot()],
-        CqrsEventStoreModule.register(
-          esConfig,
-          { subscriptions, projections },
-          eventBusConfig,
-        ),
-      ],
-    };
-  }
-  static registerSubscriptions() {
-    return {
-      module: EventStoreHeroesModule,
-      controllers: [HealthController],
-      providers: [...EventHandlers],
-      imports: [
-        ...[ContextModule.register(), TerminusModule, LoggerModule.forRoot()],
-        CqrsEventStoreModule.registerSubscriptions(
-          esConfig,
-          subscriptions,
-          eventBusConfig.read,
-        ),
-      ],
-    };
-  }
-  static registerWriteBus() {
-    return {
-      module: EventStoreHeroesModule,
-      controllers: [HealthController, WriteController],
-      providers: [HeroRepository, ...CommandHandlers],
-      imports: [
-        ...[ContextModule.register(), TerminusModule, LoggerModule.forRoot()],
-        CqrsEventStoreModule.registerWriteBus(esConfig, eventBusConfig.write),
-      ],
-    };
-  }
-  static registerProjection() {
-    return {
-      module: EventStoreHeroesModule,
-      controllers: [HealthController],
-      imports: [
-        ...[ContextModule.register(), TerminusModule, LoggerModule.forRoot()],
-        CqrsEventStoreModule.registerProjections(esConfig, projections),
-      ],
-    };
-  }
 }

@@ -1,12 +1,12 @@
-import { EventStoreProjectionType } from '../../interfaces';
+import { EventStoreProjection } from '../../interfaces';
 import {
   ICatchupSubscriptionConfig,
   IPersistentSubscriptionConfig,
   IVolatileSubscriptionConfig,
-} from '../subscriptions';
+} from '../../interfaces';
 
 export interface IEventStoreServiceConfig {
-  projections?: EventStoreProjectionType[];
+  projections?: EventStoreProjection[];
   subscriptions?: {
     catchup?: ICatchupSubscriptionConfig[];
     volatile?: IVolatileSubscriptionConfig[];

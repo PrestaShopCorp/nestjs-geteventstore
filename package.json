@@ -61,6 +61,7 @@
     }
   },
   "dependencies": {
+    "@eventstore/db-client": "^1.2.2",
     "geteventstore-promise": "3.2.5",
     "lodash": "^4.17.20",
     "node-eventstore-client": "0.2.18",

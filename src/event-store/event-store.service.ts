@@ -4,7 +4,7 @@ import {PersistentSubscriptionOptions} from 'geteventstore-promise';
 import {readFileSync} from 'fs';
 
 import {
-    EventStoreProjectionType,
+    EventStoreProjection,
     IAcknowledgeableEvent,
     ICatchupSubscriptionConfig,
     IEventStoreServiceConfig,
@@ -59,7 +59,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
         this.eventStore.close();
     }
 
-    async assertProjections(projections: EventStoreProjectionType[]) {
+    async assertProjections(projections: EventStoreProjection[]) {
         await Promise.all(
             projections.map(async (projection) => {
                 let content;
@@ -74,14 +74,9 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
                     );
                     content = readFileSync(projection.file, 'utf8');
                 }
-                await this.eventStore.HTTPClient.projections.assert(
-                    projection.name,
+                await this.eventStore.assertProjection(
+                    projection,
                     content,
-                    projection.mode,
-                    projection.enabled,
-                    projection.checkPointsEnabled,
-                    projection.emitEnabled,
-                    projection.trackEmittedStreams,
                 );
                 this.logger.log(`Projection "${projection.name}" asserted !`);
             }),
@@ -135,10 +130,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
                             "DEPRECATED: The resolveLinktos parameter shouln't be used anymore. The resolveLinkTos parameter should be used instead.",
                         );
                     }
-                    await this.eventStore.HTTPClient.persistentSubscriptions.getSubscriptionInfo(
-                        subscription.group,
-                        subscription.stream,
-                    );
+                    await this.eventStore.getPersistentSubscriptionInfo(subscription);
                 } catch (e) {
                     if (!e.response || e.response.status != 404) {
                         throw e;
@@ -151,11 +143,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
                                 subscription.options.resolveLinktos,
                         },
                     };
-                    await this.eventStore.HTTPClient.persistentSubscriptions.assert(
-                        subscription.group,
-                        subscription.stream,
-                        options,
-                    );
+                    await this.eventStore.assertPersistentSubscriptions(subscription, options);
                     this.logger.log(
                         `Persistent subscription "${subscription.group}" on stream ${subscription.stream} created ! ` +
                         JSON.stringify(subscription.options),

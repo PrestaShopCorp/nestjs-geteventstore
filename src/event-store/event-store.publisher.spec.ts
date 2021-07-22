@@ -44,7 +44,7 @@ describe('EventStorePublisher', () => {
             }
         );
         expect(eventStore.writeEvents).toHaveBeenCalledWith(
-            'jest-toto',
+            expect.anything(),
             expect.anything(),
             ExpectedVersion.Any,
         );

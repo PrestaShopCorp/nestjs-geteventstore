@@ -11,24 +11,39 @@ import {
     WriteResult,
 } from 'node-eventstore-client';
 import * as geteventstorePromise from 'geteventstore-promise';
-import {HTTPClient} from 'geteventstore-promise';
+import {HTTPClient, PersistentSubscriptionOptions} from 'geteventstore-promise';
 import {from, Observable, throwError} from 'rxjs';
 import {catchError, flatMap, map, toArray} from 'rxjs/operators';
 
-import {IEventStoreConfig, ISubscriptionStatus, IWriteEvent,} from '../interfaces';
+import {
+    EventStoreProjection,
+    IEventStoreConfig,
+    IPersistentSubscriptionConfig,
+    ISubscriptionStatus,
+    IWriteEvent,
+} from '../interfaces';
 import {ExpectedVersion} from '../enum';
 import {createEventDefaultMetadata} from '../tools/create-event-default-metadata';
+import {EventStoreDBClient} from '@eventstore/db-client';
+import {Client} from '@eventstore/db-client/dist/Client';
 
 export class EventStore {
-    private logger: Logger = new Logger(this.constructor.name);
     public connection: EventStoreNodeConnection;
     public readonly HTTPClient: HTTPClient;
-    public isConnected: boolean = false;
+
+    private logger: Logger = new Logger(this.constructor.name);
+
+    private _isConnected: boolean = false;
     private catchupSubscriptions: ISubscriptionStatus = {};
     private volatileSubscriptions: ISubscriptionStatus = {};
     private persistentSubscriptions: ISubscriptionStatus = {};
 
+    private readonly eventStoreClient: Client;
+
     constructor(public readonly config: IEventStoreConfig) {
+        this.eventStoreClient = EventStoreDBClient.connectionString('esdb://localhost:20113?tls=false');
+        this.eventStoreClient.subscribeToStream('connection-hero-event-handler-and-saga');
+
         this.HTTPClient =
             new geteventstorePromise.HTTPClient(
                 {
@@ -56,11 +71,11 @@ export class EventStore {
 
         this.connection.on('connected', () => {
             this.logger.log('Connection to EventStore established!');
-            this.isConnected = true;
+            this._isConnected = true;
             this.config.onTcpConnected(this);
         });
         this.connection.on('closed', () => {
-            this.isConnected = false;
+            this._isConnected = false;
             this.logger.error('Connection to EventStore closed!');
             this.config.onTcpDisconnected(this);
         });
@@ -275,4 +290,38 @@ export class EventStore {
     // public async getProjectionState(name: string, partition?: string) {
     //     return await this.HTTPClient.projections.getState(name, {partition});
     // }
+
+    public async assertProjection(projection: EventStoreProjection, content: string) {
+        return this.HTTPClient.projections.assert(
+            projection.name,
+            content,
+            projection.mode,
+            projection.enabled,
+            projection.checkPointsEnabled,
+            projection.emitEnabled,
+            projection.trackEmittedStreams,
+        );
+    }
+
+    public async getPersistentSubscriptionInfo(subscription: IPersistentSubscriptionConfig) {
+        return this.HTTPClient.persistentSubscriptions.getSubscriptionInfo(
+            subscription.group,
+            subscription.stream,
+        );
+    }
+
+    public async assertPersistentSubscriptions(
+        subscription: IPersistentSubscriptionConfig,
+        options: PersistentSubscriptionOptions
+    ) {
+        return this.HTTPClient.persistentSubscriptions.assert(
+            subscription.group,
+            subscription.stream,
+            options,
+        );
+    }
+
+    public isConnected(): boolean {
+        return this._isConnected;
+    }
 }

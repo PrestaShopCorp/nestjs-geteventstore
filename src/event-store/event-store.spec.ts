@@ -58,7 +58,7 @@ describe('EventStore', () => {
             });
 
             it('should save the connection state', async () => {
-                expect(store.isConnected).toBeTruthy();
+                expect(store.isConnected()).toBeTruthy();
             });
 
             it('should run tcp connection callBack', async () => {
@@ -73,7 +73,7 @@ describe('EventStore', () => {
             });
 
             it('should save the connection state', async () => {
-                expect(store.isConnected).toBeFalsy();
+                expect(store.isConnected()).toBeFalsy();
             });
 
             it('should run tcp disconnection callBack', async () => {

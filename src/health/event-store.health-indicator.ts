@@ -13,7 +13,7 @@ export class EventStoreHealthIndicator extends HealthIndicator {
   }
 
   public check(): HealthIndicatorResult {
-    if (!this.eventStore.isConnected) {
+    if (!this.eventStore.isConnected()) {
       throw new HealthCheckError(`EventStore connection lost`, {
         eventStore: `Connection lost to ${this.eventStore.config.tcp.host}:${this.eventStore.config.tcp.port}`,
       });

@@ -11,14 +11,11 @@ jest.mock('../connector/implementations/tcp-http/tcp-http-event-store');
 describe('EventStorePublisher', () => {
     let publisher: EventStorePublisher;
 
-    const eventStoreMock = TcpHttpEventStore as jest.MockedClass<typeof TcpHttpEventStore>;
     let eventStore: TcpHttpEventStore;
     let eventStoreService: EventStoreService;
     let publisherConfig: IWriteEventBusConfig;
 
     beforeEach(() => {
-        eventStoreMock.mockClear();
-
         publisherConfig = {};
         eventStore = new TcpHttpEventStore({
                                         credentials: undefined,

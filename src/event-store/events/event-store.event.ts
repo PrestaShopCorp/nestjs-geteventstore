@@ -1,7 +1,7 @@
 import { v4 } from 'uuid';
 
-import { EventOptionsType, IReadEvent, IWriteEvent } from '../interfaces';
-import { WriteEventDto } from '../dto/write-event.dto';
+import { EventOptionsType, IReadEvent, IWriteEvent } from '../../interfaces';
+import { WriteEventDto } from '../../dto/write-event.dto';
 
 export abstract class EventStoreEvent
   extends WriteEventDto

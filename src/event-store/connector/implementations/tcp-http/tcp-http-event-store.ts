@@ -29,6 +29,7 @@ import {ExpectedVersion} from '../../../../enum';
 import {createEventDefaultMetadata} from '../../../../tools/create-event-default-metadata';
 import EventStoreConnector from '../../interface/event-store-connector';
 import {IEventStoreConfig} from '../../../config';
+import TcpHttpEventStoreConfig from '../../../config/tcp-http/tcp-http-event-store.config';
 
 export class TcpHttpEventStore implements EventStoreConnector {
     public connection: EventStoreNodeConnection;
@@ -42,7 +43,7 @@ export class TcpHttpEventStore implements EventStoreConnector {
     private volatileSubscriptions: ISubscriptionStatus = {};
     private persistentSubscriptions: ISubscriptionStatus = {};
 
-    constructor(private readonly config: IEventStoreConfig) {
+    constructor(private readonly config: TcpHttpEventStoreConfig) {
 
         this.HTTPClient =
             new geteventstorePromise.HTTPClient(

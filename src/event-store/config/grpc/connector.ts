@@ -1,0 +1,14 @@
+import {
+  DNSClusterOptions,
+  GossipClusterOptions,
+  SingleNodeOptions
+} from '@eventstore/db-client/dist/Client';
+
+export default interface Connector {
+  connectionString?: string;
+  OptionSettings?: SingleNodeOptions | DNSClusterOptions | GossipClusterOptions;
+  // singleNodeOptionsConnectionSettings?: SingleNodeOptions;
+  // dnsClusterOptionsConnectionSettings?: DNSClusterOptions;
+  // gossipClusterOptionsOptionSettings?: GossipClusterOptions;
+}
+

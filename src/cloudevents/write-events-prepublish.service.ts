@@ -14,7 +14,7 @@ import {
   IEventBusPrepublishValidateProvider,
   IWriteEventBusConfig,
 } from '../interfaces';
-import { EventStoreEvent } from '../events';
+import { EventStoreEvent } from '../event-store/events';
 import { EventMetadataDto } from '../dto';
 import { WRITE_EVENT_BUS_CONFIG } from '../constants';
 import { createEventDefaultMetadata } from '../tools/create-event-default-metadata';

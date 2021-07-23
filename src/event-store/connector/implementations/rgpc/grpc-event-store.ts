@@ -1,107 +1,158 @@
-import {Logger} from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import {
-    EventStoreCatchUpSubscription,
-    EventStorePersistentSubscription,
-    EventStoreSubscription,
-    WriteResult,
+  EventStoreCatchUpSubscription,
+  EventStoreSubscription,
+  WriteResult,
 } from 'node-eventstore-client';
-import {
-    PersistentSubscriptionAssertResult,
-    PersistentSubscriptionOptions
-} from 'geteventstore-promise';
-import {Observable} from 'rxjs';
+import { Observable } from 'rxjs';
 
 import {
-    EventStoreProjection,
-    IPersistentSubscriptionConfig,
-    ISubscriptionStatus,
-    IWriteEvent,
+  EventStoreProjection,
+  IPersistentSubscriptionConfig,
+  ISubscriptionStatus,
+  IWriteEvent,
 } from '../../../../interfaces';
 import EventStoreConnector from '../../interface/event-store-connector';
-import {IEventStoreConfig} from '../../../config';
-import {EventStoreDBClient, FORWARDS, jsonEvent, START} from '@eventstore/db-client';
-import {Client} from '@eventstore/db-client/dist/Client';
-import {v4} from 'uuid';
+import {
+  EventStoreDBClient,
+  PersistentSubscription,
+} from '@eventstore/db-client';
+import { Client } from '@eventstore/db-client/dist/Client';
+import { GrpcEventStoreConfig } from '../../../config/grpc/grpc-event-store-config';
+import EventStorePersistentSubscribtionGrpc
+  from '../../../subscriptions/event-store-persistent-subscribtion-grpc';
+import EventStorePersistentSubscribtionOptions
+  from '../../../subscriptions/event-store-persistent-subscribtion-options';
+import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils';
 
 export class RGPCEventStore implements EventStoreConnector {
+  private logger: Logger = new Logger(this.constructor.name);
+  private client: Client;
 
-    private logger: Logger = new Logger(this.constructor.name);
-    private client: Client;
+  constructor(private readonly config: GrpcEventStoreConfig) {
+    this.logger.log('Instantiating gRPC connector client');
+  }
 
-    constructor(private readonly config: IEventStoreConfig) {
-        this.logger.log('Instantiating gRPC connector client');
+  public getConfig(): GrpcEventStoreConfig {
+    return this.config;
+  }
+
+  public async assertPersistentSubscriptions(
+    subscription: IPersistentSubscriptionConfig,
+    options: EventStorePersistentSubscribtionOptions,
+  ): Promise<void> {
+    try {
+      await this.client.createPersistentSubscription(
+        subscription.stream,
+        subscription.group,
+        {
+          resolveLinkTos: false,
+          extraStats: false,
+          fromRevision: 'start',
+          messageTimeout: 30_000,
+          maxRetryCount: 10,
+          checkpointAfter: 2_000,
+          minCheckpointCount: 10,
+          maxCheckpointCount: 1_000,
+          maxSubscriberCount: 'unlimited',
+          liveBufferSize: 500,
+          readBatchSize: 20,
+          historyBufferSize: 500,
+          strategy: 'round_robin',
+          ...options,
+        } as PersistentSubscriptionSettings,
+      );
+    } catch (e) {
+      return;
     }
+  }
 
-    public getConfig(): IEventStoreConfig {
-        return this.config;
-    }
+  public assertProjection(
+    projection: EventStoreProjection,
+    content: string,
+  ): Promise<void> {
+    return Promise.resolve(undefined);
+  }
 
-    public assertPersistentSubscriptions(subscription: IPersistentSubscriptionConfig, options: PersistentSubscriptionOptions): Promise<PersistentSubscriptionAssertResult> {
-        return Promise.resolve(undefined);
-    }
+  public async connect(): Promise<void> {
+    this.client = EventStoreDBClient.connectionString(
+      this.config.connectionSettings.connectionString,
+    );
+  }
 
-    public assertProjection(projection: EventStoreProjection, content: string): Promise<void> {
-        return Promise.resolve(undefined);
-    }
+  public disconnect(): void {
+  }
 
-    public async connect(): Promise<void> {
-        this.client =
-            EventStoreDBClient.connectionString('esdb://localhost:20113?tls=false');
-        const event = jsonEvent({
-                                    id: v4(),
-                                    type: "some-event",
-                                    data: {
-                                        id: "1",
-                                        value: "some value",
-                                    },
-                                });
+  public async getPersistentSubscriptionInfo(
+    subscription: IPersistentSubscriptionConfig,
+  ): Promise<void> {
+    throw {
+      response: {
+        message: 'Try creating one directly.',
+        status: 404,
+      },
+    };
+  }
 
-        const toto = this.client.subscribeToStream('$ce-hero');
-        toto.on('close', () => console.log('toto closed'))
-        const res = await this.client.appendToStream('$ce-hero', event);
-        console.log('res : ', res);
+  public getSubscriptions(): {
+    persistent: ISubscriptionStatus;
+    catchup: ISubscriptionStatus;
+  } {
+    return { catchup: undefined, persistent: undefined };
+  }
 
-        const events = await this.client.readStream('$ce-hero', {
-            direction: FORWARDS,
-            fromRevision: START,
-            maxCount: 10
-        });
-        console.log('events : ', events);
-    }
+  public isConnected(): boolean {
+    return true;
+  }
 
-    public disconnect(): void {
-    }
+  public subscribeToCatchupSubscription(
+    stream: string,
+    onEvent: (sub, payload) => void,
+    lastCheckpoint: number,
+    resolveLinkTos: boolean,
+    onSubscriptionStart: (subscription) => void,
+    onSubscriptionDropped: (sub, reason, error) => void,
+  ): Promise<EventStoreCatchUpSubscription | void> {
+    return Promise.resolve(undefined);
+  }
 
-    public getPersistentSubscriptionInfo(subscription: IPersistentSubscriptionConfig): Promise<object> {
-        return Promise.resolve(undefined);
-    }
+  public subscribeToPersistentSubscription(
+    stream: string,
+    group: string,
+    onEvent: (sub, payload) => void,
+    autoAck: boolean,
+    bufferSize: number,
+    onSubscriptionStart: (sub) => void,
+    onSubscriptionDropped: (sub, reason, error) => void,
+  ): PersistentSubscription {
+    return this.client.connectToPersistentSubscription(stream, group, {
+      bufferSize,
+    }) as EventStorePersistentSubscribtionGrpc;
+  }
 
-    public getSubscriptions(): { persistent: ISubscriptionStatus; catchup: ISubscriptionStatus } {
-        return {catchup: undefined, persistent: undefined};
-    }
+  public subscribeToVolatileSubscription(
+    stream: string,
+    onEvent: (sub, payload) => void,
+    resolveLinkTos: boolean,
+    onSubscriptionStart: (subscription) => void,
+    onSubscriptionDropped: (sub, reason, error) => void,
+  ): Promise<EventStoreSubscription> {
+    return Promise.resolve(undefined);
+  }
 
-    public isConnected(): boolean {
-        return false;
-    }
+  public writeEvents(
+    stream,
+    events: IWriteEvent[],
+    expectedVersion,
+  ): Observable<WriteResult> {
+    return undefined;
+  }
 
-    public subscribeToCatchupSubscription(stream: string, onEvent: (sub, payload) => void, lastCheckpoint: number, resolveLinkTos: boolean, onSubscriptionStart: (subscription) => void, onSubscriptionDropped: (sub, reason, error) => void): Promise<EventStoreCatchUpSubscription | void> {
-        return Promise.resolve(undefined);
-    }
-
-    public subscribeToPersistentSubscription(stream: string, group: string, onEvent: (sub, payload) => void, autoAck: boolean, bufferSize: number, onSubscriptionStart: (sub) => void, onSubscriptionDropped: (sub, reason, error) => void): Promise<EventStorePersistentSubscription> {
-        return Promise.resolve(undefined);
-    }
-
-    public subscribeToVolatileSubscription(stream: string, onEvent: (sub, payload) => void, resolveLinkTos: boolean, onSubscriptionStart: (subscription) => void, onSubscriptionDropped: (sub, reason, error) => void): Promise<EventStoreSubscription> {
-        return Promise.resolve(undefined);
-    }
-
-    public writeEvents(stream, events: IWriteEvent[], expectedVersion): Observable<WriteResult> {
-        return undefined;
-    }
-
-    public writeMetadata(stream, expectedStreamMetadataVersion, streamMetadata: any): Observable<WriteResult> {
-        return undefined;
-    }
-
+  public writeMetadata(
+    stream,
+    expectedStreamMetadataVersion,
+    streamMetadata: any,
+  ): Observable<WriteResult> {
+    return undefined;
+  }
 }

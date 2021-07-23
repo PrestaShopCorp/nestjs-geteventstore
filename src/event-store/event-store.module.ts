@@ -1,14 +1,16 @@
 import {DynamicModule, Module} from '@nestjs/common';
-import {EventStoreService, TcpHttpEventStore} from './event-store';
-import {EventStoreHealthIndicator, EventStoreSubscriptionHealthIndicator,} from './event-store/health';
-import {EVENT_STORE_SERVICE_CONFIG} from './constants';
-import {EVENT_STORE_CONNECTOR} from './event-store/connector/interface/event-store-connector';
+import {EventStoreService, TcpHttpEventStore} from './index';
+import {EventStoreHealthIndicator, EventStoreSubscriptionHealthIndicator,} from './health';
+import {EVENT_STORE_SERVICE_CONFIG} from '../constants';
+import {EVENT_STORE_CONNECTOR} from './connector/interface/event-store-connector';
 import {
     IEventStoreConfig,
     IEventStoreModuleAsyncConfig,
     IEventStoreServiceConfig
-} from './event-store/config';
-import {RGPCEventStore} from './event-store/connector/implementations/rgpc/grpc-event-store';
+} from './config';
+import {RGPCEventStore} from './connector/implementations/rgpc/grpc-event-store';
+import {GrpcEventStoreConfig} from './config/grpc/grpc-event-store-config';
+import TcpHttpEventStoreConfig from './config/tcp-http/tcp-http-event-store.config';
 
 @Module({
             providers: [
@@ -36,16 +38,17 @@ export class EventStoreModule {
                 },
                 {
                     provide: EVENT_STORE_CONNECTOR,
-                    useValue: new TcpHttpEventStore(config),
+                    useValue: new TcpHttpEventStore(config as TcpHttpEventStoreConfig),
                 },
             ],
         };
     }
 
-    static registerRgpc(
-        config: IEventStoreConfig,
+    static async registerRgpc(
+        config: IEventStoreServiceConfig | Promise<IEventStoreServiceConfig>,
         serviceConfig: IEventStoreServiceConfig
     ) {
+        const synchedConfig: GrpcEventStoreConfig = await config as GrpcEventStoreConfig;
         return {
             module: EventStoreModule,
             providers: [
@@ -55,7 +58,7 @@ export class EventStoreModule {
                 },
                 {
                     provide: EVENT_STORE_CONNECTOR,
-                    useValue: new RGPCEventStore(config),
+                    useValue: new RGPCEventStore(synchedConfig),
                 },
             ],
         };
@@ -78,7 +81,7 @@ export class EventStoreModule {
                         const config: IEventStoreConfig = await options.useFactory(
                             configService,
                         );
-                        return new TcpHttpEventStore(config);
+                        return new TcpHttpEventStore(config as TcpHttpEventStoreConfig);
                     },
                     inject: [...options.inject],
                 },

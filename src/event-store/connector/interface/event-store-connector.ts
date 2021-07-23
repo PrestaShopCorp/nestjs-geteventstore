@@ -1,12 +1,12 @@
 import {
     EventStoreProjection,
-    IPersistentSubscriptionConfig, ISubscriptionStatus,
+    IPersistentSubscriptionConfig,
+    ISubscriptionStatus,
     IWriteEvent
 } from '../../../interfaces';
 import {Observable} from 'rxjs';
 import {
     EventStoreCatchUpSubscription,
-    EventStorePersistentSubscription,
     EventStoreSubscription,
     WriteResult
 } from 'node-eventstore-client';
@@ -15,6 +15,8 @@ import {
     PersistentSubscriptionOptions
 } from 'geteventstore-promise';
 import {IEventStoreConfig} from '../../config';
+import EventStorePersistentSubscription
+    from '../../subscriptions/event-store-persistent-subscribtion';
 
 export const EVENT_STORE_CONNECTOR = Symbol();
 
@@ -40,12 +42,19 @@ export default interface EventStoreConnector {
         streamMetadata: any,
     ): Observable<WriteResult>;
 
-    getSubscriptions():{
+    getSubscriptions(): {
         persistent: ISubscriptionStatus;
         catchup: ISubscriptionStatus;
     };
 
-    getPersistentSubscriptionInfo(subscription: IPersistentSubscriptionConfig): Promise<object>;
+    /**
+     * Kept for retro compat, but useless as now with gRPC,
+     * just a try on creation will succeed of raise error,
+     * giving the same info
+     */
+    getPersistentSubscriptionInfo(
+        subscription: IPersistentSubscriptionConfig
+    ): Promise<object | void>;
 
     subscribeToPersistentSubscription(
         stream: string,
@@ -55,7 +64,7 @@ export default interface EventStoreConnector {
         bufferSize: number,
         onSubscriptionStart: (sub) => void,
         onSubscriptionDropped: (sub, reason, error) => void,
-    ): Promise<EventStorePersistentSubscription>;
+    ): EventStorePersistentSubscription | Promise<EventStorePersistentSubscription>;
 
     subscribeToVolatileSubscription(
         stream: string,
@@ -79,6 +88,6 @@ export default interface EventStoreConnector {
     assertPersistentSubscriptions(
         subscription: IPersistentSubscriptionConfig,
         options: PersistentSubscriptionOptions
-    ): Promise<PersistentSubscriptionAssertResult>;
+    ): Promise<PersistentSubscriptionAssertResult | void>;
 
 }

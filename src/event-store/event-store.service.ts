@@ -47,7 +47,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
             await this.subscribeToVolatileSubscriptions(
                 this.config.subscriptions.volatile || [],
             );
-            await this.subscribeToPersistentSubscriptions(
+            await this. subscribeToPersistentSubscriptions(
                 this.config.subscriptions.persistent || [],
             );
         }

@@ -1,6 +1,5 @@
 import { hostname } from 'os';
-import { empty, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { empty } from 'rxjs';
 import { IEventPublisher } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { basename, extname } from 'path';
@@ -35,7 +34,7 @@ export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
     context: PublicationContextInterface = {
       streamName: this.getStreamName(events[0].metadata.correlation_id),
     },
-  ): Promise<WriteResult> {
+  ): Promise<WriteResult | void> {
     const {
       streamName,
       expectedVersion = ExpectedVersion.Any,
@@ -53,17 +52,15 @@ export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
     this.logger.debug(
       `Write ${eventCount} events to stream ${streamName} with expectedVersion ${expectedVersion}`,
     );
-    return this.eventStoreService
-      .writeEvents(streamName, events, expectedVersion)
-      .pipe(
-        catchError((err) => {
-          return (
-            (this.onPublishFail && this.onPublishFail(err, events, this)) ||
-            throwError(err)
-          );
-        }),
-      )
-      .toPromise();
+    return this.eventStoreService.writeEvents(
+      streamName,
+      events,
+      expectedVersion,
+    );
+    // .catch((err) => {
+    //   this.onPublishFail(err, events, this);
+    //   throw new Error(err);
+    // });
   }
 
   protected getStreamName(

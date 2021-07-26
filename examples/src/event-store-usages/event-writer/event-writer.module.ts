@@ -5,7 +5,7 @@ import {
 } from '@nestjs-geteventstore/event-store/config';
 import { GrpcEventStoreConfig } from '@nestjs-geteventstore/event-store/config/grpc/grpc-event-store-config';
 import { EventStoreModule } from '@nestjs-geteventstore/event-store/event-store.module';
-import PersistantSubscriptionController from './persistant-subscription.controller';
+import EventWriterController from './event-writer.controller';
 
 const eventStoreConfig: GrpcEventStoreConfig = {
   connectionSettings: {
@@ -38,7 +38,7 @@ const serverConfig: IEventStoreServiceConfig = {
 };
 
 @Module({
-  controllers: [PersistantSubscriptionController],
+  controllers: [EventWriterController],
   imports: [
     EventStoreModule.registerRgpc(
       eventStoreConfig as IEventStoreConfig,
@@ -46,4 +46,4 @@ const serverConfig: IEventStoreServiceConfig = {
     ),
   ],
 })
-export default class PersistentSubscriptionModule {}
+export default class EventWriterModule {}

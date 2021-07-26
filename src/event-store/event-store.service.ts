@@ -168,7 +168,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
         this.logger.log(
           `Connecting to persistent subscription "${config.group}" on stream ${config.stream}`,
         );
-        return await this.eventStore.subscribeToPersistentSubscription(
+        return this.eventStore.subscribeToPersistentSubscription(
           config.stream,
           config.group,
           (subscription, payload) => this.onEvent(subscription, payload),
@@ -300,7 +300,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     stream,
     events: IWriteEvent[],
     expectedVersion = ExpectedVersion.Any,
-  ): Observable<WriteResult> {
+  ): Promise<WriteResult | void> {
     return this.eventStore.writeEvents(stream, events, expectedVersion);
   }
 

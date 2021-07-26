@@ -15,6 +15,7 @@ import {
 import EventStoreConnector from '../../interface/event-store-connector';
 import {
   EventStoreDBClient,
+  jsonEvent,
   PersistentSubscription,
 } from '@eventstore/db-client';
 import { Client } from '@eventstore/db-client/dist/Client';
@@ -78,6 +79,7 @@ export class RGPCEventStore implements EventStoreConnector {
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   public disconnect(): void {}
 
   public async getPersistentSubscriptionInfo(
@@ -137,12 +139,26 @@ export class RGPCEventStore implements EventStoreConnector {
     return Promise.resolve(undefined);
   }
 
-  public writeEvents(
+  public async writeEvents(
     stream,
     events: IWriteEvent[],
     expectedVersion,
-  ): Observable<WriteResult> {
-    return undefined;
+  ): Promise<void> {
+    if (events.length === 0) {
+      return null;
+    }
+    await this.client
+      .appendToStream(
+        stream,
+        events.map((event) => {
+          return jsonEvent({
+            data: event.data,
+            type: event.eventType,
+            id: event.eventId,
+          });
+        }),
+      )
+      .catch((e) => console.log('e : ', e));
   }
 
   public writeMetadata(

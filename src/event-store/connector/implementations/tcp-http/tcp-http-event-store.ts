@@ -91,7 +91,7 @@ export class TcpHttpEventStore implements EventStoreConnector {
     stream,
     events: IWriteEvent[],
     expectedVersion = ExpectedVersion.Any,
-  ): Observable<WriteResult> {
+  ): Promise<WriteResult> {
     return from(events)
       .pipe(
         map((event: IWriteEvent) =>
@@ -126,7 +126,8 @@ export class TcpHttpEventStore implements EventStoreConnector {
             message: `Error appending ${events.length} events to stream ${stream} : ${err.message}`,
           });
         }),
-      );
+      )
+      .toPromise();
   }
 
   public writeMetadata(

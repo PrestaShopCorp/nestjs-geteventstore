@@ -32,7 +32,7 @@ export default interface EventStoreConnector {
     stream,
     events: IWriteEvent[],
     expectedVersion,
-  ): Observable<WriteResult>;
+  ): Promise<WriteResult | void>;
 
   writeMetadata(
     stream,

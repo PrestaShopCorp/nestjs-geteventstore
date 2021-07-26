@@ -1,13 +1,13 @@
 import { NestFactory } from '@nestjs/core';
-import { AllExceptionFilter } from '../all-exception.filter';
 import { Logger } from 'nestjs-pino-stackdriver';
-import { EventStoreHeroesModule } from '../heroes/event-store-heroes.module';
+import PersistentSubscriptionModule from "./persistent-subscription.module";
+import { AllExceptionFilter } from "../../all-exception.filter";
 
 declare const module: any;
 
 async function bootstrap() {
   const app = await NestFactory.create(
-    EventStoreHeroesModule.registerProjection(),
+    PersistentSubscriptionModule,
     {
       logger: new Logger(),
     },

@@ -6,10 +6,7 @@
   "scripts": {
     "start": "ts-node-dev src/bin/full.ts",
     "start:cqrs": "ts-node-dev src/bin/cqrs.ts",
-    "start:eventstore": "ts-node-dev src/bin/full.ts",
-    "start:write": "ts-node-dev src/bin/write.ts",
-    "start:subscription": "ts-node-dev src/bin/subscription.ts",
-    "start:projection": "ts-node-dev src/bin/projection.ts"
+    "start:esdb:pers-sub": "ts-node-dev src/event-store-usages/persistent-subscription/persistent-subscription.runner.ts"
   },
   "dependencies": {
     "@godaddy/terminus": "^4.4.1",

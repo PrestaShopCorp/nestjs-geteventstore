@@ -37,7 +37,7 @@ export class TcpHttpEventStore implements EventStoreConnector {
 
   private logger: Logger = new Logger(this.constructor.name);
 
-  private _isConnected: boolean = false;
+  private _isConnected = false;
 
   private catchupSubscriptions: ISubscriptionStatus = {};
   private volatileSubscriptions: ISubscriptionStatus = {};
@@ -173,8 +173,8 @@ export class TcpHttpEventStore implements EventStoreConnector {
     stream: string,
     group: string,
     onEvent: (sub, payload) => void,
-    autoAck: boolean = false,
-    bufferSize: number = 10,
+    autoAck = false,
+    bufferSize = 10,
     onSubscriptionStart: (sub) => void = undefined,
     onSubscriptionDropped: (sub, reason, error) => void = undefined,
   ): Promise<EventStorePersistentSubscription> {
@@ -224,7 +224,7 @@ export class TcpHttpEventStore implements EventStoreConnector {
   public async subscribeToVolatileSubscription(
     stream: string,
     onEvent: (sub, payload) => void,
-    resolveLinkTos: boolean = true,
+    resolveLinkTos = true,
     onSubscriptionStart: (subscription) => void = undefined,
     onSubscriptionDropped: (sub, reason, error) => void = undefined,
   ): Promise<EventStoreSubscription> {
@@ -257,8 +257,8 @@ export class TcpHttpEventStore implements EventStoreConnector {
   public async subscribeToCatchupSubscription(
     stream: string,
     onEvent: (sub, payload) => void,
-    lastCheckpoint: number = 0,
-    resolveLinkTos: boolean = true,
+    lastCheckpoint = 0,
+    resolveLinkTos = true,
     onSubscriptionStart: (subscription) => void = undefined,
     onSubscriptionDropped: (sub, reason, error) => void = undefined,
   ): Promise<EventStoreCatchUpSubscription | void> {

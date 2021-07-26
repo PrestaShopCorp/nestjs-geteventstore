@@ -20,6 +20,9 @@
     ],
     "no-unused-expressions": "error",
     "no-prototype-builtins": "warn",
-    "@typescript-eslint/explicit-module-boundary-types": "warn"
+    "@typescript-eslint/explicit-module-boundary-types": "warn",
+    "@typescript-eslint/no-empty-interface": "off",
+    "@typescript-eslint/ban-types": "off",
+    "@typescript-eslint/ban-ts-comment": "off"
   }
 }

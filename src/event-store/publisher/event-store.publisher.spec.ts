@@ -51,10 +51,10 @@ describe('EventStorePublisher', () => {
   it('should write metadatas when metadata stream is given', async () => {
     eventStore.writeEvents = jest.fn().mockReturnValue(of({}));
     spyOn(eventStore, 'writeMetadata');
-    let streamName = 'streamName';
-    let expectedVersion = 999;
-    let streamMetadata = 'dumbMetadata';
-    let expectedMetadataVersion = 888;
+    const streamName = 'streamName';
+    const expectedVersion = 999;
+    const streamMetadata = 'dumbMetadata';
+    const expectedMetadataVersion = 888;
     await publisher.publish(
       {
         data: undefined,

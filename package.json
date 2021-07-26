@@ -120,11 +120,11 @@
     "testEnvironment": "node"
   },
   "lint-staged": {
-    "src/**/*.{ts,js}": [
+    "./src/**/*.{ts}": [
       "eslint . --fix",
       "git add"
     ],
-    "examples/**/*.{ts,js}": [
+    "examples/src/**/*.{ts}": [
       "eslint . --fix",
       "git add"
     ]

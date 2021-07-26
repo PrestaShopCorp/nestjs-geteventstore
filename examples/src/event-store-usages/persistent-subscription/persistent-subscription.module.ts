@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
-import PersistantSubscriptionController from './persistant-subscription.controller';
-import { IEventStoreConfig } from '@nestjs-geteventstore/event-store/config';
+import {
+  IEventStoreConfig,
+  IEventStoreServiceConfig,
+} from '@nestjs-geteventstore/event-store/config';
 import { GrpcEventStoreConfig } from '@nestjs-geteventstore/event-store/config/grpc/grpc-event-store-config';
 import { EventStoreModule } from '@nestjs-geteventstore/event-store/event-store.module';
+import PersistantSubscriptionController from './persistant-subscription.controller';
 
 const eventStoreConfig: GrpcEventStoreConfig = {
   connectionSettings: {
@@ -15,10 +18,15 @@ const eventStoreConfig: GrpcEventStoreConfig = {
   },
 };
 
+const serverConfig: IEventStoreServiceConfig = {};
+
 @Module({
   controllers: [PersistantSubscriptionController],
   imports: [
-    EventStoreModule.register(eventStoreConfig as IEventStoreConfig, {}),
+    EventStoreModule.registerRgpc(
+      eventStoreConfig as IEventStoreConfig,
+      serverConfig,
+    ),
   ],
 })
 export default class PersistentSubscriptionModule {}

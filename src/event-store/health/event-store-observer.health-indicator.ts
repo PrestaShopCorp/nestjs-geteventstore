@@ -2,7 +2,7 @@ import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
 
 export class EventStoreObserverHealthIndicator extends HealthIndicator {
   public check(): HealthIndicatorResult {
-    let res = [];
+    const res = [];
 
     // FIXME missing name
     return super.getStatus('subscription', true, {

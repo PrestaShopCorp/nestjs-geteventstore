@@ -18,7 +18,7 @@ export class EventStoreSubscriptionHealthIndicator extends HealthIndicator {
   }
 
   public check(): HealthIndicatorResult {
-    let res = {},
+    const res = {},
       causes = {};
     const subscriptions = this.eventStore.getSubscriptions().persistent;
 

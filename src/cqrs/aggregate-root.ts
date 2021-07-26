@@ -81,14 +81,16 @@ export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
   ) {
     this.logger.debug(
       `Applying ${event.constructor.name} with${
-        !!this.autoCommit ? '' : 'out'
+        this.autoCommit ? '' : 'out'
       } autocommit`,
     );
     if (!isFromHistory) {
       this.addEvent(event);
     }
+    // eslint-disable-next-line no-unused-expressions
     this.autoCommit && (await this.commit());
     const handler = this.getEventHandler(event);
+    // eslint-disable-next-line no-unused-expressions
     handler && (await handler.call(this, event));
   }
 

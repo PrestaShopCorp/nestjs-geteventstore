@@ -1,2 +1,1 @@
-export interface IEventStoreConfig{
-}
+export interface IEventStoreConfig {}

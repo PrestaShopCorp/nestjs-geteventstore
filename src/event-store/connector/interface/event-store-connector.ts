@@ -1,93 +1,95 @@
 import {
-    EventStoreProjection,
-    IPersistentSubscriptionConfig,
-    ISubscriptionStatus,
-    IWriteEvent
+  EventStoreProjection,
+  IPersistentSubscriptionConfig,
+  ISubscriptionStatus,
+  IWriteEvent,
 } from '../../../interfaces';
-import {Observable} from 'rxjs';
+import { Observable } from 'rxjs';
 import {
-    EventStoreCatchUpSubscription,
-    EventStoreSubscription,
-    WriteResult
+  EventStoreCatchUpSubscription,
+  EventStoreSubscription,
+  WriteResult,
 } from 'node-eventstore-client';
 import {
-    PersistentSubscriptionAssertResult,
-    PersistentSubscriptionOptions
+  PersistentSubscriptionAssertResult,
+  PersistentSubscriptionOptions,
 } from 'geteventstore-promise';
-import {IEventStoreConfig} from '../../config';
-import EventStorePersistentSubscription
-    from '../../subscriptions/event-store-persistent-subscribtion';
+import { IEventStoreConfig } from '../../config';
+import EventStorePersistentSubscription from '../../subscriptions/event-store-persistent-subscribtion';
 
 export const EVENT_STORE_CONNECTOR = Symbol();
 
 export default interface EventStoreConnector {
+  getConfig(): IEventStoreConfig;
 
-    getConfig(): IEventStoreConfig;
+  connect(): Promise<void> | void;
 
-    connect(): Promise<void> | void;
+  isConnected(): boolean;
 
-    isConnected(): boolean;
+  disconnect(): void;
 
-    disconnect(): void;
+  writeEvents(
+    stream,
+    events: IWriteEvent[],
+    expectedVersion,
+  ): Observable<WriteResult>;
 
-    writeEvents(
-        stream,
-        events: IWriteEvent[],
-        expectedVersion,
-    ): Observable<WriteResult>;
+  writeMetadata(
+    stream,
+    expectedStreamMetadataVersion,
+    streamMetadata: any,
+  ): Observable<WriteResult>;
 
-    writeMetadata(
-        stream,
-        expectedStreamMetadataVersion,
-        streamMetadata: any,
-    ): Observable<WriteResult>;
+  getSubscriptions(): {
+    persistent: ISubscriptionStatus;
+    catchup: ISubscriptionStatus;
+  };
 
-    getSubscriptions(): {
-        persistent: ISubscriptionStatus;
-        catchup: ISubscriptionStatus;
-    };
+  /**
+   * Kept for retro compat, but useless as now with gRPC,
+   * just a try on creation will succeed of raise error,
+   * giving the same info
+   */
+  getPersistentSubscriptionInfo(
+    subscription: IPersistentSubscriptionConfig,
+  ): Promise<object | void>;
 
-    /**
-     * Kept for retro compat, but useless as now with gRPC,
-     * just a try on creation will succeed of raise error,
-     * giving the same info
-     */
-    getPersistentSubscriptionInfo(
-        subscription: IPersistentSubscriptionConfig
-    ): Promise<object | void>;
+  subscribeToPersistentSubscription(
+    stream: string,
+    group: string,
+    onEvent: (sub, payload) => void,
+    autoAck: boolean,
+    bufferSize: number,
+    onSubscriptionStart: (sub) => void,
+    onSubscriptionDropped: (sub, reason, error) => void,
+  ):
+    | EventStorePersistentSubscription
+    | Promise<EventStorePersistentSubscription>;
 
-    subscribeToPersistentSubscription(
-        stream: string,
-        group: string,
-        onEvent: (sub, payload) => void,
-        autoAck: boolean,
-        bufferSize: number,
-        onSubscriptionStart: (sub) => void,
-        onSubscriptionDropped: (sub, reason, error) => void,
-    ): EventStorePersistentSubscription | Promise<EventStorePersistentSubscription>;
+  subscribeToVolatileSubscription(
+    stream: string,
+    onEvent: (sub, payload) => void,
+    resolveLinkTos: boolean,
+    onSubscriptionStart: (subscription) => void,
+    onSubscriptionDropped: (sub, reason, error) => void,
+  ): Promise<EventStoreSubscription>;
 
-    subscribeToVolatileSubscription(
-        stream: string,
-        onEvent: (sub, payload) => void,
-        resolveLinkTos: boolean,
-        onSubscriptionStart: (subscription) => void,
-        onSubscriptionDropped: (sub, reason, error) => void
-    ): Promise<EventStoreSubscription>;
+  subscribeToCatchupSubscription(
+    stream: string,
+    onEvent: (sub, payload) => void,
+    lastCheckpoint: number,
+    resolveLinkTos: boolean,
+    onSubscriptionStart: (subscription) => void,
+    onSubscriptionDropped: (sub, reason, error) => void,
+  ): Promise<EventStoreCatchUpSubscription | void>;
 
-    subscribeToCatchupSubscription(
-        stream: string,
-        onEvent: (sub, payload) => void,
-        lastCheckpoint: number,
-        resolveLinkTos: boolean,
-        onSubscriptionStart: (subscription) => void,
-        onSubscriptionDropped: (sub, reason, error) => void,
-    ): Promise<EventStoreCatchUpSubscription | void>;
+  assertProjection(
+    projection: EventStoreProjection,
+    content: string,
+  ): Promise<void>;
 
-    assertProjection(projection: EventStoreProjection, content: string): Promise<void>;
-
-    assertPersistentSubscriptions(
-        subscription: IPersistentSubscriptionConfig,
-        options: PersistentSubscriptionOptions
-    ): Promise<PersistentSubscriptionAssertResult | void>;
-
+  assertPersistentSubscriptions(
+    subscription: IPersistentSubscriptionConfig,
+    options: PersistentSubscriptionOptions,
+  ): Promise<PersistentSubscriptionAssertResult | void>;
 }

@@ -23,7 +23,7 @@
   "scripts": {
     "start:dev": "tsc -w",
     "build": "tsc",
-    "prepare": "npm run build",
+    "prepare": "npm run build && husky install",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "tslint -p tsconfig.json -c tslint.json",
     "lint:fix": "tslint -p tsconfig.json -c tslint.json --fix",
@@ -131,7 +131,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged && npx pretty-quick --staged"
+      "pre-commit": "yarn lint-staged && yarn pretty-quick --staged && yarn jest --forceExit"
     }
   }
 }

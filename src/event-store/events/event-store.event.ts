@@ -5,7 +5,8 @@ import { WriteEventDto } from '../../dto/write-event.dto';
 
 export abstract class EventStoreEvent
   extends WriteEventDto
-  implements IWriteEvent, IReadEvent {
+  implements IWriteEvent, IReadEvent
+{
   // just for read events
   public readonly eventStreamId: IReadEvent['eventStreamId'] | undefined;
   public readonly eventNumber: IReadEvent['eventNumber'] | undefined;

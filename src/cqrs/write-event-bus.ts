@@ -1,17 +1,21 @@
-import {CommandBus, EventBus as Parent} from '@nestjs/cqrs';
-import {Inject, Injectable, Logger} from '@nestjs/common';
-import {EventStorePublisher, EventStoreService} from '../event-store';
-import {IWriteEvent, IWriteEventBusConfig, PublicationContextInterface,} from '../interfaces';
-import {WRITE_EVENT_BUS_CONFIG} from '../constants';
-import {ModuleRef} from '@nestjs/core';
-import {EventBusPrepublishService} from './event-bus-prepublish.service';
-import {InvalidEventException} from '../exceptions/invalid-event.exception';
+import { CommandBus, EventBus as Parent } from '@nestjs/cqrs';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { EventStorePublisher, EventStoreService } from '../event-store';
+import {
+  IWriteEvent,
+  IWriteEventBusConfig,
+  PublicationContextInterface,
+} from '../interfaces';
+import { WRITE_EVENT_BUS_CONFIG } from '../constants';
+import { ModuleRef } from '@nestjs/core';
+import { EventBusPrepublishService } from './event-bus-prepublish.service';
+import { InvalidEventException } from '../exceptions/invalid-event.exception';
 
 // add next, pass onError
 
 @Injectable()
 export class WriteEventBus<
-  EventBase extends IWriteEvent = IWriteEvent
+  EventBase extends IWriteEvent = IWriteEvent,
 > extends Parent<EventBase> {
   private logger = new Logger(this.constructor.name);
   constructor(

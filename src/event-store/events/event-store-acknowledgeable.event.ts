@@ -4,7 +4,8 @@ import { IAcknowledgeableEvent } from '../../interfaces';
 
 export abstract class EventStoreAcknowledgeableEvent
   extends EventStoreEvent
-  implements IAcknowledgeableEvent {
+  implements IAcknowledgeableEvent
+{
   ack() {
     return Promise.resolve();
   }

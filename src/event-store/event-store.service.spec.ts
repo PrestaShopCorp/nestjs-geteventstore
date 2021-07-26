@@ -1,25 +1,22 @@
-import {EventStoreService} from './event-store.service';
+import { EventStoreService } from './event-store.service';
 import EventStoreConnector from './connector/interface/event-store-connector';
-import {IEventStoreServiceConfig} from './config';
+import { IEventStoreServiceConfig } from './config';
 
 describe('EventStoreService', () => {
-    let service: EventStoreService;
+  let service: EventStoreService;
 
-    const eventStoreConnectorMock = {
-    };
+  const eventStoreConnectorMock = {};
 
-    const eventStoreServiceConfig: IEventStoreServiceConfig = {
+  const eventStoreServiceConfig: IEventStoreServiceConfig = {};
 
-    };
+  beforeEach(() => {
+    service = new EventStoreService(
+      eventStoreConnectorMock as EventStoreConnector,
+      eventStoreServiceConfig,
+    );
+  });
 
-    beforeEach(() => {
-        service = new EventStoreService(
-            eventStoreConnectorMock as EventStoreConnector,
-            eventStoreServiceConfig
-        );
-    });
-
-    it('should be created', () => {
-        expect(service).toBeTruthy();
-    });
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
 });

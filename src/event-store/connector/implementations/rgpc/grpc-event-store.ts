@@ -19,10 +19,8 @@ import {
 } from '@eventstore/db-client';
 import { Client } from '@eventstore/db-client/dist/Client';
 import { GrpcEventStoreConfig } from '../../../config/grpc/grpc-event-store-config';
-import EventStorePersistentSubscribtionGrpc
-  from '../../../subscriptions/event-store-persistent-subscribtion-grpc';
-import EventStorePersistentSubscribtionOptions
-  from '../../../subscriptions/event-store-persistent-subscribtion-options';
+import EventStorePersistentSubscribtionGrpc from '../../../subscriptions/event-store-persistent-subscribtion-grpc';
+import EventStorePersistentSubscribtionOptions from '../../../subscriptions/event-store-persistent-subscribtion-options';
 import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils';
 
 export class RGPCEventStore implements EventStoreConnector {
@@ -80,8 +78,7 @@ export class RGPCEventStore implements EventStoreConnector {
     );
   }
 
-  public disconnect(): void {
-  }
+  public disconnect(): void {}
 
   public async getPersistentSubscriptionInfo(
     subscription: IPersistentSubscriptionConfig,

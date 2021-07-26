@@ -90,16 +90,15 @@ describe('TcpHttpEventStore', () => {
 });
 
 const getTcpStore = (config: TcpHttpEventStoreConfig) => {
-    return new TcpHttpEventStore({
-                              ...config,
-                              tcp: {port: 6666, host: 'https://hostname.com/'}
-                          });
+  return new TcpHttpEventStore({
+    ...config,
+    tcp: { port: 6666, host: 'https://hostname.com/' },
+  });
 };
 
 const getClusterDnsStore = (config: TcpHttpEventStoreConfig) => {
-    return new TcpHttpEventStore({
-                              ...config,
-                              clusterDns: 'tcp://hostname:6666'
-                          });
+  return new TcpHttpEventStore({
+    ...config,
+    clusterDns: 'tcp://hostname:6666',
+  });
 };
-

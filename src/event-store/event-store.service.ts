@@ -16,6 +16,7 @@ import { readFileSync } from 'fs';
 import {
   EventStoreProjection,
   IAcknowledgeableEvent,
+  IBaseEvent,
   ICatchupSubscriptionConfig,
   IPersistentSubscriptionConfig,
   IVolatileSubscriptionConfig,
@@ -181,7 +182,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     );
   }
 
-  async onEvent(subscription, payload) {
+  private async onEvent(subscription, payload): Promise<any> {
     // use configured onEvent
     if (this.config.onEvent) {
       return await this.onEvent(subscription, payload);
@@ -297,15 +298,27 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
   }
 
   public writeEvents(
-    stream,
+    stream: string,
     events: IWriteEvent[],
     expectedVersion = ExpectedRevision.Any,
   ): Promise<WriteResult | void> {
     return this.eventStore.writeEvents(stream, events, expectedVersion);
   }
 
+  public readFromStream(
+    stream: string,
+    options: {
+      maxCount?: number;
+      fromRevision?: 'start' | 'end' | BigInt;
+      resolveLinkTos?: boolean;
+      direction?: 'forwards' | 'backwards';
+    },
+  ): Promise<IBaseEvent[]> {
+    return this.eventStore.readFromStream(stream, options);
+  }
+
   public writeMetadata(
-    stream,
+    stream: string,
     expectedStreamMetadataVersion: ExpectedRevisionType = ExpectedRevision.Any,
     streamMetadata: any,
   ): Observable<WriteResult> {

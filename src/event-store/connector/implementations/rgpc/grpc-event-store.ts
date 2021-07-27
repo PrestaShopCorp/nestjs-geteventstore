@@ -8,25 +8,30 @@ import { Observable } from 'rxjs';
 
 import {
   EventStoreProjection,
+  IBaseEvent,
   IPersistentSubscriptionConfig,
   ISubscriptionStatus,
   IWriteEvent,
 } from '../../../../interfaces';
 import EventStoreConnector from '../../interface/event-store-connector';
 import {
-  ANY,
   AppendExpectedRevision,
+  BACKWARDS,
+  END,
   EventStoreDBClient,
+  EventType,
+  FORWARDS,
   jsonEvent,
-  NO_STREAM,
   PersistentSubscription,
+  ResolvedEvent,
+  START,
 } from '@eventstore/db-client';
 import { Client } from '@eventstore/db-client/dist/Client';
 import { GrpcEventStoreConfig } from '../../../config/grpc/grpc-event-store-config';
 import EventStorePersistentSubscribtionGrpc from '../../../subscriptions/event-store-persistent-subscribtion-grpc';
 import EventStorePersistentSubscribtionOptions from '../../../subscriptions/event-store-persistent-subscribtion-options';
 import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils';
-import { ExpectedRevision, ExpectedRevisionType } from '../../../events';
+import { ExpectedRevisionType } from '../../../events';
 
 export class RGPCEventStore implements EventStoreConnector {
   private logger: Logger = new Logger(this.constructor.name);
@@ -144,7 +149,7 @@ export class RGPCEventStore implements EventStoreConnector {
   }
 
   public async writeEvents(
-    stream,
+    stream: string,
     events: IWriteEvent[],
     expectedRevision: ExpectedRevisionType,
   ): Promise<void> {
@@ -164,6 +169,14 @@ export class RGPCEventStore implements EventStoreConnector {
         { expectedRevision: expectedRevision as AppendExpectedRevision },
       )
       .catch((e) => console.log('e : ', e));
+    const ezzz = await this.client.readStream(stream, {
+      direction: FORWARDS,
+      fromRevision: START,
+    });
+
+    for (const resolvedEvent of ezzz) {
+      console.log(resolvedEvent.event.data);
+    }
   }
 
   public writeMetadata(
@@ -172,5 +185,28 @@ export class RGPCEventStore implements EventStoreConnector {
     streamMetadata: any,
   ): Observable<WriteResult> {
     return undefined;
+  }
+
+  public async readFromStream(
+    stream: string,
+    options: any,
+  ): Promise<IBaseEvent[]> {
+    const events: ResolvedEvent<EventType>[] = await this.client.readStream(
+      stream,
+      {
+        direction: options.direction,
+        fromRevision: options.fromRevision,
+        maxCount: options.maxCount,
+      },
+    );
+
+    return events.map((event: ResolvedEvent<EventType>): IBaseEvent => {
+      return {
+        data: event.event.data,
+        eventId: event.event.id,
+        eventType: event.event.type,
+        metadata: event.event.metadata as unknown,
+      };
+    });
   }
 }

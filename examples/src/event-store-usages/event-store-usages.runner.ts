@@ -1,12 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger } from 'nestjs-pino-stackdriver';
-import EventWriterModule from './event-writer.module';
-import { AllExceptionFilter } from '../../all-exception.filter';
+import EventStoreUsagesModule from './event-store-usages.module';
+import { AllExceptionFilter } from '../all-exception.filter';
 
 declare const module: any;
 
 async function bootstrap() {
-  const app = await NestFactory.create(EventWriterModule, {
+  const app = await NestFactory.create(EventStoreUsagesModule, {
     logger: new Logger(),
   });
 

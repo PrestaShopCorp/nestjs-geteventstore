@@ -5,7 +5,11 @@ import {
 } from '@nestjs-geteventstore/event-store/config';
 import { GrpcEventStoreConfig } from '@nestjs-geteventstore/event-store/config/grpc/grpc-event-store-config';
 import { EventStoreModule } from '@nestjs-geteventstore/event-store/event-store.module';
-import PersistantSubscriptionController from './persistant-subscription.controller';
+import EventWriterController from './controllers/event-writer.controller';
+import PersistantSubscriptionController from './controllers/persistant-subscription.controller';
+import { resolve } from 'path';
+import { ProjectionMode } from 'geteventstore-promise';
+import StreamReaderController from './controllers/stream-reader.controller';
 
 const eventStoreConfig: GrpcEventStoreConfig = {
   connectionSettings: {
@@ -19,6 +23,16 @@ const eventStoreConfig: GrpcEventStoreConfig = {
 };
 
 const serverConfig: IEventStoreServiceConfig = {
+  projections: [
+    {
+      name: 'hero-dragon',
+      file: resolve(`${__dirname}/projections/hero-dragon.js`),
+      mode: 'continuous' as ProjectionMode,
+      enabled: true,
+      checkPointsEnabled: true,
+      emitEnabled: true,
+    },
+  ],
   subscriptions: {
     persistent: [
       {
@@ -38,7 +52,11 @@ const serverConfig: IEventStoreServiceConfig = {
 };
 
 @Module({
-  controllers: [PersistantSubscriptionController],
+  controllers: [
+    EventWriterController,
+    StreamReaderController,
+    PersistantSubscriptionController,
+  ],
   imports: [
     EventStoreModule.register(
       eventStoreConfig as IEventStoreConfig,
@@ -46,4 +64,4 @@ const serverConfig: IEventStoreServiceConfig = {
     ),
   ],
 })
-export default class PersistentSubscriptionModule {}
+export default class EventStoreUsagesModule {}

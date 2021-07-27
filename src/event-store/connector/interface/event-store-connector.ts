@@ -29,22 +29,24 @@ export default interface EventStoreConnector {
 
   disconnect(): void;
 
+  getSubscriptions(): {
+    persistent: ISubscriptionStatus;
+    catchup: ISubscriptionStatus;
+  };
+
   writeEvents(
-    stream,
+    stream: string,
     events: IWriteEvent[],
     expectedVersion: ExpectedRevision,
   ): Promise<WriteResult | void>;
 
   writeMetadata(
-    stream,
+    stream: string,
     expectedStreamMetadataVersion,
     streamMetadata: any,
   ): Observable<WriteResult>;
 
-  getSubscriptions(): {
-    persistent: ISubscriptionStatus;
-    catchup: ISubscriptionStatus;
-  };
+  readFromStream(stream: string, options: any);
 
   /**
    * Kept for retro compat, but useless as now with gRPC,

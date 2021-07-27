@@ -24,10 +24,22 @@ Then, the REST API will start.
 
 ## Usage
 
-In the controllers file, you will find what url you have to try. For instance, you can do :
+#### Writing one event
 
 ```
-curl -XGET localhost:3000/persistent-subscription
+curl -XGET localhost:3000/event-writer/write-one-event/<optional : the stream name>
+```
+
+#### Writing a batch of events
+
+```
+curl -XGET localhost:3000/event-writer/write-event-batch/<optional : the stream name>
+```
+
+#### Reading on a stream
+
+```
+curl -XGET localhost:3000/stream-reader/$test-stream/<optional : the stream name>
 ```
 
 # Trying CQRS

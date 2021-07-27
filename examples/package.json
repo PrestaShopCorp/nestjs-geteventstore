@@ -7,8 +7,7 @@
     "start": "ts-node-dev src/bin/full.ts",
     "postinstall": "link-module-alias",
     "start:cqrs": "ts-node-dev src/bin/cqrs.ts",
-    "start:esdb:pers-sub": "ts-node-dev src/event-store-usages/persistent-subscription/persistent-subscription.runner.ts",
-    "start:esdb:event-writer": "ts-node-dev src/event-store-usages/event-writer/event-writer.runner.ts"
+    "start:event-store-usages": "ts-node-dev src/event-store-usages/event-store-usages.runner.ts"
   },
   "_moduleAliases": {
     "@nestjs-geteventstore": "../src"

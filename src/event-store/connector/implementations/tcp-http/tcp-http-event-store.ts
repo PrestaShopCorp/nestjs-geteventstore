@@ -343,4 +343,8 @@ export class TcpHttpEventStore implements EventStoreConnector {
   public isConnected(): boolean {
     return this._isConnected;
   }
+
+  public readFromStream(stream: string, options: any) {
+    throw new Error('not implemented in this version');
+  }
 }

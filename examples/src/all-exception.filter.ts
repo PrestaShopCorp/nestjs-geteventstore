@@ -8,10 +8,14 @@ export class AllExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    response.status(500).json({
-      statusCode: 500,
+    const status = (exception as any).status ?? 500;
+    const message = (exception as any).message ?? '';
+
+    response.status(status).json({
+      statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
+      message,
     });
   }
 }

@@ -25,11 +25,11 @@ import {
   ISubscriptionStatus,
   IWriteEvent,
 } from '../../../../interfaces';
-import { ExpectedVersion } from '../../../../enum';
 import { createEventDefaultMetadata } from '../../../../tools/create-event-default-metadata';
 import EventStoreConnector from '../../interface/event-store-connector';
 import { IEventStoreConfig } from '../../../config';
 import TcpHttpEventStoreConfig from '../../../config/tcp-http/tcp-http-event-store.config';
+import { ExpectedRevision } from '../../../events';
 
 export class TcpHttpEventStore implements EventStoreConnector {
   public connection: EventStoreNodeConnection;
@@ -90,7 +90,7 @@ export class TcpHttpEventStore implements EventStoreConnector {
   public writeEvents(
     stream,
     events: IWriteEvent[],
-    expectedVersion = ExpectedVersion.Any,
+    expectedVersion = ExpectedRevision.Any,
   ): Promise<WriteResult> {
     return from(events)
       .pipe(
@@ -115,7 +115,13 @@ export class TcpHttpEventStore implements EventStoreConnector {
       .pipe(
         //tap(esEvents => console.log('Writing events', stream, esEvents)),
         flatMap((events: EventData[]) =>
-          from(this.connection.appendToStream(stream, expectedVersion, events)),
+          from(
+            this.connection.appendToStream(
+              stream,
+              ExpectedRevision.convertRevisionToVersion(expectedVersion),
+              events,
+            ),
+          ),
         ),
         catchError((err) => {
           if (err.response) {
@@ -132,13 +138,15 @@ export class TcpHttpEventStore implements EventStoreConnector {
 
   public writeMetadata(
     stream,
-    expectedStreamMetadataVersion = ExpectedVersion.Any,
+    expectedStreamMetadataVersion = ExpectedRevision.Any,
     streamMetadata: any,
   ): Observable<WriteResult> {
     return from(
       this.connection.setStreamMetadataRaw(
         stream,
-        expectedStreamMetadataVersion,
+        ExpectedRevision.convertRevisionToVersion(
+          expectedStreamMetadataVersion,
+        ),
         streamMetadata,
       ),
     ).pipe(

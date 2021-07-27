@@ -28,9 +28,9 @@ import TcpHttpEventStoreConfig from './config/tcp-http/tcp-http-event-store.conf
   ],
 })
 export class EventStoreModule {
-  static register(
-    config: IEventStoreConfig,
-    serviceConfig: IEventStoreServiceConfig,
+  static async register(
+    config: IEventStoreServiceConfig | Promise<IEventStoreServiceConfig>,
+    serviceConfig: IEventStoreServiceConfig = {},
   ) {
     return {
       module: EventStoreModule,
@@ -39,10 +39,23 @@ export class EventStoreModule {
           provide: EVENT_STORE_SERVICE_CONFIG,
           useValue: serviceConfig,
         },
+        await this.getEventStoreConnector(config),
+      ],
+    };
+  }
+
+  static async registerAsync(
+    options: IEventStoreModuleAsyncConfig,
+    serviceConfig: IEventStoreServiceConfig,
+  ): Promise<DynamicModule> {
+    return {
+      module: EventStoreModule,
+      providers: [
         {
-          provide: EVENT_STORE_CONNECTOR,
-          useValue: new TcpHttpEventStore(config as TcpHttpEventStoreConfig),
+          provide: EVENT_STORE_SERVICE_CONFIG,
+          useValue: serviceConfig,
         },
+        await this.getEventStoreConnector(options),
       ],
     };
   }
@@ -50,9 +63,7 @@ export class EventStoreModule {
   static async registerRgpc(
     config: IEventStoreServiceConfig | Promise<IEventStoreServiceConfig>,
     serviceConfig: IEventStoreServiceConfig,
-  ) {
-    const synchedConfig: GrpcEventStoreConfig =
-      (await config) as GrpcEventStoreConfig;
+  ): Promise<DynamicModule> {
     return {
       module: EventStoreModule,
       providers: [
@@ -60,36 +71,46 @@ export class EventStoreModule {
           provide: EVENT_STORE_SERVICE_CONFIG,
           useValue: serviceConfig,
         },
-        {
-          provide: EVENT_STORE_CONNECTOR,
-          useValue: new RGPCEventStore(synchedConfig),
-        },
+        await this.getEventStoreConnector(config),
       ],
     };
   }
 
-  static registerAsync(
-    options: IEventStoreModuleAsyncConfig,
-    serviceConfig: IEventStoreServiceConfig,
-  ): DynamicModule {
-    return {
-      module: EventStoreModule,
-      providers: [
-        {
-          provide: EVENT_STORE_SERVICE_CONFIG,
-          useValue: serviceConfig,
-        },
-        {
+  private static async getEventStoreConnector(
+    config:
+      | IEventStoreServiceConfig
+      | Promise<IEventStoreServiceConfig>
+      | IEventStoreModuleAsyncConfig,
+  ) {
+    const synchedConfig: IEventStoreServiceConfig =
+      (await config) as IEventStoreServiceConfig;
+
+    if (isRGPCConfig(synchedConfig as GrpcEventStoreConfig)) {
+      return {
+        provide: EVENT_STORE_CONNECTOR,
+        useValue: new RGPCEventStore(synchedConfig as GrpcEventStoreConfig),
+      };
+    }
+    return isEventStoreConfig(config)
+      ? {
           provide: EVENT_STORE_CONNECTOR,
-          useFactory: async (configService) => {
-            const config: IEventStoreConfig = await options.useFactory(
-              configService,
-            );
-            return new TcpHttpEventStore(config as TcpHttpEventStoreConfig);
-          },
-          inject: [...options.inject],
-        },
-      ],
-    };
+          useValue: new TcpHttpEventStore(config as TcpHttpEventStoreConfig),
+        }
+      : {
+          provide: EVENT_STORE_CONNECTOR,
+          useValue: new TcpHttpEventStore(config as TcpHttpEventStoreConfig),
+        };
   }
 }
+
+const isEventStoreConfig = (
+  config: IEventStoreModuleAsyncConfig | IEventStoreConfig,
+): config is IEventStoreConfig => {
+  return !!config['credentials'];
+};
+
+const isRGPCConfig = (
+  config: IEventStoreModuleAsyncConfig | IEventStoreConfig,
+): config is IEventStoreConfig => {
+  return !!config['connectionSettings'];
+};

@@ -40,7 +40,7 @@ const serverConfig: IEventStoreServiceConfig = {
 @Module({
   controllers: [PersistantSubscriptionController],
   imports: [
-    EventStoreModule.registerRgpc(
+    EventStoreModule.register(
       eventStoreConfig as IEventStoreConfig,
       serverConfig,
     ),

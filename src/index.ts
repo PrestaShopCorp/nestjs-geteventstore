@@ -1,7 +1,6 @@
 export * from './cloudevents';
 export * from './cqrs';
 export * from './dto';
-export * from './enum';
 export * from './event-store';
 export * from './event-store/events';
 export * from './event-store/health';

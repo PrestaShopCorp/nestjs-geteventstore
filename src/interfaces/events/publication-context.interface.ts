@@ -1,8 +1,8 @@
-import { ExpectedVersion } from '../../enum';
+import { ExpectedRevisionType } from '../../event-store/events';
 
 export interface PublicationContextInterface {
   streamName?: string;
-  expectedVersion?: ExpectedVersion;
+  expectedVersion?: ExpectedRevisionType;
   streamMetadata?: any;
-  expectedMetadataVersion?: ExpectedVersion;
+  expectedMetadataVersion?: ExpectedRevisionType;
 }

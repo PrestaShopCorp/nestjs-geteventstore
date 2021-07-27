@@ -29,9 +29,6 @@ const esConfig = {
     host: process.env.EVENTSTORE_HTTP_HOST || 'http://localhost',
     port: +process.env.EVENTSTORE_HTTP_PORT || 2113,
   },
-  connectionSettings: {
-    connectionString: 'esdb://localhost:20113?tls=false',
-  },
   tcpConnectionName: 'connection-hero-event-handler-and-saga',
   options: {
     log: {

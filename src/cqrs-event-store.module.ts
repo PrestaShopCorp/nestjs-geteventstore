@@ -17,12 +17,8 @@ import {
   IEventStoreModuleAsyncConfig,
   IEventStoreServiceConfig,
 } from './event-store/config';
-
-const isEventStoreConfig = (
-  config: IEventStoreModuleAsyncConfig | IEventStoreConfig,
-): config is IEventStoreConfig => {
-  return !!config['credentials'];
-};
+import { ExplorerService } from '@nestjs/cqrs/dist/services/explorer.service';
+import { EventStoreService } from './event-store';
 
 export type EventStoreModuleConfig =
   | IEventStoreModuleAsyncConfig
@@ -40,15 +36,10 @@ const registerEventStore = (
 ) => {
   return {
     imports: [
-      isEventStoreConfig(config)
-        ? EventStoreModule.registerRgpc(
-            config as IEventStoreConfig,
-            serviceConfig,
-          )
-        : EventStoreModule.registerAsync(config, serviceConfig),
+      EventStoreModule.register(config as IEventStoreConfig, serviceConfig),
     ],
-    exports: [EventStoreModule],
     providers: [],
+    exports: [EventStoreModule],
   };
 };
 

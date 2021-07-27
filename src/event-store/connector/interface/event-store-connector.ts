@@ -16,6 +16,7 @@ import {
 } from 'geteventstore-promise';
 import { IEventStoreConfig } from '../../config';
 import EventStorePersistentSubscription from '../../subscriptions/event-store-persistent-subscribtion';
+import { ExpectedRevision } from '../../events';
 
 export const EVENT_STORE_CONNECTOR = Symbol();
 
@@ -31,7 +32,7 @@ export default interface EventStoreConnector {
   writeEvents(
     stream,
     events: IWriteEvent[],
-    expectedVersion,
+    expectedVersion: ExpectedRevision,
   ): Promise<WriteResult | void>;
 
   writeMetadata(

@@ -23,12 +23,12 @@ import {
 } from '../interfaces';
 import { ReadEventBus } from '../cqrs';
 import { EVENT_STORE_SERVICE_CONFIG } from '../constants';
-import { ExpectedVersion } from '../enum';
 import { Observable } from 'rxjs';
 import EventStoreConnector, {
   EVENT_STORE_CONNECTOR,
 } from './connector/interface/event-store-connector';
 import { IEventStoreServiceConfig } from './config';
+import { ExpectedRevision, ExpectedRevisionType } from './events';
 
 @Injectable()
 export class EventStoreService implements OnModuleDestroy, OnModuleInit {
@@ -299,14 +299,14 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
   public writeEvents(
     stream,
     events: IWriteEvent[],
-    expectedVersion = ExpectedVersion.Any,
+    expectedVersion = ExpectedRevision.Any,
   ): Promise<WriteResult | void> {
     return this.eventStore.writeEvents(stream, events, expectedVersion);
   }
 
   public writeMetadata(
     stream,
-    expectedStreamMetadataVersion = ExpectedVersion.Any,
+    expectedStreamMetadataVersion: ExpectedRevisionType = ExpectedRevision.Any,
     streamMetadata: any,
   ): Observable<WriteResult> {
     return this.eventStore.writeMetadata(

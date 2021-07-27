@@ -1,10 +1,8 @@
 import { hostname } from 'os';
-import { empty } from 'rxjs';
 import { IEventPublisher } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { basename, extname } from 'path';
 
-import { ExpectedVersion } from '../../enum';
 import {
   IWriteEvent,
   IWriteEventBusConfig,
@@ -12,21 +10,22 @@ import {
 } from '../../interfaces';
 import { WriteResult } from 'node-eventstore-client';
 import { EventStoreService } from '../event-store.service';
+import { ExpectedRevision } from '../events';
 
 export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
   implements IEventPublisher<EventBase>
 {
   private logger: Logger = new Logger(this.constructor.name);
-  private readonly onPublishFail: IWriteEventBusConfig['onPublishFail'] = () =>
-    empty();
+  // private readonly onPublishFail: IWriteEventBusConfig['onPublishFail'] = () =>
+  //   empty();
 
   constructor(
     private readonly eventStoreService: EventStoreService,
     private readonly config: IWriteEventBusConfig,
   ) {
-    if (config.onPublishFail) {
-      this.onPublishFail = config.onPublishFail;
-    }
+    // if (config.onPublishFail) {
+    //   this.onPublishFail = config.onPublishFail;
+    // } // TODO manage this onPublishFail
   }
 
   private writeEvents<T extends EventBase>(
@@ -37,9 +36,9 @@ export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
   ): Promise<WriteResult | void> {
     const {
       streamName,
-      expectedVersion = ExpectedVersion.Any,
+      expectedVersion = ExpectedRevision.Any,
       streamMetadata,
-      expectedMetadataVersion = ExpectedVersion.Any,
+      expectedMetadataVersion = ExpectedRevision.Any,
     } = context;
     if (streamMetadata) {
       this.eventStoreService.writeMetadata(

@@ -1,9 +1,9 @@
 import { AggregateRoot as Parent } from '../cqrs';
-import { ExpectedVersion } from '../enum';
 import { IBaseEvent, PublicationContextInterface } from '../interfaces';
+import { ExpectedRevision, ExpectedRevisionType } from './events';
 
 export abstract class EventStoreAggregateRoot<
-  EventBase extends IBaseEvent = IBaseEvent
+  EventBase extends IBaseEvent = IBaseEvent,
 > extends Parent<EventBase> {
   private _streamName?: string;
   private _streamMetadata?: any;
@@ -31,8 +31,8 @@ export abstract class EventStoreAggregateRoot<
   }
 
   async commit(
-    expectedVersion: ExpectedVersion = ExpectedVersion.Any,
-    expectedMetadataVersion: ExpectedVersion = ExpectedVersion.Any,
+    expectedRevision: ExpectedRevisionType = ExpectedRevision.Any,
+    expectedMetadataVersion: ExpectedRevisionType = ExpectedRevision.Any,
   ) {
     this.logger.debug(
       `Aggregate will commit ${this.getUncommittedEvents().length} events in ${
@@ -40,7 +40,7 @@ export abstract class EventStoreAggregateRoot<
       } publishers`,
     );
     const context: PublicationContextInterface = {
-      expectedVersion,
+      expectedVersion: expectedRevision,
       ...(this._streamName ? { streamName: this._streamName } : {}),
       ...(this._streamMetadata
         ? { streamMetadata: this._streamMetadata, expectedMetadataVersion }

@@ -2,7 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import * as clc from 'cli-color';
 import { HeroRepository } from '../../repository/hero.repository';
 import { KillDragonCommand } from '../impl/kill-dragon.command';
-import { ExpectedVersion, WriteEventBus } from '../../../../../src';
+import { ExpectedRevision, WriteEventBus } from '../../../../../src';
 
 @CommandHandler(KillDragonCommand)
 export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
@@ -35,9 +35,9 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     await hero.damageEnemy(dragonId, 10);
     await hero.damageEnemy(dragonId, 10);
     await hero.damageEnemy(dragonId, 10);
-    await hero.commit(ExpectedVersion.NoStream);
+    await hero.commit(ExpectedRevision.Any);
     await hero.killEnemy(dragonId);
-    await hero.commit(ExpectedVersion.StreamExists);
+    await hero.commit(ExpectedRevision.StreamExists);
 
     return command;
   }

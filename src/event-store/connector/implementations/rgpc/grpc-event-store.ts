@@ -14,8 +14,11 @@ import {
 } from '../../../../interfaces';
 import EventStoreConnector from '../../interface/event-store-connector';
 import {
+  ANY,
+  AppendExpectedRevision,
   EventStoreDBClient,
   jsonEvent,
+  NO_STREAM,
   PersistentSubscription,
 } from '@eventstore/db-client';
 import { Client } from '@eventstore/db-client/dist/Client';
@@ -23,6 +26,7 @@ import { GrpcEventStoreConfig } from '../../../config/grpc/grpc-event-store-conf
 import EventStorePersistentSubscribtionGrpc from '../../../subscriptions/event-store-persistent-subscribtion-grpc';
 import EventStorePersistentSubscribtionOptions from '../../../subscriptions/event-store-persistent-subscribtion-options';
 import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils';
+import { ExpectedRevision, ExpectedRevisionType } from '../../../events';
 
 export class RGPCEventStore implements EventStoreConnector {
   private logger: Logger = new Logger(this.constructor.name);
@@ -142,7 +146,7 @@ export class RGPCEventStore implements EventStoreConnector {
   public async writeEvents(
     stream,
     events: IWriteEvent[],
-    expectedVersion,
+    expectedRevision: ExpectedRevisionType,
   ): Promise<void> {
     if (events.length === 0) {
       return null;
@@ -157,6 +161,7 @@ export class RGPCEventStore implements EventStoreConnector {
             id: event.eventId,
           });
         }),
+        { expectedRevision: expectedRevision as AppendExpectedRevision },
       )
       .catch((e) => console.log('e : ', e));
   }

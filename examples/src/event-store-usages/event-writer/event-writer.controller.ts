@@ -11,7 +11,7 @@ export default class EventWriterController {
   public async test(): Promise<IWriteEvent> {
     const event: IWriteEvent = {
       data: {
-        id: 5,
+        id: 1,
         value: 'This event was sent at ' + new Date(),
       },
       eventId: v4(),

@@ -2,9 +2,9 @@ import { EventStorePublisher } from './event-store.publisher';
 import { IWriteEvent, IWriteEventBusConfig } from '../../interfaces';
 import { TcpHttpEventStore } from '../connector/implementations/tcp-http/tcp-http-event-store';
 import { of } from 'rxjs';
-import { ExpectedVersion } from '../../enum';
 import spyOn = jest.spyOn;
 import { EventStoreService } from '../event-store.service';
+import { ExpectedRevision, ExpectedRevisionType } from '../events';
 
 jest.mock('../connector/implementations/tcp-http/tcp-http-event-store');
 
@@ -44,7 +44,7 @@ describe('EventStorePublisher', () => {
     expect(eventStore.writeEvents).toHaveBeenCalledWith(
       expect.anything(),
       expect.anything(),
-      ExpectedVersion.Any,
+      ExpectedRevision.Any,
     );
   });
 
@@ -52,7 +52,7 @@ describe('EventStorePublisher', () => {
     eventStore.writeEvents = jest.fn().mockReturnValue(of({}));
     spyOn(eventStore, 'writeMetadata');
     const streamName = 'streamName';
-    const expectedVersion = 999;
+    const expectedRevision: ExpectedRevisionType = ExpectedRevision.Any;
     const streamMetadata = 'dumbMetadata';
     const expectedMetadataVersion = 888;
     await publisher.publish(
@@ -64,7 +64,7 @@ describe('EventStorePublisher', () => {
       },
       {
         streamName: streamName,
-        expectedVersion: expectedVersion,
+        expectedVersion: expectedRevision,
         streamMetadata: streamMetadata,
         expectedMetadataVersion: expectedMetadataVersion,
       },

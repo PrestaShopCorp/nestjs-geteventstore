@@ -16,20 +16,11 @@ import { QueryHandlers } from './queries/handlers';
 import { HeroRepository } from './repository/hero.repository';
 import { HeroesGameSagas } from './sagas/heroes.sagas';
 
-const esConfig = {
-  credentials: {
+const tcpHttpEvenStoreConfig = {
+  defaultUserCredentials: {
     username: process.env.EVENTSTORE_CREDENTIALS_USERNAME || 'admin',
     password: process.env.EVENTSTORE_CREDENTIALS_PASSWORD || 'changeit',
   },
-  tcp: {
-    host: process.env.EVENTSTORE_TCP_HOST || 'localhost',
-    port: +process.env.EVENTSTORE_TCP_PORT || 1113,
-  },
-  http: {
-    host: process.env.EVENTSTORE_HTTP_HOST || 'http://localhost',
-    port: +process.env.EVENTSTORE_HTTP_PORT || 2113,
-  },
-  tcpConnectionName: 'connection-hero-event-handler-and-saga',
   options: {
     log: {
       debug: (str, ...args) => {
@@ -63,6 +54,15 @@ const esConfig = {
   },
   onTcpConnected: () => {},
 };
+
+const rGPCEventStoreConf = {
+  ...tcpHttpEvenStoreConfig,
+  connectionSettings: {
+    connectionString:
+      process.env.CONNECTION_STRING || 'esdb://localhost:20113?tls=false',
+  },
+};
+
 const subscriptions = {
   persistent: [
     {
@@ -112,7 +112,7 @@ const eventBusConfig = {
     TerminusModule,
     LoggerModule.forRoot(),
     CqrsEventStoreModule.register(
-      esConfig,
+      rGPCEventStoreConf,
       { subscriptions, projections },
       eventBusConfig,
     ),

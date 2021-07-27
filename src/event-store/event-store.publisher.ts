@@ -29,12 +29,11 @@ export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
 
   private writeEvents<T extends EventBase>(
     events: T[],
-    context: PublicationContextInterface = {
-      streamName: this.getStreamName(events[0].metadata.correlation_id),
-    },
+    context: PublicationContextInterface = {},
   ) {
     const {
-      streamName,
+      streamName = context?.streamName ||
+        this.getStreamName(events[0].metadata.correlation_id),
       expectedVersion = ExpectedVersion.Any,
       streamMetadata,
       expectedMetadataVersion = ExpectedVersion.Any,

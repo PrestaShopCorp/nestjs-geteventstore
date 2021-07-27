@@ -16,8 +16,11 @@ export class HeroesGameSagas {
   @Saga()
   dragonKilled = (events$: Observable<any>): Observable<ICommand> => {
     return events$.pipe(
+      //@ts-ignore
       filter((ev) => ev instanceof HeroKilledDragonEvent),
+      //@ts-ignore
       delay(400),
+      //@ts-ignore
       map((event: HeroKilledDragonEvent) => {
         this.context.setCachedValue(
           CONTEXT_CORRELATION_ID,

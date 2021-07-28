@@ -17,6 +17,7 @@ import {
 import { IEventStoreConfig } from '../../config';
 import EventStorePersistentSubscription from '../../subscriptions/event-store-persistent-subscribtion';
 import { ExpectedRevision } from '../../events';
+import { AppendResult } from '@eventstore/db-client';
 
 export const EVENT_STORE_CONNECTOR = Symbol();
 
@@ -44,7 +45,9 @@ export default interface EventStoreConnector {
     stream: string,
     expectedStreamMetadataVersion,
     streamMetadata: any,
-  ): Observable<WriteResult>;
+  ): Observable<WriteResult | AppendResult>;
+
+  readMetadata(stream: string): Observable<any>;
 
   readFromStream(stream: string, options: any);
 

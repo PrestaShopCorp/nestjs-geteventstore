@@ -30,6 +30,7 @@ import EventStoreConnector, {
 } from './connector/interface/event-store-connector';
 import { IEventStoreServiceConfig } from './config';
 import { ExpectedRevision, ExpectedRevisionType } from './events';
+import { AppendResult } from '@eventstore/db-client';
 
 @Injectable()
 export class EventStoreService implements OnModuleDestroy, OnModuleInit {
@@ -321,11 +322,15 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     stream: string,
     expectedStreamMetadataVersion: ExpectedRevisionType = ExpectedRevision.Any,
     streamMetadata: any,
-  ): Observable<WriteResult> {
+  ): Observable<WriteResult | AppendResult> {
     return this.eventStore.writeMetadata(
       stream,
       expectedStreamMetadataVersion,
       streamMetadata,
     );
+  }
+
+  public readMetadata(stream: string): Observable<any> {
+    return this.eventStore.readMetadata(stream);
   }
 }

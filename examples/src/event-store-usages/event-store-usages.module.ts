@@ -10,6 +10,7 @@ import PersistantSubscriptionController from './controllers/persistant-subscript
 import { resolve } from 'path';
 import { ProjectionMode } from 'geteventstore-promise';
 import StreamReaderController from './controllers/stream-reader.controller';
+import MetadatasController from './controllers/metadatas/metadatas.controller';
 
 const eventStoreConfig: GrpcEventStoreConfig = {
   connectionSettings: {
@@ -53,6 +54,7 @@ const serverConfig: IEventStoreServiceConfig = {
 
 @Module({
   controllers: [
+    MetadatasController,
     EventWriterController,
     StreamReaderController,
     PersistantSubscriptionController,

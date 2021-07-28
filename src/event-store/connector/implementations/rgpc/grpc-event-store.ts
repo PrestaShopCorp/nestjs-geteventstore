@@ -2,9 +2,8 @@ import { Logger } from '@nestjs/common';
 import {
   EventStoreCatchUpSubscription,
   EventStoreSubscription,
-  WriteResult,
 } from 'node-eventstore-client';
-import { Observable } from 'rxjs';
+import { from, Observable } from 'rxjs';
 
 import {
   EventStoreProjection,
@@ -16,8 +15,7 @@ import {
 import EventStoreConnector from '../../interface/event-store-connector';
 import {
   AppendExpectedRevision,
-  BACKWARDS,
-  END,
+  AppendResult,
   EventStoreDBClient,
   EventType,
   FORWARDS,
@@ -180,11 +178,19 @@ export class RGPCEventStore implements EventStoreConnector {
   }
 
   public writeMetadata(
-    stream,
-    expectedStreamMetadataVersion,
+    stream: string,
+    expectedRevision: any,
     streamMetadata: any,
-  ): Observable<WriteResult> {
-    return undefined;
+  ): Observable<AppendResult> {
+    return from(
+      this.client.setStreamMetadata(stream, streamMetadata, {
+        expectedRevision,
+      }),
+    );
+  }
+
+  public readMetadata(stream: string): Observable<any> {
+    return from(this.client.getStreamMetadata(stream));
   }
 
   public async readFromStream(

@@ -137,7 +137,7 @@ export class TcpHttpEventStore implements EventStoreConnector {
   }
 
   public writeMetadata(
-    stream,
+    stream: string,
     expectedStreamMetadataVersion = ExpectedRevision.Any,
     streamMetadata: any,
   ): Observable<WriteResult> {
@@ -344,7 +344,11 @@ export class TcpHttpEventStore implements EventStoreConnector {
     return this._isConnected;
   }
 
-  public readFromStream(stream: string, options: any) {
+  public readFromStream(stream: string, options?: any) {
+    throw new Error('not implemented in this version');
+  }
+
+  public readMetadata(stream: string): Observable<any> {
     throw new Error('not implemented in this version');
   }
 }

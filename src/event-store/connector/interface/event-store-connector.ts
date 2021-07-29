@@ -10,14 +10,13 @@ import {
   EventStoreSubscription,
   WriteResult,
 } from 'node-eventstore-client';
-import {
-  PersistentSubscriptionAssertResult,
-  PersistentSubscriptionOptions,
-} from 'geteventstore-promise';
 import { IEventStoreConfig } from '../../config';
 import EventStorePersistentSubscription from '../../subscriptions/event-store-persistent-subscribtion';
 import { ExpectedRevision } from '../../events';
-import { AppendResult } from '@eventstore/db-client';
+import { PersistentSubscriptionOptions } from './persistent-subscriptions-options';
+import { PersistentSubscriptionAssertResult } from './persistent-subscriptions-assert-result';
+import { AppendResult } from './append-result';
+import { Credentials } from '@eventstore/db-client/dist/types';
 
 export const EVENT_STORE_CONNECTOR = Symbol();
 
@@ -50,6 +49,13 @@ export default interface EventStoreConnector {
   readMetadata(stream: string): Observable<any>;
 
   readFromStream(stream: string, options: any);
+
+  createPersistentSubscription(
+    stream: string,
+    group: string,
+    settings: PersistentSubscriptionOptions,
+    credentials?: Credentials,
+  ): Promise<void>;
 
   /**
    * Kept for retro compat, but useless as now with gRPC,
@@ -98,4 +104,11 @@ export default interface EventStoreConnector {
     subscription: IPersistentSubscriptionConfig,
     options: PersistentSubscriptionOptions,
   ): Promise<PersistentSubscriptionAssertResult | void>;
+
+  updatePersistentSubscription(
+    streamName: string,
+    group: string,
+    persistentSubscriptionOptions: PersistentSubscriptionOptions,
+    credentials: Credentials,
+  ): Promise<void>;
 }

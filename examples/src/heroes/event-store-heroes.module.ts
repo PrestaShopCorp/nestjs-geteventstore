@@ -6,7 +6,7 @@ import { LoggerModule } from 'nestjs-pino-stackdriver/dist';
 import { resolve } from 'path';
 import * as util from 'util';
 
-import { CqrsEventStoreModule } from '../../../src';
+import { CqrsEventStoreModule, EventStoreProjection } from '../../../src';
 import { CommandHandlers } from './commands/handlers';
 import { EventHandlers } from './events/handlers';
 import { heroesEvents } from './events/impl';
@@ -79,7 +79,7 @@ const subscriptions = {
     },
   ],
 };
-const projections = [
+const projections: EventStoreProjection[] = [
   {
     name: 'hero-dragon',
     file: resolve(`${__dirname}/projections/hero-dragon.js`),

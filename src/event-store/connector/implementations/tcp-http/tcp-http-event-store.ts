@@ -30,6 +30,7 @@ import EventStoreConnector from '../../interface/event-store-connector';
 import { IEventStoreConfig } from '../../../config';
 import TcpHttpEventStoreConfig from '../../../config/tcp-http/tcp-http-event-store.config';
 import { ExpectedRevision } from '../../../events';
+import { Credentials } from '@eventstore/db-client/dist/types';
 
 export class TcpHttpEventStore implements EventStoreConnector {
   public connection: EventStoreNodeConnection;
@@ -349,6 +350,24 @@ export class TcpHttpEventStore implements EventStoreConnector {
   }
 
   public readMetadata(stream: string): Observable<any> {
+    throw new Error('not implemented in this version');
+  }
+
+  public async createPersistentSubscription(
+    stream: string,
+    group: string,
+    settings: PersistentSubscriptionOptions,
+    credentials?: Credentials,
+  ): Promise<void> {
+    throw new Error('not implemented in this version');
+  }
+
+  public async updatePersistentSubscription(
+    streamName: string,
+    group: string,
+    persistentSubscriptionOptions: PersistentSubscriptionOptions,
+    credentials: Credentials,
+  ): Promise<void> {
     throw new Error('not implemented in this version');
   }
 }

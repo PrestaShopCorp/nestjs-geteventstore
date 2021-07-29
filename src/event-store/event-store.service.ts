@@ -31,6 +31,8 @@ import EventStoreConnector, {
 import { IEventStoreServiceConfig } from './config';
 import { ExpectedRevision, ExpectedRevisionType } from './events';
 import { AppendResult } from '@eventstore/db-client';
+import { Credentials } from '@eventstore/db-client/dist/types';
+import * as stream from 'stream';
 
 @Injectable()
 export class EventStoreService implements OnModuleDestroy, OnModuleInit {
@@ -332,5 +334,33 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
 
   public readMetadata(stream: string): Observable<any> {
     return this.eventStore.readMetadata(stream);
+  }
+
+  public async createPersistentSubscription(
+    streamName: string,
+    group: string,
+    persistentSubscriptionOptions?: PersistentSubscriptionOptions,
+    credentials?: Credentials,
+  ) {
+    return await this.eventStore.createPersistentSubscription(
+      streamName,
+      group,
+      persistentSubscriptionOptions,
+      credentials,
+    );
+  }
+
+  public async updatePersistentSubscription(
+    streamName: string,
+    group: string,
+    persistentSubscriptionOptions: PersistentSubscriptionOptions,
+    credentials?: Credentials,
+  ): Promise<void> {
+    return await this.eventStore.updatePersistentSubscription(
+      streamName,
+      group,
+      persistentSubscriptionOptions,
+      credentials,
+    );
   }
 }

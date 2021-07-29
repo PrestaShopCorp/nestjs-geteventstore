@@ -28,8 +28,10 @@ import { Client } from '@eventstore/db-client/dist/Client';
 import { GrpcEventStoreConfig } from '../../../config/grpc/grpc-event-store-config';
 import EventStorePersistentSubscribtionGrpc from '../../../subscriptions/event-store-persistent-subscribtion-grpc';
 import EventStorePersistentSubscribtionOptions from '../../../subscriptions/event-store-persistent-subscribtion-options';
-import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils';
 import { ExpectedRevisionType } from '../../../events';
+import { Credentials } from '@eventstore/db-client/dist/types';
+import { PersistentSubscriptionOptions } from '../../interface/persistent-subscriptions-options';
+import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils';
 
 export class RGPCEventStore implements EventStoreConnector {
   private logger: Logger = new Logger(this.constructor.name);
@@ -86,7 +88,6 @@ export class RGPCEventStore implements EventStoreConnector {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   public disconnect(): void {}
 
   public async getPersistentSubscriptionInfo(
@@ -214,5 +215,65 @@ export class RGPCEventStore implements EventStoreConnector {
         metadata: event.event.metadata as unknown,
       };
     });
+  }
+
+  public async createPersistentSubscription(
+    stream: string,
+    group: string,
+    settings: PersistentSubscriptionOptions,
+    credentials?: Credentials,
+  ): Promise<void> {
+    return await this.client.createPersistentSubscription(
+      stream,
+      group,
+      {
+        resolveLinkTos: false,
+        extraStats: false,
+        fromRevision: 'start',
+        messageTimeout: 30_000,
+        maxRetryCount: 10,
+        checkpointAfter: 2_000,
+        minCheckpointCount: 10,
+        maxCheckpointCount: 1_000,
+        maxSubscriberCount: 'unlimited',
+        liveBufferSize: 500,
+        readBatchSize: 20,
+        historyBufferSize: 500,
+        strategy: 'round_robin',
+        ...settings,
+      } as PersistentSubscriptionSettings,
+      {
+        credentials,
+      },
+    );
+  }
+
+  public async updatePersistentSubscription(
+    streamName: string,
+    group: string,
+    persistentSubscriptionOptions: PersistentSubscriptionOptions,
+    credentials: Credentials,
+  ): Promise<void> {
+    return await this.client.updatePersistentSubscription(
+      streamName,
+      group,
+      {
+        resolveLinkTos: false,
+        extraStats: false,
+        fromRevision: 'start',
+        messageTimeout: 30_000,
+        maxRetryCount: 10,
+        checkpointAfter: 2_000,
+        minCheckpointCount: 10,
+        maxCheckpointCount: 1_000,
+        maxSubscriberCount: 'unlimited',
+        liveBufferSize: 500,
+        readBatchSize: 20,
+        historyBufferSize: 500,
+        strategy: 'round_robin',
+        ...persistentSubscriptionOptions,
+      } as PersistentSubscriptionSettings,
+      { credentials },
+    );
   }
 }

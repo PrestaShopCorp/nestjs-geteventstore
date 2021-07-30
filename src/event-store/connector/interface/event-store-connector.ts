@@ -111,4 +111,13 @@ export default interface EventStoreConnector {
     persistentSubscriptionOptions: PersistentSubscriptionOptions,
     credentials: Credentials,
   ): Promise<void>;
+
+  createProjection(
+    query: string,
+    type: 'oneTime' | 'continuous' | 'transient',
+    projectionName?: string,
+    options?: any,
+  ): Promise<void>;
+
+  getProjectionState(streamName: string): Promise<any>;
 }

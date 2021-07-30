@@ -8,9 +8,9 @@ import { EventStoreModule } from '@nestjs-geteventstore/event-store/event-store.
 import EventWriterController from './controllers/event-writer.controller';
 import PersistantSubscriptionController from './controllers/persistant-subscription.controller';
 import { resolve } from 'path';
-import { ProjectionMode } from 'geteventstore-promise';
 import StreamReaderController from './controllers/stream-reader.controller';
 import MetadatasController from './controllers/metadatas/metadatas.controller';
+import ProjectionController from './controllers/projection.controller';
 
 const eventStoreConfig: GrpcEventStoreConfig = {
   connectionSettings: {
@@ -26,9 +26,9 @@ const eventStoreConfig: GrpcEventStoreConfig = {
 const serverConfig: IEventStoreServiceConfig = {
   projections: [
     {
-      name: 'hero-dragon',
-      file: resolve(`${__dirname}/projections/hero-dragon.js`),
-      mode: 'continuous' as ProjectionMode,
+      name: 'some-projection-continuous',
+      file: resolve(`${__dirname}/projections/test-projection.js`),
+      mode: 'continuous',
       enabled: true,
       checkPointsEnabled: true,
       emitEnabled: true,
@@ -55,6 +55,7 @@ const serverConfig: IEventStoreServiceConfig = {
 @Module({
   controllers: [
     MetadatasController,
+    ProjectionController,
     EventWriterController,
     StreamReaderController,
     PersistantSubscriptionController,

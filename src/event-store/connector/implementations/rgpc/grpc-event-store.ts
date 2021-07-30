@@ -54,19 +54,7 @@ export class RGPCEventStore implements EventStoreConnector {
         subscription.stream,
         subscription.group,
         {
-          resolveLinkTos: false,
-          extraStats: false,
-          fromRevision: 'start',
-          messageTimeout: 30_000,
-          maxRetryCount: 10,
-          checkpointAfter: 2_000,
-          minCheckpointCount: 10,
-          maxCheckpointCount: 1_000,
-          maxSubscriberCount: 'unlimited',
-          liveBufferSize: 500,
-          readBatchSize: 20,
-          historyBufferSize: 500,
-          strategy: 'round_robin',
+          ...PersistentSubscriptionOptions.getDefaultOptions(),
           ...options,
         } as PersistentSubscriptionSettings,
       );
@@ -220,27 +208,15 @@ export class RGPCEventStore implements EventStoreConnector {
   public async createPersistentSubscription(
     stream: string,
     group: string,
-    settings: PersistentSubscriptionOptions,
+    options: PersistentSubscriptionOptions,
     credentials?: Credentials,
   ): Promise<void> {
     return await this.client.createPersistentSubscription(
       stream,
       group,
       {
-        resolveLinkTos: false,
-        extraStats: false,
-        fromRevision: 'start',
-        messageTimeout: 30_000,
-        maxRetryCount: 10,
-        checkpointAfter: 2_000,
-        minCheckpointCount: 10,
-        maxCheckpointCount: 1_000,
-        maxSubscriberCount: 'unlimited',
-        liveBufferSize: 500,
-        readBatchSize: 20,
-        historyBufferSize: 500,
-        strategy: 'round_robin',
-        ...settings,
+        ...PersistentSubscriptionOptions.getDefaultOptions(),
+        ...options,
       } as PersistentSubscriptionSettings,
       {
         credentials,
@@ -251,29 +227,45 @@ export class RGPCEventStore implements EventStoreConnector {
   public async updatePersistentSubscription(
     streamName: string,
     group: string,
-    persistentSubscriptionOptions: PersistentSubscriptionOptions,
+    options: PersistentSubscriptionOptions,
     credentials: Credentials,
   ): Promise<void> {
     return await this.client.updatePersistentSubscription(
       streamName,
       group,
       {
-        resolveLinkTos: false,
-        extraStats: false,
-        fromRevision: 'start',
-        messageTimeout: 30_000,
-        maxRetryCount: 10,
-        checkpointAfter: 2_000,
-        minCheckpointCount: 10,
-        maxCheckpointCount: 1_000,
-        maxSubscriberCount: 'unlimited',
-        liveBufferSize: 500,
-        readBatchSize: 20,
-        historyBufferSize: 500,
-        strategy: 'round_robin',
-        ...persistentSubscriptionOptions,
+        ...PersistentSubscriptionOptions.getDefaultOptions(),
+        ...options,
       } as PersistentSubscriptionSettings,
       { credentials },
     );
+  }
+
+  public async createProjection(
+    query: string,
+    type: 'oneTime' | 'continuous' | 'transient',
+    projectionName?: string,
+    options?: any,
+  ): Promise<any> {
+    switch (type) {
+      case 'continuous':
+        return await this.client.createContinuousProjection(
+          projectionName,
+          query,
+          options ?? {},
+        );
+      case 'transient':
+      case 'oneTime': {
+        await this.client.createOneTimeProjection(query, {});
+        const list = await this.client
+          .listOneTimeProjections()
+          .catch((e) => console.log('e : ', e));
+        console.log('list : ', list);
+      }
+    }
+  }
+
+  public async getProjectionState(projectionName: string): Promise<void> {
+    return this.client.getProjectionState(projectionName);
   }
 }

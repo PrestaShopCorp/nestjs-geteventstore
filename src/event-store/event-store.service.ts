@@ -10,7 +10,6 @@ import {
   OnModuleInit,
   Optional,
 } from '@nestjs/common';
-import { PersistentSubscriptionOptions } from 'geteventstore-promise';
 import { readFileSync } from 'fs';
 
 import {
@@ -32,7 +31,7 @@ import { IEventStoreServiceConfig } from './config';
 import { ExpectedRevision, ExpectedRevisionType } from './events';
 import { AppendResult } from '@eventstore/db-client';
 import { Credentials } from '@eventstore/db-client/dist/types';
-import * as stream from 'stream';
+import { PersistentSubscriptionOptions } from './connector/interface/persistent-subscriptions-options';
 
 @Injectable()
 export class EventStoreService implements OnModuleDestroy, OnModuleInit {
@@ -362,5 +361,23 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
       persistentSubscriptionOptions,
       credentials,
     );
+  }
+
+  public async createProjection(
+    query: string,
+    type: 'oneTime' | 'continuous' | 'transient',
+    projectionName?: string,
+    options?: any,
+  ) {
+    return this.eventStore.createProjection(
+      query,
+      type,
+      projectionName,
+      options,
+    );
+  }
+
+  public getProjectionState(streamName: string): Promise<any> {
+    return this.eventStore.getProjectionState(streamName);
   }
 }

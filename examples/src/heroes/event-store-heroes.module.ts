@@ -6,7 +6,6 @@ import { LoggerModule } from 'nestjs-pino-stackdriver/dist';
 import { resolve } from 'path';
 import * as util from 'util';
 
-import { CqrsEventStoreModule, EventStoreProjection } from '../../../src';
 import { CommandHandlers } from './commands/handlers';
 import { EventHandlers } from './events/handlers';
 import { heroesEvents } from './events/impl';
@@ -15,6 +14,8 @@ import { HeroesGameController } from './heroes.controller';
 import { QueryHandlers } from './queries/handlers';
 import { HeroRepository } from './repository/hero.repository';
 import { HeroesGameSagas } from './sagas/heroes.sagas';
+import { EventStoreProjection } from '@nestjs-geteventstore/interfaces';
+import { CqrsEventStoreModule } from '@nestjs-geteventstore/cqrs-event-store.module';
 
 const tcpHttpEvenStoreConfig = {
   defaultUserCredentials: {
@@ -83,7 +84,7 @@ const projections: EventStoreProjection[] = [
   {
     name: 'hero-dragon',
     file: resolve(`${__dirname}/projections/hero-dragon.js`),
-    mode: 'continuous' as ProjectionMode,
+    mode: 'continuous',
     enabled: true,
     checkPointsEnabled: true,
     emitEnabled: true,

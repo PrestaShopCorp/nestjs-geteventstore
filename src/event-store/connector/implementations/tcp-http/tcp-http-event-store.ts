@@ -14,7 +14,7 @@ import * as geteventstorePromise from 'geteventstore-promise';
 import {
   HTTPClient,
   PersistentSubscriptionAssertResult,
-  PersistentSubscriptionOptions,
+  ProjectionMode,
 } from 'geteventstore-promise';
 import { from, Observable, throwError } from 'rxjs';
 import { catchError, flatMap, map, toArray } from 'rxjs/operators';
@@ -31,6 +31,7 @@ import { IEventStoreConfig } from '../../../config';
 import TcpHttpEventStoreConfig from '../../../config/tcp-http/tcp-http-event-store.config';
 import { ExpectedRevision } from '../../../events';
 import { Credentials } from '@eventstore/db-client/dist/types';
+import { PersistentSubscriptionOptions } from '../../interface/persistent-subscriptions-options';
 
 export class TcpHttpEventStore implements EventStoreConnector {
   public connection: EventStoreNodeConnection;
@@ -322,7 +323,7 @@ export class TcpHttpEventStore implements EventStoreConnector {
     return this.HTTPClient.projections.assert(
       projection.name,
       content,
-      projection.mode,
+      projection.mode as ProjectionMode,
       projection.enabled,
       projection.checkPointsEnabled,
       projection.emitEnabled,
@@ -337,7 +338,7 @@ export class TcpHttpEventStore implements EventStoreConnector {
     return this.HTTPClient.persistentSubscriptions.assert(
       subscription.group,
       subscription.stream,
-      options,
+      options as unknown,
     );
   }
 
@@ -369,5 +370,16 @@ export class TcpHttpEventStore implements EventStoreConnector {
     credentials: Credentials,
   ): Promise<void> {
     throw new Error('not implemented in this version');
+  }
+
+  public createProjection(
+    query: string,
+    type: 'oneTime' | 'continuous' | 'transient',
+  ): Promise<void> {
+    throw new Error('not implemented in this version');
+  }
+
+  public getProjectionState(streamName: string): Promise<any> {
+    return Promise.resolve(undefined);
   }
 }

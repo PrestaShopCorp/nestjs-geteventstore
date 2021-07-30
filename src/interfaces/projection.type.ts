@@ -1,10 +1,10 @@
-import { ProjectionMode } from 'geteventstore-promise';
-
 export type EventStoreProjection = {
   name: string;
   content?: string;
   file?: string;
-  mode?: ProjectionMode;
+
+  // 'transient' mode won't work with deprecated connector
+  mode?: 'oneTime' | 'continuous' | 'transient';
   trackEmittedStreams?: boolean;
   enabled?: boolean;
   checkPointsEnabled?: boolean;

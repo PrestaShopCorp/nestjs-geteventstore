@@ -17,7 +17,7 @@ export default class EventWriterController {
         value: 'This event was sent at ' + new Date(),
       },
       eventId: v4(),
-      eventType: 'single-event',
+      eventType: 'eventtype',
     };
 
     await this.eventStoreService.writeEvents(streamName, [event]);

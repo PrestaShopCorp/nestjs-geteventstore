@@ -120,4 +120,10 @@ export default interface EventStoreConnector {
   ): Promise<void>;
 
   getProjectionState(streamName: string): Promise<any>;
+
+  deletPersistentSubscription(
+    streamName: string,
+    group: string,
+    deleteOptions?: any,
+  ): Promise<void>;
 }

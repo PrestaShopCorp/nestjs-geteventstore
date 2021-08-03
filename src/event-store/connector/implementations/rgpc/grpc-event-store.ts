@@ -18,20 +18,18 @@ import {
   AppendResult,
   EventStoreDBClient,
   EventType,
-  FORWARDS,
   jsonEvent,
   PersistentSubscription,
   ResolvedEvent,
-  START,
 } from '@eventstore/db-client';
 import { Client } from '@eventstore/db-client/dist/Client';
 import { GrpcEventStoreConfig } from '../../../config/grpc/grpc-event-store-config';
-import EventStorePersistentSubscribtionGrpc from '../../../subscriptions/event-store-persistent-subscribtion-grpc';
 import EventStorePersistentSubscribtionOptions from '../../../subscriptions/event-store-persistent-subscribtion-options';
 import { ExpectedRevisionType } from '../../../events';
 import { Credentials } from '@eventstore/db-client/dist/types';
 import { PersistentSubscriptionOptions } from '../../interface/persistent-subscriptions-options';
 import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils';
+import { isNil } from '@nestjs/common/utils/shared.utils';
 
 export class RGPCEventStore implements EventStoreConnector {
   private logger: Logger = new Logger(this.constructor.name);
@@ -111,7 +109,7 @@ export class RGPCEventStore implements EventStoreConnector {
     return Promise.resolve(undefined);
   }
 
-  public subscribeToPersistentSubscription(
+  public async subscribeToPersistentSubscription(
     stream: string,
     group: string,
     onEvent: (sub, payload) => void,
@@ -119,10 +117,22 @@ export class RGPCEventStore implements EventStoreConnector {
     bufferSize: number,
     onSubscriptionStart: (sub) => void,
     onSubscriptionDropped: (sub, reason, error) => void,
-  ): PersistentSubscription {
-    return this.client.connectToPersistentSubscription(stream, group, {
-      bufferSize,
-    }) as EventStorePersistentSubscribtionGrpc;
+  ): Promise<PersistentSubscription> {
+    const persistentSubscription: PersistentSubscription =
+      this.client.connectToPersistentSubscription(stream, group, {
+        bufferSize,
+      });
+    if (!isNil(onEvent)) {
+      persistentSubscription.on('data', onEvent);
+    }
+    if (!isNil(onSubscriptionStart)) {
+      persistentSubscription.on('confirmation', onSubscriptionStart);
+    }
+    if (!isNil(onSubscriptionDropped)) {
+      persistentSubscription.on('close', onSubscriptionDropped);
+    }
+
+    return persistentSubscription;
   }
 
   public subscribeToVolatileSubscription(
@@ -143,27 +153,17 @@ export class RGPCEventStore implements EventStoreConnector {
     if (events.length === 0) {
       return null;
     }
-    await this.client
-      .appendToStream(
-        stream,
-        events.map((event) => {
-          return jsonEvent({
-            data: event.data,
-            type: event.eventType,
-            id: event.eventId,
-          });
-        }),
-        { expectedRevision: expectedRevision as AppendExpectedRevision },
-      )
-      .catch((e) => console.log('e : ', e));
-    const ezzz = await this.client.readStream(stream, {
-      direction: FORWARDS,
-      fromRevision: START,
-    });
-
-    for (const resolvedEvent of ezzz) {
-      console.log(resolvedEvent.event.data);
-    }
+    await this.client.appendToStream(
+      stream,
+      events.map((event) => {
+        return jsonEvent({
+          data: event.data,
+          type: event.eventType,
+          id: event.eventId,
+        });
+      }),
+      { expectedRevision: expectedRevision as AppendExpectedRevision },
+    );
   }
 
   public writeMetadata(
@@ -238,6 +238,18 @@ export class RGPCEventStore implements EventStoreConnector {
         ...options,
       } as PersistentSubscriptionSettings,
       { credentials },
+    );
+  }
+
+  public async deletPersistentSubscription(
+    streamName: string,
+    group: string,
+    deleteOptions?: any,
+  ): Promise<void> {
+    await this.client.deletePersistentSubscription(
+      streamName,
+      group,
+      deleteOptions,
     );
   }
 

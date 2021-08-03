@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { EventStoreService } from '@nestjs-geteventstore/event-store';
 import { PersistentSubscriptionOptions } from '@nestjs-geteventstore/event-store/connector/interface/persistent-subscriptions-options';
 
@@ -6,7 +14,7 @@ import { PersistentSubscriptionOptions } from '@nestjs-geteventstore/event-store
 export default class PersistantSubscriptionController {
   constructor(private readonly eventStoreService: EventStoreService) {}
 
-  @Get('create/:streamname/:group')
+  @Post('create/:streamname/:group')
   public async createPersistentSubscription(
     @Param('streamname') streamName: string,
     @Param('group') group: string,
@@ -14,10 +22,11 @@ export default class PersistantSubscriptionController {
     return this.eventStoreService.createPersistentSubscription(
       streamName,
       group,
+      { fromRevision: 'start' },
     );
   }
 
-  @Get('update/:streamname/:group')
+  @Put('update/:streamname/:group')
   public async updatePersistentSubscription(
     @Param('streamname') streamName: string,
     @Param('group') group: string,
@@ -28,5 +37,29 @@ export default class PersistantSubscriptionController {
       group,
       persistentSubscriptionOptions,
     );
+  }
+
+  @Get('read/:streamname/:group')
+  public async readPersistentSubscription(
+    @Param('streamname') stream: string,
+    @Param('group') group: string,
+    @Body() persistentSubscriptionOptions: PersistentSubscriptionOptions,
+  ): Promise<void> {
+    return this.eventStoreService.subscribeToPersistentSubscriptions([
+      {
+        stream,
+        group,
+      },
+    ]);
+  }
+
+  @Delete('delete/:streamname/:group')
+  public async deletePersistentSubscription(
+    @Param('streamname') stream: string,
+    @Param('group') group: string,
+  ): Promise<void> {
+    return await this.eventStoreService
+      .deletePersistentSubscription(stream, group)
+      .catch(() => {});
   }
 }

@@ -38,7 +38,7 @@ const serverConfig: IEventStoreServiceConfig = {
     persistent: [
       {
         // Event stream category (before the -)
-        stream: '$ce-hero',
+        stream: '$ce-usecase',
         group: 'data',
         autoAck: false,
         bufferSize: 500,

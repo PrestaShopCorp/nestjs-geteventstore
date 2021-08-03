@@ -137,7 +137,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
           this.logger.log(
             `Check if persistent subscription "${subscription.group}" on stream ${subscription.stream} needs to be created `,
           );
-          if (subscription.options.resolveLinktos !== undefined) {
+          if (subscription.options?.resolveLinktos !== undefined) {
             this.logger.warn(
               "DEPRECATED: The resolveLinktos parameter shouln't be used anymore. The resolveLinkTos parameter should be used instead.",
             );
@@ -151,8 +151,8 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
             ...subscription.options,
             ...{
               resolveLinkTos:
-                subscription.options.resolveLinkTos ||
-                subscription.options.resolveLinktos,
+                subscription.options?.resolveLinkTos ||
+                subscription.options?.resolveLinktos,
             },
           };
           await this.eventStore.assertPersistentSubscriptions(
@@ -379,5 +379,12 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
 
   public getProjectionState(streamName: string): Promise<any> {
     return this.eventStore.getProjectionState(streamName);
+  }
+
+  public async deletePersistentSubscription(
+    streamName: string,
+    group: string,
+  ): Promise<void> {
+    return await this.eventStore.deletPersistentSubscription(streamName, group);
   }
 }

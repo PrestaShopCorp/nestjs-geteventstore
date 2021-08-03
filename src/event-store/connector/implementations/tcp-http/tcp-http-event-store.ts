@@ -380,6 +380,14 @@ export class TcpHttpEventStore implements EventStoreConnector {
   }
 
   public getProjectionState(streamName: string): Promise<any> {
-    return Promise.resolve(undefined);
+    throw new Error('not implemented in this version');
+  }
+
+  public deletPersistentSubscription(
+    streamName: string,
+    group: string,
+    deleteOptions?: any,
+  ): Promise<void> {
+    throw new Error('not implemented in this version');
   }
 }

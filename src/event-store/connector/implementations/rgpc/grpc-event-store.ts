@@ -260,12 +260,13 @@ export class RGPCEventStore implements EventStoreConnector {
           options ?? {},
         );
       case 'transient':
+        return await this.client.createTransientProjection(
+          projectionName,
+          query,
+          options ?? {},
+        );
       case 'oneTime': {
-        await this.client.createOneTimeProjection(query, {});
-        const list = await this.client
-          .listOneTimeProjections()
-          .catch((e) => console.log('e : ', e));
-        console.log('list : ', list);
+        await this.client.createOneTimeProjection(query, options ?? {});
       }
     }
   }

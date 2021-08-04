@@ -57,6 +57,10 @@ export class TcpHttpEventStore implements EventStoreConnector {
     this.initTcpConnection();
   }
 
+  updateProjection(projection: EventStoreProjection): Promise<void> {
+    throw new Error('not implemented in this version');
+  }
+
   public getConfig(): IEventStoreConfig {
     return this.config;
   }

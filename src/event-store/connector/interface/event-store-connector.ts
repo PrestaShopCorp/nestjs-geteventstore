@@ -95,11 +95,6 @@ export default interface EventStoreConnector {
     onSubscriptionDropped: (sub, reason, error) => void,
   ): Promise<EventStoreCatchUpSubscription | void>;
 
-  assertProjection(
-    projection: EventStoreProjection,
-    content: string,
-  ): Promise<void>;
-
   assertPersistentSubscriptions(
     subscription: IPersistentSubscriptionConfig,
     options: PersistentSubscriptionOptions,
@@ -112,6 +107,17 @@ export default interface EventStoreConnector {
     credentials: Credentials,
   ): Promise<void>;
 
+  deletPersistentSubscription(
+    streamName: string,
+    group: string,
+    deleteOptions?: any,
+  ): Promise<void>;
+
+  assertProjection(
+    projection: EventStoreProjection,
+    content?: string,
+  ): Promise<void>;
+
   createProjection(
     query: string,
     type: 'oneTime' | 'continuous' | 'transient',
@@ -119,11 +125,7 @@ export default interface EventStoreConnector {
     options?: any,
   ): Promise<void>;
 
-  getProjectionState(streamName: string): Promise<any>;
+  updateProjection(projection: EventStoreProjection): Promise<void>;
 
-  deletPersistentSubscription(
-    streamName: string,
-    group: string,
-    deleteOptions?: any,
-  ): Promise<void>;
+  getProjectionState(streamName: string): Promise<any>;
 }

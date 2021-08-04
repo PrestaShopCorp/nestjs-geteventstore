@@ -74,27 +74,6 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     this.eventStore.disconnect();
   }
 
-  async assertProjections(projections: EventStoreProjection[]) {
-    await Promise.all(
-      projections.map(async (projection) => {
-        let content;
-        if (projection.content) {
-          this.logger.log(
-            `Assert projection "${projection.name}" from content`,
-          );
-          content = projection.content;
-        } else if (projection.file) {
-          this.logger.log(
-            `Assert projection "${projection.name}" from file ${projection.file}`,
-          );
-          content = readFileSync(projection.file, 'utf8');
-        }
-        await this.eventStore.assertProjection(projection, content);
-        this.logger.log(`Projection "${projection.name}" asserted !`);
-      }),
-    );
-  }
-
   async subscribeToCatchUpSubscriptions(
     subscriptions: ICatchupSubscriptionConfig[],
   ) {
@@ -363,6 +342,24 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     );
   }
 
+  public async deletePersistentSubscription(
+    streamName: string,
+    group: string,
+  ): Promise<void> {
+    return await this.eventStore.deletPersistentSubscription(streamName, group);
+  }
+
+  async assertProjections(projections: EventStoreProjection[]) {
+    await Promise.all(
+      projections.map(async (projection) => {
+        this.logger.log(`Asserting projection "${projection.name}"...`);
+        const content = this.extractProjectionContent(projection);
+        await this.eventStore.assertProjection(projection, content);
+        this.logger.log(`Projection "${projection.name}" asserted !`);
+      }),
+    );
+  }
+
   public async createProjection(
     query: string,
     type: 'oneTime' | 'continuous' | 'transient',
@@ -381,10 +378,24 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     return this.eventStore.getProjectionState(streamName);
   }
 
-  public async deletePersistentSubscription(
-    streamName: string,
-    group: string,
+  public async updateProjections(
+    projections: EventStoreProjection[],
   ): Promise<void> {
-    return await this.eventStore.deletPersistentSubscription(streamName, group);
+    projections.map(async (projection: EventStoreProjection) => {
+      projection.content = this.extractProjectionContent(projection);
+      await this.eventStore.updateProjection(projection);
+    });
+  }
+
+  private extractProjectionContent(projection: EventStoreProjection) {
+    let content;
+    if (projection.content) {
+      this.logger.log(`"${projection.name}" projection in content`);
+      content = projection.content;
+    } else if (projection.file) {
+      this.logger.log(`"${projection.name}" projection in file`);
+      content = readFileSync(projection.file, 'utf8');
+    }
+    return content;
   }
 }

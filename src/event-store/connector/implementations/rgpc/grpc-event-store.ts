@@ -287,4 +287,12 @@ export class RGPCEventStore implements EventStoreConnector {
   public async getProjectionState(projectionName: string): Promise<void> {
     return this.client.getProjectionState(projectionName);
   }
+
+  public async updateProjection(
+    projection: EventStoreProjection,
+  ): Promise<void> {
+    return this.client.updateProjection(projection.name, projection.content, {
+      trackEmittedStreams: projection.trackEmittedStreams,
+    });
+  }
 }

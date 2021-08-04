@@ -26,22 +26,23 @@ export default class ProjectionController {
   }
 
   @Get('state/:projectionname')
-  public async updateProjection(
+  public async getProjectionState(
     @Param('projectionname') streamName: string,
   ): Promise<any> {
     return this.eventStoreService.getProjectionState(streamName);
   }
 
-  // @Get('getstate/:streamname/:group')
-  // public async getProjectionState(
-  //   @Param('streamname') streamName: string,
-  //   @Param('group') group: string,
-  //   @Body() options: PersistentSubscriptionOptions,
-  // ): Promise<void> {
-  //   return this.eventStoreService.updatePersistentSubscription(
-  //     streamName,
-  //     group,
-  //     options,
-  //   );
-  // }
+  @Get('update/')
+  public async updateProjectionState(): Promise<void> {
+    return this.eventStoreService.updateProjections([
+      {
+        name: 'some-projection-continuous2',
+        mode: 'continuous',
+        enabled: true,
+        checkPointsEnabled: true,
+        emitEnabled: true,
+        file: resolve(`${__dirname}/../projections/test-projection.js`),
+      },
+    ]);
+  }
 }

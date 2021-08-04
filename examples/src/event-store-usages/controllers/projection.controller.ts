@@ -1,7 +1,6 @@
 import { Body, Controller, Get, Param } from '@nestjs/common';
 import { EventStoreService } from '@nestjs-geteventstore/event-store';
 import { resolve } from 'path';
-import { readFileSync } from 'fs';
 
 @Controller('projection')
 export default class ProjectionController {
@@ -14,17 +13,16 @@ export default class ProjectionController {
 
   @Get('create/continuous/:name')
   public async createContinousProjection(@Param() name: string): Promise<void> {
-    const queryPath: string = resolve(
-      `${__dirname}/../projections/test-projection.js`,
-    );
-    const query: string = readFileSync(queryPath, 'utf8');
-
-    return this.eventStoreService.createProjection(
-      query,
-      'continuous',
-      name,
-      {},
-    );
+    return this.eventStoreService.assertProjections([
+      {
+        name: 'some-projection-continuous2',
+        file: resolve(`${__dirname}/../projections/test-projection.js`),
+        mode: 'continuous',
+        enabled: true,
+        checkPointsEnabled: true,
+        emitEnabled: true,
+      },
+    ]);
   }
 
   @Get('state/:projectionname')

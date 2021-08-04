@@ -61,13 +61,6 @@ export class RGPCEventStore implements EventStoreConnector {
     }
   }
 
-  public assertProjection(
-    projection: EventStoreProjection,
-    content: string,
-  ): Promise<void> {
-    return Promise.resolve(undefined);
-  }
-
   public async connect(): Promise<void> {
     this.client = EventStoreDBClient.connectionString(
       this.config.connectionSettings.connectionString,
@@ -275,6 +268,20 @@ export class RGPCEventStore implements EventStoreConnector {
         console.log('list : ', list);
       }
     }
+  }
+
+  public assertProjection(
+    projection: EventStoreProjection,
+    content: string,
+  ): Promise<void> {
+    return this.createProjection(
+      content ?? projection.content,
+      projection.mode,
+      projection.name,
+      {
+        trackEmittedStreams: projection.trackEmittedStreams,
+      },
+    ).catch((e) => console.log('e : ', e));
   }
 
   public async getProjectionState(projectionName: string): Promise<void> {

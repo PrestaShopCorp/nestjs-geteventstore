@@ -25,17 +25,24 @@ export default class EventWriterController {
     return event;
   }
 
-  @Get('write-event-batch/:streamname?')
+  @Get('write-event-batch/:streamname?/:eventtype?')
   public async writeEventBatch(
     @Param('streamname') streamName = '$test-stream',
+    @Param('eventtype') eventType = 'batch-event',
   ): Promise<IWriteEvent[]> {
-    const eventBatch: IWriteEvent[] = EventWriterController.getEventBatch(10);
+    const eventBatch: IWriteEvent[] = EventWriterController.getEventBatch(
+      10,
+      eventType,
+    );
     await this.eventStoreService.writeEvents(streamName, eventBatch);
 
     return eventBatch;
   }
 
-  private static getEventBatch(nbEvents: number): IWriteEvent[] {
+  private static getEventBatch(
+    nbEvents: number,
+    eventType: string,
+  ): IWriteEvent[] {
     const batch: IWriteEvent[] = [];
 
     for (let i = 0; i < nbEvents; i++) {
@@ -45,7 +52,7 @@ export default class EventWriterController {
           value: 'This event was sent at ' + new Date(),
         },
         eventId: v4(),
-        eventType: 'batch-event',
+        eventType: eventType,
       });
     }
 

@@ -91,10 +91,10 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     );
   }
 
-  async subscribeToVolatileSubscriptions(
+  public async subscribeToVolatileSubscriptions(
     subscriptions: IVolatileSubscriptionConfig[],
-  ) {
-    await Promise.all(
+  ): Promise<unknown> {
+    return await Promise.all(
       subscriptions.map((config: IVolatileSubscriptionConfig) => {
         return this.eventStore.subscribeToVolatileSubscription(
           config.stream,

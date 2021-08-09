@@ -16,7 +16,10 @@ import { ExpectedRevision } from '../../events';
 import { PersistentSubscriptionOptions } from './persistent-subscriptions-options';
 import { PersistentSubscriptionAssertResult } from './persistent-subscriptions-assert-result';
 import { AppendResult } from './append-result';
-import { Credentials } from '@eventstore/db-client/dist/types';
+import {
+  Credentials,
+  StreamSubscription,
+} from '@eventstore/db-client/dist/types';
 
 export const EVENT_STORE_CONNECTOR = Symbol();
 
@@ -84,7 +87,7 @@ export default interface EventStoreConnector {
     resolveLinkTos: boolean,
     onSubscriptionStart: (subscription) => void,
     onSubscriptionDropped: (sub, reason, error) => void,
-  ): Promise<EventStoreSubscription>;
+  ): Promise<EventStoreSubscription | StreamSubscription>;
 
   subscribeToCatchupSubscription(
     stream: string,

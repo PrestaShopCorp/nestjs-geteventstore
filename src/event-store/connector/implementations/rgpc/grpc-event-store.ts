@@ -1,8 +1,4 @@
 import { Logger } from '@nestjs/common';
-import {
-  EventStoreCatchUpSubscription,
-  EventStoreSubscription,
-} from 'node-eventstore-client';
 import { from, Observable } from 'rxjs';
 
 import {
@@ -26,7 +22,10 @@ import { Client } from '@eventstore/db-client/dist/Client';
 import { GrpcEventStoreConfig } from '../../../config/grpc/grpc-event-store-config';
 import EventStorePersistentSubscribtionOptions from '../../../subscriptions/event-store-persistent-subscribtion-options';
 import { ExpectedRevisionType } from '../../../events';
-import { Credentials } from '@eventstore/db-client/dist/types';
+import {
+  Credentials,
+  StreamSubscription,
+} from '@eventstore/db-client/dist/types';
 import { PersistentSubscriptionOptions } from '../../interface/persistent-subscriptions-options';
 import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils';
 import { isNil } from '@nestjs/common/utils/shared.utils';
@@ -98,7 +97,7 @@ export class RGPCEventStore implements EventStoreConnector {
     resolveLinkTos: boolean,
     onSubscriptionStart: (subscription) => void,
     onSubscriptionDropped: (sub, reason, error) => void,
-  ): Promise<EventStoreCatchUpSubscription | void> {
+  ): Promise<void> {
     return Promise.resolve(undefined);
   }
 
@@ -134,8 +133,12 @@ export class RGPCEventStore implements EventStoreConnector {
     resolveLinkTos: boolean,
     onSubscriptionStart: (subscription) => void,
     onSubscriptionDropped: (sub, reason, error) => void,
-  ): Promise<EventStoreSubscription> {
-    return Promise.resolve(undefined);
+  ): StreamSubscription {
+    return this.client.subscribeToStream(
+      stream,
+      { fromRevision: 'start' },
+      { autoDestroy: true },
+    );
   }
 
   public async writeEvents(

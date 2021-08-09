@@ -11,6 +11,7 @@ import { resolve } from 'path';
 import StreamReaderController from './controllers/stream-reader.controller';
 import MetadatasController from './controllers/metadatas/metadatas.controller';
 import ProjectionController from './controllers/projection.controller';
+import VolatileSubscriptionController from './controllers/volatile-subscription.controller';
 
 const eventStoreConfig: GrpcEventStoreConfig = {
   connectionSettings: {
@@ -58,6 +59,7 @@ const serverConfig: IEventStoreServiceConfig = {
     ProjectionController,
     EventWriterController,
     StreamReaderController,
+    VolatileSubscriptionController,
     PersistantSubscriptionController,
   ],
   imports: [

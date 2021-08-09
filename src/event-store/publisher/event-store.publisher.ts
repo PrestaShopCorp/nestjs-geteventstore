@@ -1,6 +1,6 @@
 import { hostname } from 'os';
 import { IEventPublisher } from '@nestjs/cqrs';
-import { Logger } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { basename, extname } from 'path';
 
 import {
@@ -9,8 +9,11 @@ import {
   PublicationContextInterface,
 } from '../../interfaces';
 import { WriteResult } from 'node-eventstore-client';
-import { EventStoreService } from '../event-store.service';
 import { ExpectedRevision } from '../events';
+import {
+  EVENT_STORE_SERVICE,
+  IEventStoreService,
+} from '../services/interfaces/event-store.service.interface';
 
 export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
   implements IEventPublisher<EventBase>
@@ -20,7 +23,8 @@ export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
   //   empty();
 
   constructor(
-    private readonly eventStoreService: EventStoreService,
+    @Inject(EVENT_STORE_SERVICE)
+    private readonly eventStoreService: IEventStoreService,
     private readonly config: IWriteEventBusConfig,
   ) {
     // if (config.onPublishFail) {

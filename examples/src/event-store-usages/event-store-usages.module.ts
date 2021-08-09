@@ -27,22 +27,22 @@ const eventStoreConfig: GrpcEventStoreConfig = {
 const serverConfig: IEventStoreServiceConfig = {
   projections: [
     {
+      enabled: true,
+      emitEnabled: true,
+      mode: 'continuous',
+      checkPointsEnabled: true,
       name: 'some-projection-continuous',
       file: resolve(`${__dirname}/projections/test-projection.js`),
-      mode: 'continuous',
-      enabled: true,
-      checkPointsEnabled: true,
-      emitEnabled: true,
     },
   ],
   subscriptions: {
     persistent: [
       {
-        // Event stream category (before the -)
-        stream: '$ce-usecase',
         group: 'data',
         autoAck: false,
         bufferSize: 500,
+        // Event stream category (before the -)
+        stream: '$ce-usecase',
         // Subscription is created with this options
         options: {
           resolveLinkTos: true,

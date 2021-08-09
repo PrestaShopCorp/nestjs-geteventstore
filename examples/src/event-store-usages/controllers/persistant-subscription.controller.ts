@@ -3,16 +3,23 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
   Post,
   Put,
 } from '@nestjs/common';
-import { EventStoreService } from '@nestjs-geteventstore/event-store';
 import { PersistentSubscriptionOptions } from '@nestjs-geteventstore/event-store/connector/interface/persistent-subscriptions-options';
+import {
+  EVENT_STORE_SERVICE,
+  IEventStoreService,
+} from '@nestjs-geteventstore/event-store/services/interfaces/event-store.service.interface';
 
 @Controller('persistent-subscription')
 export default class PersistantSubscriptionController {
-  constructor(private readonly eventStoreService: EventStoreService) {}
+  constructor(
+    @Inject(EVENT_STORE_SERVICE)
+    private readonly eventStoreService: IEventStoreService,
+  ) {}
 
   @Post('create/:streamname/:group')
   public async createPersistentSubscription(
@@ -44,7 +51,7 @@ export default class PersistantSubscriptionController {
     @Param('streamname') stream: string,
     @Param('group') group: string,
     @Body() persistentSubscriptionOptions: PersistentSubscriptionOptions,
-  ): Promise<void> {
+  ): Promise<unknown> {
     return this.eventStoreService.subscribeToPersistentSubscriptions([
       {
         stream,

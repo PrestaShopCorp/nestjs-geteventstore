@@ -126,7 +126,7 @@ export default interface EventStoreConnector {
     type: 'oneTime' | 'continuous' | 'transient',
     projectionName?: string,
     options?: any,
-  ): Promise<void>;
+  ): Promise<any>;
 
   updateProjection(projection: EventStoreProjection): Promise<void>;
 

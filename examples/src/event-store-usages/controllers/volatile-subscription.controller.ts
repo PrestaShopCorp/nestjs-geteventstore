@@ -1,14 +1,20 @@
-import { Controller, Get, Logger, Param } from '@nestjs/common';
-import { EventStoreService } from '@nestjs-geteventstore/event-store';
+import { Controller, Get, Inject, Logger, Param } from '@nestjs/common';
 import { IVolatileSubscriptionConfig } from '@nestjs-geteventstore/interfaces';
 import { StreamSubscription } from '@eventstore/db-client/dist/types';
 import { from, Subject } from 'rxjs';
+import {
+  EVENT_STORE_SERVICE,
+  IEventStoreService,
+} from '@nestjs-geteventstore/event-store/services/interfaces/event-store.service.interface';
 
 @Controller('volatile-subscription')
 export default class VolatileSubscriptionController {
   private readonly logger = new Logger(this.constructor.name);
 
-  constructor(private readonly eventStoreService: EventStoreService) {}
+  constructor(
+    @Inject(EVENT_STORE_SERVICE)
+    private readonly eventStoreService: IEventStoreService,
+  ) {}
 
   @Get('subscribe/:stream')
   public async subscribeVolatileSubscription(

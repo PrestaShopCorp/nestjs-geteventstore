@@ -1,11 +1,17 @@
-import { Body, Controller, Get, Param } from '@nestjs/common';
-import { EventStoreService } from '@nestjs-geteventstore/event-store';
+import { Controller, Get, Inject, Param } from '@nestjs/common';
 import { resolve } from 'path';
 import { readFileSync } from 'fs';
+import {
+  EVENT_STORE_SERVICE,
+  IEventStoreService,
+} from '@nestjs-geteventstore/event-store/services/interfaces/event-store.service.interface';
 
 @Controller('projection')
 export default class ProjectionController {
-  constructor(private readonly eventStoreService: EventStoreService) {}
+  constructor(
+    @Inject(EVENT_STORE_SERVICE)
+    private readonly eventStoreService: IEventStoreService,
+  ) {}
 
   @Get('create/oneTime')
   public async createOneTimeProjection(): Promise<void> {

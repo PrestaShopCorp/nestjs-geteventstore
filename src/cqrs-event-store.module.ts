@@ -17,8 +17,6 @@ import {
   IEventStoreModuleAsyncConfig,
   IEventStoreServiceConfig,
 } from './event-store/config';
-import { ExplorerService } from '@nestjs/cqrs/dist/services/explorer.service';
-import { EventStoreService } from './event-store';
 
 export type EventStoreModuleConfig =
   | IEventStoreModuleAsyncConfig

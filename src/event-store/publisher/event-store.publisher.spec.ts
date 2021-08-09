@@ -2,9 +2,10 @@ import { EventStorePublisher } from './event-store.publisher';
 import { IWriteEvent, IWriteEventBusConfig } from '../../interfaces';
 import { TcpHttpEventStore } from '../connector/implementations/tcp-http/tcp-http-event-store';
 import { of } from 'rxjs';
-import spyOn = jest.spyOn;
-import { EventStoreService } from '../event-store.service';
+import { EventStoreService } from '../services/event-store.service';
 import { ExpectedRevision, ExpectedRevisionType } from '../events';
+import { IEventHandler } from '../services/event.handler.interface';
+import spyOn = jest.spyOn;
 
 jest.mock('../connector/implementations/tcp-http/tcp-http-event-store');
 
@@ -22,7 +23,8 @@ describe('EventStorePublisher', () => {
       http: undefined,
       tcpConnectionName: '',
     });
-    eventStoreService = new EventStoreService(eventStore, {});
+    const eventHandlerMock: IEventHandler = { onEvent: jest.fn() };
+    eventStoreService = new EventStoreService(eventStore, {}, eventHandlerMock);
     publisher = new EventStorePublisher<IWriteEvent>(
       eventStoreService,
       publisherConfig,

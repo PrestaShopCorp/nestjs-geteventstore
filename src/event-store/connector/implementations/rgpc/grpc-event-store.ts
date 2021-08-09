@@ -127,13 +127,13 @@ export class RGPCEventStore implements EventStoreConnector {
     return persistentSubscription;
   }
 
-  public subscribeToVolatileSubscription(
+  public async subscribeToVolatileSubscription(
     stream: string,
     onEvent: (sub, payload) => void,
     resolveLinkTos: boolean,
     onSubscriptionStart: (subscription) => void,
     onSubscriptionDropped: (sub, reason, error) => void,
-  ): StreamSubscription {
+  ): Promise<StreamSubscription> {
     return this.client.subscribeToStream(
       stream,
       { fromRevision: 'start' },

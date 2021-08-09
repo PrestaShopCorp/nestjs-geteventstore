@@ -1,14 +1,20 @@
-import { Body, Controller, Get, Optional, Param } from '@nestjs/common';
-import { EventStoreService } from '@nestjs-geteventstore/event-store';
+import { Body, Controller, Get, Inject, Optional, Param } from '@nestjs/common';
 import { ExpectedRevision } from '@nestjs-geteventstore/event-store/events';
 import { AppendResult } from '@eventstore/db-client';
 import MetadatasDto from './metadatas-dto';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import {
+  EVENT_STORE_SERVICE,
+  IEventStoreService,
+} from '@nestjs-geteventstore/event-store/services/interfaces/event-store.service.interface';
 
 @Controller('metadatas')
 export default class MetadatasController {
-  constructor(private readonly eventStoreService: EventStoreService) {}
+  constructor(
+    @Inject(EVENT_STORE_SERVICE)
+    private readonly eventStoreService: IEventStoreService,
+  ) {}
 
   @Get('write/:streamname')
   public writeMetadatas(

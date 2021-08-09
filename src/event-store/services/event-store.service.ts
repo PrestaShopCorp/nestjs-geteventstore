@@ -1,7 +1,4 @@
-import {
-  PersistentSubscriptionNakEventAction,
-  WriteResult,
-} from 'node-eventstore-client';
+import { WriteResult } from 'node-eventstore-client';
 import {
   Inject,
   Injectable,
@@ -14,27 +11,33 @@ import { readFileSync } from 'fs';
 
 import {
   EventStoreProjection,
-  IAcknowledgeableEvent,
   IBaseEvent,
   ICatchupSubscriptionConfig,
   IPersistentSubscriptionConfig,
   IVolatileSubscriptionConfig,
   IWriteEvent,
-} from '../interfaces';
-import { ReadEventBus } from '../cqrs';
-import { EVENT_STORE_SERVICE_CONFIG } from '../constants';
+} from '../../interfaces';
+import { ReadEventBus } from '../../cqrs';
+import { EVENT_STORE_SERVICE_CONFIG } from '../../constants';
 import { Observable } from 'rxjs';
 import EventStoreConnector, {
   EVENT_STORE_CONNECTOR,
-} from './connector/interface/event-store-connector';
-import { IEventStoreServiceConfig } from './config';
-import { ExpectedRevision, ExpectedRevisionType } from './events';
+} from '../connector/interface/event-store-connector';
+import { IEventStoreServiceConfig } from '../config';
+import { ExpectedRevision, ExpectedRevisionType } from '../events';
 import { AppendResult } from '@eventstore/db-client';
 import { Credentials } from '@eventstore/db-client/dist/types';
-import { PersistentSubscriptionOptions } from './connector/interface/persistent-subscriptions-options';
+import { PersistentSubscriptionOptions } from '../connector/interface/persistent-subscriptions-options';
+import { IEventStoreService } from './interfaces/event-store.service.interface';
+import {
+  EVENT_STORE_EVENT_HANDLER,
+  IEventHandler,
+} from './event.handler.interface';
 
 @Injectable()
-export class EventStoreService implements OnModuleDestroy, OnModuleInit {
+export class EventStoreService
+  implements OnModuleDestroy, OnModuleInit, IEventStoreService
+{
   private logger: Logger = new Logger(this.constructor.name);
 
   constructor(
@@ -42,14 +45,21 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     private readonly eventStore: EventStoreConnector,
     @Inject(EVENT_STORE_SERVICE_CONFIG)
     private readonly config: IEventStoreServiceConfig,
+    @Inject(EVENT_STORE_EVENT_HANDLER)
+    private readonly eventHandler: IEventHandler,
     @Optional() private readonly eventBus?: ReadEventBus,
   ) {}
 
-  async onModuleInit() {
+  public async onModuleInit(): Promise<void> {
     return await this.connect();
   }
 
-  async connect() {
+  public onModuleDestroy(): void {
+    this.logger.log(`Destroy, disconnect EventStore`);
+    this.eventStore.disconnect();
+  }
+
+  public async connect(): Promise<void> {
     await this.eventStore.connect();
     this.logger.debug(`EventStore connected`);
 
@@ -65,19 +75,12 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
         this.config.subscriptions.persistent || [],
       );
     }
-    // Wait for everything to be up before application boot
-    return Promise.resolve(this);
   }
 
-  onModuleDestroy(): any {
-    this.logger.log(`Destroy, disconnect EventStore`);
-    this.eventStore.disconnect();
-  }
-
-  async subscribeToCatchUpSubscriptions(
+  public async subscribeToCatchUpSubscriptions(
     subscriptions: ICatchupSubscriptionConfig[],
-  ) {
-    await Promise.all(
+  ): Promise<unknown> {
+    return await Promise.all(
       subscriptions.map((config: ICatchupSubscriptionConfig) => {
         return this.eventStore.subscribeToCatchupSubscription(
           config.stream,
@@ -107,9 +110,9 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     );
   }
 
-  async subscribeToPersistentSubscriptions(
+  public async subscribeToPersistentSubscriptions(
     subscriptions: IPersistentSubscriptionConfig[],
-  ) {
+  ): Promise<unknown> {
     await Promise.all(
       subscriptions.map(async (subscription) => {
         try {
@@ -145,7 +148,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
         }
       }),
     );
-    await Promise.all(
+    return await Promise.all(
       subscriptions.map(async (config) => {
         this.logger.log(
           `Connecting to persistent subscription "${config.group}" on stream ${config.stream}`,
@@ -168,114 +171,8 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     if (this.config.onEvent) {
       return await this.onEvent(subscription, payload);
     }
-    // do nothing, as we have not defined an event bus
-    if (!this.eventBus) {
-      return;
-    }
-    // use default onEvent
-    const { event } = payload;
-    // TODO allow unresolved event
-    if (!payload.isResolved) {
-      this.logger.warn(
-        `Ignore unresolved event from stream ${payload.originalStreamId} with ID ${payload.originalEvent.eventId}`,
-      );
-      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
-        await subscription.acknowledge([payload]);
-      }
-      return;
-    }
-    // TODO handle not JSON
-    if (!event.isJson) {
-      // TODO add info on error not coded
-      this.logger.warn(
-        `Received event that could not be resolved! stream ${event.eventStreamId} type ${event.eventType} id ${event.eventId} `,
-      );
-      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
-        await subscription.acknowledge([payload]);
-      }
-      return;
-    }
 
-    // TODO throw error
-    let data = {};
-    try {
-      data = JSON.parse(event.data.toString());
-    } catch (e) {
-      this.logger.warn(
-        `Received event of type ${event.eventType} with shitty data acknowledge`,
-      );
-      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
-        await subscription.acknowledge([payload]);
-      }
-      return;
-    }
-
-    // we do not add default metadata as
-    // we do not want to modify
-    // read models
-    let metadata = {};
-    if (event.metadata.toString()) {
-      metadata = { ...metadata, ...JSON.parse(event.metadata.toString()) };
-    }
-
-    const finalEvent = this.eventBus.map<IAcknowledgeableEvent>(data, {
-      metadata,
-      eventStreamId: event.eventStreamId,
-      eventId: event.eventId,
-      eventNumber: event.eventNumber.low,
-      eventType: event.eventType,
-      originalEventId: payload.originalEvent.eventId || event.eventId,
-    });
-
-    if (!finalEvent) {
-      this.logger.warn(
-        `Received event of type ${event.eventType} with no declared handler acknowledge`,
-      );
-      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
-        await subscription.acknowledge([payload]);
-      }
-      return;
-    }
-    // If event wants to handle ack/nack
-    // only for persistent
-    if (subscription.hasOwnProperty('_autoAck')) {
-      if (
-        typeof finalEvent.ack == 'function' &&
-        typeof finalEvent.nack == 'function'
-      ) {
-        const ack = async () => {
-          this.logger.debug(
-            `Acknowledge event ${event.eventType} with id ${event.eventId}`,
-          );
-          return subscription.acknowledge([payload]);
-        };
-        const nack = async (
-          action: PersistentSubscriptionNakEventAction,
-          reason: string,
-        ) => {
-          this.logger.debug(
-            `Nak and ${
-              Object.keys(PersistentSubscriptionNakEventAction)[action]
-            } for event ${event.eventType} with id ${
-              event.eventId
-            } : reason ${reason}`,
-          );
-          return subscription.fail([payload], action, reason);
-        };
-
-        finalEvent.ack = ack;
-        finalEvent.nack = nack;
-      } else {
-        // Otherwise manage here
-        this.logger.debug(
-          `Auto acknowledge event ${event.eventType} with id ${event.eventId}`,
-        );
-        subscription.acknowledge([payload]);
-      }
-    }
-
-    // Dispatch to event handlers and sagas
-    await this.eventBus.publish(finalEvent);
+    return this.eventHandler.onEvent(subscription, payload);
   }
 
   public writeEvents(
@@ -301,7 +198,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
   public writeMetadata(
     stream: string,
     expectedStreamMetadataVersion: ExpectedRevisionType = ExpectedRevision.Any,
-    streamMetadata: any,
+    streamMetadata: unknown,
   ): Observable<WriteResult | AppendResult> {
     return this.eventStore.writeMetadata(
       stream,
@@ -319,8 +216,8 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     group: string,
     persistentSubscriptionOptions?: PersistentSubscriptionOptions,
     credentials?: Credentials,
-  ) {
-    return await this.eventStore.createPersistentSubscription(
+  ): Promise<void> {
+    await this.eventStore.createPersistentSubscription(
       streamName,
       group,
       persistentSubscriptionOptions,
@@ -334,7 +231,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     persistentSubscriptionOptions: PersistentSubscriptionOptions,
     credentials?: Credentials,
   ): Promise<void> {
-    return await this.eventStore.updatePersistentSubscription(
+    await this.eventStore.updatePersistentSubscription(
       streamName,
       group,
       persistentSubscriptionOptions,
@@ -346,10 +243,12 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     streamName: string,
     group: string,
   ): Promise<void> {
-    return await this.eventStore.deletPersistentSubscription(streamName, group);
+    await this.eventStore.deletPersistentSubscription(streamName, group);
   }
 
-  async assertProjections(projections: EventStoreProjection[]) {
+  public async assertProjections(
+    projections: EventStoreProjection[],
+  ): Promise<void> {
     await Promise.all(
       projections.map(async (projection) => {
         this.logger.log(`Asserting projection "${projection.name}"...`);
@@ -365,7 +264,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     type: 'oneTime' | 'continuous' | 'transient',
     projectionName?: string,
     options?: any,
-  ) {
+  ): Promise<any> {
     return this.eventStore.createProjection(
       query,
       type,
@@ -387,7 +286,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     });
   }
 
-  private extractProjectionContent(projection: EventStoreProjection) {
+  public extractProjectionContent(projection: EventStoreProjection) {
     let content;
     if (projection.content) {
       this.logger.log(`"${projection.name}" projection in content`);

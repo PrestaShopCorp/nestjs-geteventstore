@@ -1,6 +1,6 @@
 import { CommandBus, EventBus as Parent } from '@nestjs/cqrs';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { EventStorePublisher, EventStoreService } from '../event-store';
+import { EventStorePublisher } from '../event-store';
 import {
   IWriteEvent,
   IWriteEventBusConfig,
@@ -10,6 +10,10 @@ import { WRITE_EVENT_BUS_CONFIG } from '../constants';
 import { ModuleRef } from '@nestjs/core';
 import { EventBusPrepublishService } from './event-bus-prepublish.service';
 import { InvalidEventException } from '../exceptions/invalid-event.exception';
+import {
+  EVENT_STORE_SERVICE,
+  IEventStoreService,
+} from '../event-store/services/interfaces/event-store.service.interface';
 
 // add next, pass onError
 
@@ -19,7 +23,8 @@ export class WriteEventBus<
 > extends Parent<EventBase> {
   private logger = new Logger(this.constructor.name);
   constructor(
-    private readonly eventstoreService: EventStoreService,
+    @Inject(EVENT_STORE_SERVICE)
+    private readonly eventstoreService: IEventStoreService,
     @Inject(WRITE_EVENT_BUS_CONFIG)
     private readonly config: IWriteEventBusConfig,
     private readonly prepublish: EventBusPrepublishService,

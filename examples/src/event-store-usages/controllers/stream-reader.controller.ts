@@ -3,15 +3,22 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Inject,
   Optional,
   Param,
 } from '@nestjs/common';
-import { EventStoreService } from '@nestjs-geteventstore/event-store';
 import { IBaseEvent } from '@nestjs-geteventstore/interfaces';
+import {
+  EVENT_STORE_SERVICE,
+  IEventStoreService,
+} from '@nestjs-geteventstore/event-store/services/interfaces/event-store.service.interface';
 
 @Controller('stream-reader')
 export default class StreamReaderController {
-  constructor(private readonly eventStoreService: EventStoreService) {}
+  constructor(
+    @Inject(EVENT_STORE_SERVICE)
+    private readonly eventStoreService: IEventStoreService,
+  ) {}
 
   @Get(':streamname?')
   public async readOnStream(

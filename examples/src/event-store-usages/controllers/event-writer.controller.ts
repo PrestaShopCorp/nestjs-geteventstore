@@ -1,11 +1,17 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { EventStoreService } from '@nestjs-geteventstore/event-store';
+import { Controller, Get, Inject, Param } from '@nestjs/common';
 import { v4 } from 'uuid';
 import { IWriteEvent } from '@nestjs-geteventstore/interfaces';
+import {
+  EVENT_STORE_SERVICE,
+  IEventStoreService,
+} from '@nestjs-geteventstore/event-store/services/interfaces/event-store.service.interface';
 
 @Controller('event-writer')
 export default class EventWriterController {
-  constructor(private readonly eventStoreService: EventStoreService) {}
+  constructor(
+    @Inject(EVENT_STORE_SERVICE)
+    private readonly eventStoreService: IEventStoreService,
+  ) {}
 
   @Get('write-one-event/:streamname?')
   public async writeOneEvent(

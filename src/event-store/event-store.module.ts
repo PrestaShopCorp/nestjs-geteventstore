@@ -14,15 +14,27 @@ import {
 import { RGPCEventStore } from './connector/implementations/rgpc/grpc-event-store';
 import { GrpcEventStoreConfig } from './config/grpc/grpc-event-store-config';
 import TcpHttpEventStoreConfig from './config/tcp-http/tcp-http-event-store.config';
+import { EVENT_STORE_EVENT_HANDLER } from './services/event.handler.interface';
+import EventHandler from './services/event.handler';
+import { EVENT_STORE_SERVICE } from './services/interfaces/event-store.service.interface';
 
 @Module({
   providers: [
-    EventStoreService,
     EventStoreHealthIndicator,
     EventStoreSubscriptionHealthIndicator,
+    {
+      provide: EVENT_STORE_EVENT_HANDLER,
+      useClass: EventHandler,
+    },
+    {
+      provide: EVENT_STORE_SERVICE,
+      useClass: EventStoreService,
+    },
   ],
   exports: [
-    EventStoreService,
+    EVENT_STORE_SERVICE,
+    EVENT_STORE_EVENT_HANDLER,
+
     EventStoreHealthIndicator,
     EventStoreSubscriptionHealthIndicator,
   ],
@@ -31,7 +43,7 @@ export class EventStoreModule {
   static async register(
     config: IEventStoreServiceConfig | Promise<IEventStoreServiceConfig>,
     serviceConfig: IEventStoreServiceConfig = {},
-  ) {
+  ): Promise<DynamicModule> {
     return {
       module: EventStoreModule,
       providers: [
@@ -56,22 +68,6 @@ export class EventStoreModule {
           useValue: serviceConfig,
         },
         await this.getEventStoreConnector(options),
-      ],
-    };
-  }
-
-  static async registerRgpc(
-    config: IEventStoreServiceConfig | Promise<IEventStoreServiceConfig>,
-    serviceConfig: IEventStoreServiceConfig,
-  ): Promise<DynamicModule> {
-    return {
-      module: EventStoreModule,
-      providers: [
-        {
-          provide: EVENT_STORE_SERVICE_CONFIG,
-          useValue: serviceConfig,
-        },
-        await this.getEventStoreConnector(config),
       ],
     };
   }

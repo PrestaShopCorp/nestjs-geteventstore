@@ -1,6 +1,5 @@
 import { Body, Controller, Get, Inject, Optional, Param } from '@nestjs/common';
 import { ExpectedRevision } from '@nestjs-geteventstore/event-store/events';
-import { AppendResult } from '@eventstore/db-client';
 import MetadatasDto from './metadatas-dto';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -8,6 +7,7 @@ import {
   EVENT_STORE_SERVICE,
   IEventStoreService,
 } from '@nestjs-geteventstore/event-store/services/interfaces/event-store.service.interface';
+import { AppendResult } from '@nestjs-geteventstore/event-store/connector/interface/append-result';
 
 @Controller('metadatas')
 export default class MetadatasController {

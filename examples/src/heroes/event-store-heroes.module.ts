@@ -1,6 +1,5 @@
 import { Logger, Module } from '@nestjs/common';
 import { TerminusModule } from '@nestjs/terminus';
-import { ProjectionMode } from 'geteventstore-promise';
 import { ContextModule } from 'nestjs-context';
 import { LoggerModule } from 'nestjs-pino-stackdriver/dist';
 import { resolve } from 'path';
@@ -18,10 +17,19 @@ import { EventStoreProjection } from '@nestjs-geteventstore/interfaces';
 import { CqrsEventStoreModule } from '@nestjs-geteventstore/cqrs-event-store.module';
 
 const tcpHttpEvenStoreConfig = {
-  defaultUserCredentials: {
+  credentials: {
     username: process.env.EVENTSTORE_CREDENTIALS_USERNAME || 'admin',
     password: process.env.EVENTSTORE_CREDENTIALS_PASSWORD || 'changeit',
   },
+  tcp: {
+    host: process.env.EVENTSTORE_TCP_HOST || 'localhost',
+    port: +process.env.EVENTSTORE_TCP_PORT || 1113,
+  },
+  http: {
+    host: process.env.EVENTSTORE_HTTP_HOST || 'http://localhost',
+    port: +process.env.EVENTSTORE_HTTP_PORT || 2113,
+  },
+
   options: {
     log: {
       debug: (str, ...args) => {
@@ -58,10 +66,11 @@ const tcpHttpEvenStoreConfig = {
 
 const rGPCEventStoreConf = {
   ...tcpHttpEvenStoreConfig,
-  connectionSettings: {
-    connectionString:
-      process.env.CONNECTION_STRING || 'esdb://localhost:20113?tls=false',
-  },
+  // Uncomment to have a rGPC conf
+  // connectionSettings: {
+  //   connectionString:
+  //     process.env.CONNECTION_STRING || 'esdb://localhost:20113?tls=false',
+  // },
 };
 
 const subscriptions = {

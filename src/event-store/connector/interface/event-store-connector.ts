@@ -1,7 +1,9 @@
 import {
   EventStoreProjection,
+  ICatchupSubscriptionConfig,
   IPersistentSubscriptionConfig,
   ISubscriptionStatus,
+  IVolatileSubscriptionConfig,
   IWriteEvent,
 } from '../../../interfaces';
 import { Observable } from 'rxjs';
@@ -41,7 +43,7 @@ export default interface EventStoreConnector {
     stream: string,
     events: IWriteEvent[],
     expectedVersion: ExpectedRevision,
-  ): Promise<WriteResult | void>;
+  ): Promise<AppendResult>;
 
   writeMetadata(
     stream: string,
@@ -91,7 +93,13 @@ export default interface EventStoreConnector {
 
   subscribeToCatchupSubscription(
     stream: string,
-    onEvent: (sub, payload) => void,
+    onEvent: (
+      subscription:
+        | ICatchupSubscriptionConfig
+        | IVolatileSubscriptionConfig
+        | IPersistentSubscriptionConfig,
+      payload: unknown,
+    ) => void,
     lastCheckpoint: number,
     resolveLinkTos: boolean,
     onSubscriptionStart: (subscription) => void,
@@ -110,7 +118,7 @@ export default interface EventStoreConnector {
     credentials: Credentials,
   ): Promise<void>;
 
-  deletPersistentSubscription(
+  deletePersistentSubscription(
     streamName: string,
     group: string,
     deleteOptions?: any,

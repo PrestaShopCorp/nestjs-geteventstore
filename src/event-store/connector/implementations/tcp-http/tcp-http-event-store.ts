@@ -94,10 +94,10 @@ export class TcpHttpEventStore implements EventStoreConnector {
   }
 
   public writeEvents(
-    stream,
+    stream: string,
     events: IWriteEvent[],
     expectedVersion = ExpectedRevision.Any,
-  ): Promise<WriteResult> {
+  ): Promise<any> {
     return from(events)
       .pipe(
         map((event: IWriteEvent) =>
@@ -387,7 +387,7 @@ export class TcpHttpEventStore implements EventStoreConnector {
     throw new Error('not implemented in this version');
   }
 
-  public deletPersistentSubscription(
+  public deletePersistentSubscription(
     streamName: string,
     group: string,
     deleteOptions?: any,

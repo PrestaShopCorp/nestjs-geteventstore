@@ -1,7 +1,6 @@
-import { IEvent } from '@nestjs/cqrs';
 import { EventMetadataDto } from '../../dto';
 
-export interface IBaseEvent extends IEvent {
+export interface IBaseEvent {
   data: any;
   metadata?: Partial<EventMetadataDto>;
   eventId?: string;

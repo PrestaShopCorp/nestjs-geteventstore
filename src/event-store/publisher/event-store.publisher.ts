@@ -8,12 +8,12 @@ import {
   IWriteEventBusConfig,
   PublicationContextInterface,
 } from '../../interfaces';
-import { WriteResult } from 'node-eventstore-client';
 import { ExpectedRevision } from '../events';
 import {
   EVENT_STORE_SERVICE,
   IEventStoreService,
 } from '../services/interfaces/event-store.service.interface';
+import { AppendResult } from '../connector/interface/append-result';
 
 export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
   implements IEventPublisher<EventBase>
@@ -34,12 +34,11 @@ export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
 
   private writeEvents<T extends EventBase>(
     events: T[],
-    context: PublicationContextInterface = {
-      streamName: this.getStreamName(events[0].metadata.correlation_id),
-    },
-  ): Promise<WriteResult | void> {
+    context: PublicationContextInterface = {},
+  ): Promise<AppendResult> {
     const {
-      streamName,
+      streamName = context?.streamName ||
+        this.getStreamName(events[0].metadata.correlation_id),
       expectedVersion = ExpectedRevision.Any,
       streamMetadata,
       expectedMetadataVersion = ExpectedRevision.Any,

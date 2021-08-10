@@ -6,10 +6,10 @@ import { IEventStoreConfig } from '../event-store-config.interface';
 export interface IHttpEndpoint extends TcpEndPoint {}
 
 export default interface TcpHttpEventStoreConfig extends IEventStoreConfig {
-  credentials: UserCredentials;
-  tcpConnectionName: string;
+  credentials?: UserCredentials;
+  tcpConnectionName?: string;
   tcp?: TcpEndPoint;
-  http: IHttpEndpoint;
+  http?: IHttpEndpoint;
   clusterDns?: string;
   options?: ConnectionSettings;
   onTcpConnected?: (eventStore: EventStoreConnector) => void;

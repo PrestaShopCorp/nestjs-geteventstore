@@ -2,14 +2,14 @@ import { IBaseEvent, IWriteEvent } from '../../../interfaces';
 import { WriteResult } from 'node-eventstore-client';
 import { ExpectedRevisionType } from '../../events';
 import { Observable } from 'rxjs';
-import { AppendResult } from '@eventstore/db-client';
+import { AppendResult } from '../../connector/interface/append-result';
 
 export interface IStreamService {
   writeEvents(
     stream: string,
     events: IWriteEvent[],
     expectedVersion?,
-  ): Promise<WriteResult | void>;
+  ): Promise<AppendResult>;
 
   readFromStream(
     stream: string,

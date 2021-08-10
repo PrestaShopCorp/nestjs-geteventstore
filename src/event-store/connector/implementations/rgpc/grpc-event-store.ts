@@ -11,7 +11,6 @@ import {
 import EventStoreConnector from '../../interface/event-store-connector';
 import {
   AppendExpectedRevision,
-  AppendResult,
   EventStoreDBClient,
   EventType,
   jsonEvent,
@@ -29,6 +28,7 @@ import {
 import { PersistentSubscriptionOptions } from '../../interface/persistent-subscriptions-options';
 import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils';
 import { isNil } from '@nestjs/common/utils/shared.utils';
+import { AppendResult } from '../../interface/append-result';
 
 export class RGPCEventStore implements EventStoreConnector {
   private logger: Logger = new Logger(this.constructor.name);
@@ -145,11 +145,11 @@ export class RGPCEventStore implements EventStoreConnector {
     stream: string,
     events: IWriteEvent[],
     expectedRevision: ExpectedRevisionType,
-  ): Promise<void> {
+  ): Promise<AppendResult> {
     if (events.length === 0) {
       return null;
     }
-    await this.client.appendToStream(
+    return await this.client.appendToStream(
       stream,
       events.map((event) => {
         return jsonEvent({
@@ -237,7 +237,7 @@ export class RGPCEventStore implements EventStoreConnector {
     );
   }
 
-  public async deletPersistentSubscription(
+  public async deletePersistentSubscription(
     streamName: string,
     group: string,
     deleteOptions?: any,

@@ -9,11 +9,12 @@ export default class EventHandler implements IEventHandler {
 
   constructor(@Optional() private readonly eventBus?: ReadEventBus) {}
 
-  public async onEvent(subscription, payload): Promise<any> {
+  public async onEvent(subscription: any, payload: any): Promise<any> {
     // do nothing, as we have not defined an event bus
     if (!this.eventBus) {
       return;
     }
+
     // use default onEvent
     const { event } = payload;
     // TODO allow unresolved event

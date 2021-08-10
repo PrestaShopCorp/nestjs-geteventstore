@@ -25,7 +25,6 @@ import EventStoreConnector, {
 } from '../connector/interface/event-store-connector';
 import { IEventStoreServiceConfig } from '../config';
 import { ExpectedRevision, ExpectedRevisionType } from '../events';
-import { AppendResult } from '@eventstore/db-client';
 import { Credentials } from '@eventstore/db-client/dist/types';
 import { PersistentSubscriptionOptions } from '../connector/interface/persistent-subscriptions-options';
 import { IEventStoreService } from './interfaces/event-store.service.interface';
@@ -33,6 +32,7 @@ import {
   EVENT_STORE_EVENT_HANDLER,
   IEventHandler,
 } from './event.handler.interface';
+import { AppendResult } from '../connector/interface/append-result';
 
 @Injectable()
 export class EventStoreService
@@ -84,7 +84,11 @@ export class EventStoreService
       subscriptions.map((config: ICatchupSubscriptionConfig) => {
         return this.eventStore.subscribeToCatchupSubscription(
           config.stream,
-          (subscription, payload) => this.onEvent(subscription, payload),
+          (subscription, payload) => {
+            return this.config.onEvent
+              ? this.config.onEvent(subscription, payload)
+              : this.onEvent(subscription, payload);
+          },
           config.lastCheckpoint,
           config.resolveLinkTos,
           config.onSubscriptionStart,
@@ -101,7 +105,11 @@ export class EventStoreService
       subscriptions.map((config: IVolatileSubscriptionConfig) => {
         return this.eventStore.subscribeToVolatileSubscription(
           config.stream,
-          (subscription, payload) => this.onEvent(subscription, payload),
+          (subscription, payload) => {
+            return this.config.onEvent
+              ? this.config.onEvent(subscription, payload)
+              : this.onEvent(subscription, payload);
+          },
           config.resolveLinkTos,
           config.onSubscriptionStart,
           config.onSubscriptionDropped,
@@ -121,7 +129,7 @@ export class EventStoreService
           );
           if (subscription.options?.resolveLinktos !== undefined) {
             this.logger.warn(
-              "DEPRECATED: The resolveLinktos parameter shouln't be used anymore. The resolveLinkTos parameter should be used instead.",
+              "DEPRECATED: The resolveLinktos parameter shouldn't be used anymore. The resolveLinkTos parameter should be used instead.",
             );
           }
           await this.eventStore.getPersistentSubscriptionInfo(subscription);
@@ -156,7 +164,11 @@ export class EventStoreService
         return this.eventStore.subscribeToPersistentSubscription(
           config.stream,
           config.group,
-          (subscription, payload) => this.onEvent(subscription, payload),
+          (subscription, payload) => {
+            return this.config.onEvent
+              ? this.config.onEvent(subscription, payload)
+              : this.onEvent(subscription, payload);
+          },
           config.autoAck,
           config.bufferSize,
           config.onSubscriptionStart,
@@ -166,12 +178,13 @@ export class EventStoreService
     );
   }
 
-  private async onEvent(subscription, payload): Promise<any> {
-    // use configured onEvent
-    if (this.config.onEvent) {
-      return await this.onEvent(subscription, payload);
-    }
-
+  private async onEvent(
+    subscription:
+      | ICatchupSubscriptionConfig
+      | IVolatileSubscriptionConfig
+      | IPersistentSubscriptionConfig,
+    payload,
+  ): Promise<any> {
     return this.eventHandler.onEvent(subscription, payload);
   }
 
@@ -179,7 +192,7 @@ export class EventStoreService
     stream: string,
     events: IWriteEvent[],
     expectedVersion = ExpectedRevision.Any,
-  ): Promise<WriteResult | void> {
+  ): Promise<AppendResult> {
     return this.eventStore.writeEvents(stream, events, expectedVersion);
   }
 
@@ -243,7 +256,7 @@ export class EventStoreService
     streamName: string,
     group: string,
   ): Promise<void> {
-    await this.eventStore.deletPersistentSubscription(streamName, group);
+    await this.eventStore.deletePersistentSubscription(streamName, group);
   }
 
   public async assertProjections(

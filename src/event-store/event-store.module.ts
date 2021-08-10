@@ -1,4 +1,4 @@
-import { DynamicModule, Module } from '@nestjs/common';
+import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { EventStoreService, TcpHttpEventStore } from './index';
 import {
   EventStoreHealthIndicator,
@@ -77,7 +77,7 @@ export class EventStoreModule {
       | IEventStoreServiceConfig
       | Promise<IEventStoreServiceConfig>
       | IEventStoreModuleAsyncConfig,
-  ) {
+  ): Promise<Provider> {
     const synchedConfig: IEventStoreServiceConfig =
       (await config) as IEventStoreServiceConfig;
 
@@ -94,7 +94,16 @@ export class EventStoreModule {
         }
       : {
           provide: EVENT_STORE_CONNECTOR,
-          useValue: new TcpHttpEventStore(config as TcpHttpEventStoreConfig),
+          useFactory: async (configService) => {
+            const asyncConf = config as IEventStoreModuleAsyncConfig;
+            if (!asyncConf.useFactory) {
+              throw new Error('Error in the conf');
+            }
+            const conf: TcpHttpEventStoreConfig = await asyncConf.useFactory(
+              configService,
+            );
+            return new TcpHttpEventStore(conf);
+          },
         };
   }
 }

@@ -453,3 +453,11 @@ export class HealthController {
   }
 }
 ```
+
+## Note on the migration
+
+The lib is actually getting updated.
+
+In a first version, the idea is to keep some retro compatibility at maximum. Then project that use this lib are able to test and perform some tests when I/O on the last eventStore container.
+
+In a second time, the update will consist in moving to a full observable mechanism. It's probably more adapted than using an external client. Then you'll have at least the official client to read/write on the eventStore container. This client will be isolated, and you'll have a workflow mechanism that will be usable directly with observables. The idea is to have the possibility to pipe and trigger some action on some event of the workflow. The retro compatibility will then be removed.

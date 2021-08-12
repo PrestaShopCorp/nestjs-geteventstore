@@ -1,6 +1,6 @@
 export declare type Position = {
-  commit: bigint;
-  prepare: bigint;
+  commit?: bigint;
+  prepare?: bigint;
 
   // keeping retro compat
   commitPosition?: Long;

@@ -1,5 +1,4 @@
 import { IBaseEvent, IWriteEvent } from '../../../interfaces';
-import { WriteResult } from 'node-eventstore-client';
 import { ExpectedRevisionType } from '../../events';
 import { Observable } from 'rxjs';
 import { AppendResult } from '../../connector/interface/append-result';
@@ -25,7 +24,7 @@ export interface IStreamService {
     stream: string,
     expectedStreamMetadataVersion: ExpectedRevisionType,
     streamMetadata: unknown,
-  ): Observable<WriteResult | AppendResult>;
+  ): Observable<AppendResult>;
 
   readMetadata(stream: string): Observable<any>;
 }

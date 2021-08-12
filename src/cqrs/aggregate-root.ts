@@ -97,11 +97,11 @@ export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
   private getEventHandler<T extends EventBase = EventBase>(
     event: T,
   ): Function | undefined {
-    const handler = `on${this.getEventName(event)}`;
+    const handler = `on${AggregateRoot.getEventName(event)}`;
     return this[handler];
   }
 
-  private getEventName(event: any): string {
+  private static getEventName(event: any): string {
     const { constructor } = Object.getPrototypeOf(event);
     return constructor.name as string;
   }

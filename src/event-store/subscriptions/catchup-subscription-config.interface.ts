@@ -1,4 +1,4 @@
-import { EventStoreCatchUpSubscription } from 'node-eventstore-client';
+import EventStoreCatchUpSubscription from './event-store-catchup-subscription';
 
 export interface ICatchupSubscriptionConfig {
   stream: string;

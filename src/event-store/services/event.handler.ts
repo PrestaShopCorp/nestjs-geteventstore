@@ -1,8 +1,8 @@
 import { IAcknowledgeableEvent } from '../../interfaces';
-import { PersistentSubscriptionNakEventAction } from 'node-eventstore-client';
 import { Logger, Optional } from '@nestjs/common';
 import { ReadEventBus } from '../../cqrs';
 import { IEventHandler } from './event.handler.interface';
+import { PersistentSubscriptionNakEventAction } from '../../interfaces/events/persistent-subscription-nak-event-action.enum';
 
 export default class EventHandler implements IEventHandler {
   private logger: Logger = new Logger(this.constructor.name);

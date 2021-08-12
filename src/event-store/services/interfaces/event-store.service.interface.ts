@@ -2,9 +2,9 @@ import {
   ICatchupSubscriptionConfig,
   IVolatileSubscriptionConfig,
 } from '../../../interfaces';
-import { IPersistentSubscriptionsService } from './persistent-subscriptions.interface';
-import { IStreamService } from './streams.interface';
-import { IProjectionService } from './projection.interface';
+import { IPersistentSubscriptionsService } from './persistent-subscriptions.service.interface';
+import { IStreamService } from './streams.service.interface';
+import { IProjectionService } from './projection.service.interface';
 
 export const EVENT_STORE_SERVICE = Symbol();
 

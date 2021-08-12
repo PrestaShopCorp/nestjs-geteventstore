@@ -1,8 +1,6 @@
-import {
-  EventStoreCatchUpSubscription,
-  EventStorePersistentSubscription,
-  EventStoreSubscription,
-} from 'node-eventstore-client';
+import EventStorePersistentSubscription from './event-store-persistent-subscribtion';
+import EventStoreCatchUpSubscription from './event-store-catchup-subscription';
+import EventStoreSubscription from './event-store-subscription';
 
 export interface ISubscriptionStatus {
   [key: string]: {

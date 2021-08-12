@@ -38,6 +38,9 @@ describe('RGPCEventStore', () => {
   });
 
   it('should use the lib with the right options when subscribing to a persistent subscription', async () => {
+    spiedConnectToPersistentSubscription.mockReturnValue({
+      on: jest.fn(),
+    });
     await eventStore.connect();
 
     eventStore.subscribeToPersistentSubscription(

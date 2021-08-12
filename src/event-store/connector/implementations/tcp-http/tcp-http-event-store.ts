@@ -1,15 +1,5 @@
 import { v4 } from 'uuid';
 import { Logger } from '@nestjs/common';
-import {
-  createConnection,
-  createJsonEventData,
-  EventData,
-  EventStoreCatchUpSubscription,
-  EventStoreNodeConnection,
-  EventStorePersistentSubscription,
-  EventStoreSubscription,
-  WriteResult,
-} from 'node-eventstore-client';
 import * as geteventstorePromise from 'geteventstore-promise';
 import {
   HTTPClient,
@@ -32,6 +22,16 @@ import TcpHttpEventStoreConfig from '../../../config/tcp-http/tcp-http-event-sto
 import { ExpectedRevision } from '../../../events';
 import { Credentials } from '@eventstore/db-client/dist/types';
 import { PersistentSubscriptionOptions } from '../../interface/persistent-subscriptions-options';
+import { AppendResult } from '../../interface/append-result';
+import {
+  createConnection,
+  createJsonEventData,
+  EventData,
+  EventStoreNodeConnection,
+} from 'node-eventstore-client';
+import EventStorePersistentSubscription from '../../../subscriptions/event-store-persistent-subscribtion';
+import EventStoreCatchUpSubscription from '../../../subscriptions/event-store-catchup-subscription';
+import EventStoreSubscription from '../../../subscriptions/event-store-subscription';
 
 export class TcpHttpEventStore implements EventStoreConnector {
   public connection: EventStoreNodeConnection;
@@ -146,7 +146,7 @@ export class TcpHttpEventStore implements EventStoreConnector {
     stream: string,
     expectedStreamMetadataVersion = ExpectedRevision.Any,
     streamMetadata: any,
-  ): Observable<WriteResult> {
+  ): Observable<AppendResult> {
     return from(
       this.connection.setStreamMetadataRaw(
         stream,
@@ -156,6 +156,13 @@ export class TcpHttpEventStore implements EventStoreConnector {
         streamMetadata,
       ),
     ).pipe(
+      map((metadata: AppendResult): AppendResult => {
+        return {
+          nextExpectedRevision:
+            metadata.nextExpectedRevision as unknown as Long,
+          logPosition: metadata.logPosition,
+        };
+      }),
       catchError((err) => {
         const message = err.message.err.response ? err.response.statusText : '';
         return throwError({
@@ -215,7 +222,7 @@ export class TcpHttpEventStore implements EventStoreConnector {
           bufferSize,
           autoAck,
         )
-        .then((subscription) => {
+        .then((subscription): EventStorePersistentSubscription => {
           this.logger.log(
             `Connected to persistent subscription ${group} on stream ${stream}!`,
           );
@@ -223,7 +230,8 @@ export class TcpHttpEventStore implements EventStoreConnector {
             isConnected: true,
             streamName: stream,
             group: group,
-            subscription: subscription,
+            subscription:
+              subscription as unknown as EventStoreCatchUpSubscription,
             status: `Connected to persistent subscription ${group} on stream ${stream}!`,
           };
           if (onSubscriptionStart) {
@@ -276,10 +284,10 @@ export class TcpHttpEventStore implements EventStoreConnector {
     resolveLinkTos = true,
     onSubscriptionStart: (subscription) => void = undefined,
     onSubscriptionDropped: (sub, reason, error) => void = undefined,
-  ): Promise<EventStoreCatchUpSubscription | void> {
+  ): Promise<EventStoreCatchUpSubscription> {
     this.logger.log(`Catching up and subscribing to stream ${stream}!`);
     try {
-      return await this.connection.subscribeToStreamFrom(
+      return (await this.connection.subscribeToStreamFrom(
         stream,
         lastCheckpoint,
         resolveLinkTos,
@@ -288,7 +296,8 @@ export class TcpHttpEventStore implements EventStoreConnector {
           this.catchupSubscriptions[stream] = {
             isConnected: true,
             streamName: stream,
-            subscription: subscription,
+            subscription:
+              subscription as unknown as EventStoreCatchUpSubscription,
             status: `Connected catchup subscription on stream ${stream}!`,
           };
           if (onSubscriptionStart) {
@@ -301,7 +310,7 @@ export class TcpHttpEventStore implements EventStoreConnector {
             onSubscriptionDropped(subscription, reason, error);
           }
         },
-      );
+      )) as unknown as EventStoreCatchUpSubscription;
     } catch (err) {
       this.logger.error(err.message);
     }

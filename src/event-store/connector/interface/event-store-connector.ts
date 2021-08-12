@@ -7,13 +7,9 @@ import {
   IWriteEvent,
 } from '../../../interfaces';
 import { Observable } from 'rxjs';
-import {
-  EventStoreCatchUpSubscription,
-  EventStoreSubscription,
-  WriteResult,
-} from 'node-eventstore-client';
 import { IEventStoreConfig } from '../../config';
 import EventStorePersistentSubscription from '../../subscriptions/event-store-persistent-subscribtion';
+import EventStoreCatchUpSubscription from '../../subscriptions/event-store-catchup-subscription';
 import { ExpectedRevision } from '../../events';
 import { PersistentSubscriptionOptions } from './persistent-subscriptions-options';
 import { PersistentSubscriptionAssertResult } from './persistent-subscriptions-assert-result';
@@ -22,6 +18,7 @@ import {
   Credentials,
   StreamSubscription,
 } from '@eventstore/db-client/dist/types';
+import EventStoreSubscription from '../../subscriptions/event-store-subscription';
 
 export const EVENT_STORE_CONNECTOR = Symbol();
 
@@ -49,7 +46,7 @@ export default interface EventStoreConnector {
     stream: string,
     expectedStreamMetadataVersion,
     streamMetadata: any,
-  ): Observable<WriteResult | AppendResult>;
+  ): Observable<AppendResult>;
 
   readMetadata(stream: string): Observable<any>;
 
@@ -79,9 +76,7 @@ export default interface EventStoreConnector {
     bufferSize: number,
     onSubscriptionStart: (sub) => void,
     onSubscriptionDropped: (sub, reason, error) => void,
-  ):
-    | EventStorePersistentSubscription
-    | Promise<EventStorePersistentSubscription>;
+  ): void | Promise<EventStorePersistentSubscription>;
 
   subscribeToVolatileSubscription(
     stream: string,
@@ -104,7 +99,7 @@ export default interface EventStoreConnector {
     resolveLinkTos: boolean,
     onSubscriptionStart: (subscription) => void,
     onSubscriptionDropped: (sub, reason, error) => void,
-  ): Promise<EventStoreCatchUpSubscription | void>;
+  ): Promise<EventStoreCatchUpSubscription>;
 
   assertPersistentSubscriptions(
     subscription: IPersistentSubscriptionConfig,

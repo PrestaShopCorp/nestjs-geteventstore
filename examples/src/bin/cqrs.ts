@@ -1,3 +1,5 @@
+// noinspection JSIgnoredPromiseFromCall
+
 import { NestFactory } from '@nestjs/core';
 import { AllExceptionFilter } from '../all-exception.filter';
 import { Logger } from 'nestjs-pino-stackdriver';

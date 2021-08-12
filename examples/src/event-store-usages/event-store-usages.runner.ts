@@ -20,4 +20,5 @@ async function bootstrap() {
   );
 }
 
+// noinspection JSIgnoredPromiseFromCall
 bootstrap();

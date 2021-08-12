@@ -12,7 +12,6 @@ import EventStoreConnector from '../../interface/event-store-connector';
 import {
   AppendExpectedRevision,
   EventStoreDBClient,
-  EventType,
   jsonEvent,
   PersistentSubscription,
   ResolvedEvent,
@@ -29,6 +28,7 @@ import { PersistentSubscriptionOptions } from '../../interface/persistent-subscr
 import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import { AppendResult } from '../../interface/append-result';
+import EventStoreCatchUpSubscription from '../../../subscriptions/event-store-catchup-subscription';
 
 export class RGPCEventStore implements EventStoreConnector {
   private logger: Logger = new Logger(this.constructor.name);
@@ -68,9 +68,7 @@ export class RGPCEventStore implements EventStoreConnector {
 
   public disconnect(): void {}
 
-  public async getPersistentSubscriptionInfo(
-    subscription: IPersistentSubscriptionConfig,
-  ): Promise<void> {
+  public async getPersistentSubscriptionInfo(): Promise<void> {
     throw {
       response: {
         message: 'Try creating one directly.',
@@ -90,18 +88,11 @@ export class RGPCEventStore implements EventStoreConnector {
     return true;
   }
 
-  public subscribeToCatchupSubscription(
-    stream: string,
-    onEvent: (sub, payload) => void,
-    lastCheckpoint: number,
-    resolveLinkTos: boolean,
-    onSubscriptionStart: (subscription) => void,
-    onSubscriptionDropped: (sub, reason, error) => void,
-  ): Promise<void> {
+  public subscribeToCatchupSubscription(): Promise<EventStoreCatchUpSubscription> {
     return Promise.resolve(undefined);
   }
 
-  public async subscribeToPersistentSubscription(
+  public subscribeToPersistentSubscription(
     stream: string,
     group: string,
     onEvent: (sub, payload) => void,
@@ -109,7 +100,8 @@ export class RGPCEventStore implements EventStoreConnector {
     bufferSize: number,
     onSubscriptionStart: (sub) => void,
     onSubscriptionDropped: (sub, reason, error) => void,
-  ): Promise<PersistentSubscription> {
+  ): void {
+    // once deprecated is removed, add observable mecchanism
     const persistentSubscription: PersistentSubscription =
       this.client.connectToPersistentSubscription(stream, group, {
         bufferSize,
@@ -123,8 +115,6 @@ export class RGPCEventStore implements EventStoreConnector {
     if (!isNil(onSubscriptionDropped)) {
       persistentSubscription.on('close', onSubscriptionDropped);
     }
-
-    return persistentSubscription;
   }
 
   public async subscribeToVolatileSubscription(
@@ -182,16 +172,13 @@ export class RGPCEventStore implements EventStoreConnector {
     stream: string,
     options: any,
   ): Promise<IBaseEvent[]> {
-    const events: ResolvedEvent<EventType>[] = await this.client.readStream(
-      stream,
-      {
-        direction: options.direction,
-        fromRevision: options.fromRevision,
-        maxCount: options.maxCount,
-      },
-    );
+    const events: ResolvedEvent[] = await this.client.readStream(stream, {
+      direction: options.direction,
+      fromRevision: options.fromRevision,
+      maxCount: options.maxCount,
+    });
 
-    return events.map((event: ResolvedEvent<EventType>): IBaseEvent => {
+    return events.map((event: ResolvedEvent): IBaseEvent => {
       return {
         data: event.event.data,
         eventId: event.event.id,

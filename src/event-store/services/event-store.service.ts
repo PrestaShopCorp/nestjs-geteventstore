@@ -1,4 +1,3 @@
-import { WriteResult } from 'node-eventstore-client';
 import {
   Inject,
   Injectable,
@@ -212,7 +211,7 @@ export class EventStoreService
     stream: string,
     expectedStreamMetadataVersion: ExpectedRevisionType = ExpectedRevision.Any,
     streamMetadata: unknown,
-  ): Observable<WriteResult | AppendResult> {
+  ): Observable<AppendResult> {
     return this.eventStore.writeMetadata(
       stream,
       expectedStreamMetadataVersion,

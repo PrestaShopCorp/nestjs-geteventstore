@@ -1,5 +1,5 @@
-import { EventStorePersistentSubscription } from 'node-eventstore-client';
 import { PersistentSubscriptionOptions } from '../connector/interface/persistent-subscriptions-options';
+import EventStorePersistentSubscription from './event-store-persistent-subscribtion';
 
 export interface IPersistentSubscriptionConfig {
   stream: string;

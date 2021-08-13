@@ -1,14 +1,14 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import { ClientArrivesEvent } from '../impl/client-arrives.event';
+import { ClientArrivedEvent } from '../impl/client-arrived.event';
 
-@EventsHandler(ClientArrivesEvent)
-export class ClientArrivesEventHandler
-  implements IEventHandler<ClientArrivesEvent>
+@EventsHandler(ClientArrivedEvent)
+export class ClientArrivedEventHandler
+  implements IEventHandler<ClientArrivedEvent>
 {
   private readonly logger = new Logger(this.constructor.name);
 
-  public handle(event: ClientArrivesEvent): void {
+  public handle(event: ClientArrivedEvent): void {
     this.logger.log(
       `Async ClientArrivesEvent... client : ${event.clientId} took room ${event.roomNumber}`,
     );

@@ -1,7 +1,7 @@
 import Client from '../../domain/client';
 import Room from '../../domain/room';
 
-export class ClientReservesRoomEvent {
+export class ClientReservedRoomEvent {
   constructor(
     public readonly client: Client,
     public readonly room: Room,

@@ -24,6 +24,7 @@ describe('Hotel use cases', () => {
     },
   };
   const roomRegistryMock: RoomRegistry = {
+    registerBillPaiement(clientId: string, billAmount: number): void {},
     async findRoomNumber(clientId: string): Promise<number> {
       return 101;
     },
@@ -122,6 +123,14 @@ describe('Hotel use cases', () => {
   });
 
   describe('when the client leaves', () => {
+    it('should find the client room number', () => {
+      spyOn(roomRegistryMock, 'findRoomNumber');
+
+      hotel.findKey(clientId);
+
+      expect(roomRegistryMock.findRoomNumber).toHaveBeenCalled();
+    });
+
     it('should check whether the room is ok', async () => {
       spyOn(housemaidMock, 'checksOutRoom').mockImplementationOnce(async () => {
         return 'allIsOk';
@@ -134,15 +143,43 @@ describe('Hotel use cases', () => {
       expect(roomCheckout).toEqual('allIsOk');
     });
 
-    it('should proceed to payement', async () => {
-      spyOn(client, 'payTheBill');
+    describe('when paying the bill', () => {
+      it('should pay standard bill when nothing is missing in the room', async () => {
+        spyOn(client, 'payTheBill');
 
-      const nbNights = 5;
-      const oneNightCost = 100;
-      const moneyAmount = nbNights * oneNightCost;
-      await hotel.makesTheClientPay(client, moneyAmount);
+        const nbNights = 1;
+        const oneNightCost = 100;
+        const moneyAmount = nbNights * oneNightCost;
+        await hotel.makesTheClientPay(client, 'allIsOk');
 
-      expect(client.payTheBill).toHaveBeenCalledWith(moneyAmount);
+        expect(client.payTheBill).toHaveBeenCalledWith(moneyAmount);
+      });
+
+      it('should pay fine bill when towels are missing in the room', async () => {
+        spyOn(client, 'payTheBill');
+
+        const nbNights = 1;
+        const oneNightCost = 100;
+        const fine = 10;
+        const moneyAmount = nbNights * oneNightCost + fine;
+        await hotel.makesTheClientPay(client, 'towelsMissing');
+
+        expect(client.payTheBill).toHaveBeenCalledWith(moneyAmount);
+      });
+
+      it('should write the bill transaction in the room registry at the end of the stay', async () => {
+        spyOn(roomRegistryMock, 'registerBillPaiement');
+
+        const billAmount: number = await hotel.makesTheClientPay(
+          client,
+          'towelsMissing',
+        );
+
+        expect(roomRegistryMock.registerBillPaiement).toHaveBeenCalledWith(
+          clientId,
+          billAmount,
+        );
+      });
     });
 
     it('should makes the room clean', async () => {

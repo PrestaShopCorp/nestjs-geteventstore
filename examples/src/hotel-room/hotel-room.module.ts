@@ -8,26 +8,45 @@ import ClientNotifierHandler from './adapters/client-notifier.handler';
 import { ROOM_REGISTRY } from './domain/ports/room-registry';
 import { HOUSE_MAID } from './domain/ports/house-maid';
 import { CLIENT_NOTIFIER } from './domain/ports/client-notifier';
-import { NotifyClientEventHandler } from './events/handlers/notify-client.event.handler';
+import { ClientNotifiedEventHandler } from './events/handlers/client-notified.event.handler';
 import { ClientReservesRoomCommandHandler } from './commands/handlers/client-reserves-room.command.handler';
 import { NotifyClientCommandHandler } from './commands/handlers/notify-client.command.handler';
-import { ClientReservesRoomEventHandler } from './events/handlers/client-reserves-room.event.handler';
+import { ClientReservedRoomEventHandler } from './events/handlers/client-reserved-room.event.handler';
 import { HOTEL_REPOSITORY } from './repositories/hotel.repository.interface';
 import { ClientArrivesCommandHandler } from './commands/handlers/client-arrives.command.handler';
-import { ClientArrivesEventHandler } from './events/handlers/client-arrives.event.handler';
+import { ClientArrivedEventHandler } from './events/handlers/client-arrived.event.handler';
+import { ClientLeavedEventHandler } from './events/handlers/client-leaved.event.handler';
+import { ClientPaidEventHandler } from './events/handlers/client-paid.event.handler';
+import { RoomCleanedEventHandler } from './events/handlers/room-cleaned.event.handler';
+import { PayBillCommandHandler } from './commands/handlers/pay-bill-command.handler';
+import CheckoutRoomQueryHandler from './queries/handlers/checkout-room.query.handler';
+import GetClientRoomQueryHandler from './queries/handlers/get-client-room.query.handler';
+import GetClientReceiptQueryHandler from './queries/handlers/get-client-receipt.query.handler';
 
 export const CommandHandlers = [
   ClientReservesRoomCommandHandler,
   NotifyClientCommandHandler,
 
   ClientArrivesCommandHandler,
+
+  PayBillCommandHandler,
+];
+
+export const QueryHandlers = [
+  CheckoutRoomQueryHandler,
+  GetClientRoomQueryHandler,
+  GetClientReceiptQueryHandler,
 ];
 
 export const EventsHandlers = [
-  ClientReservesRoomEventHandler,
-  NotifyClientEventHandler,
+  ClientReservedRoomEventHandler,
+  ClientNotifiedEventHandler,
 
-  ClientArrivesEventHandler,
+  ClientArrivedEventHandler,
+
+  ClientLeavedEventHandler,
+  ClientPaidEventHandler,
+  RoomCleanedEventHandler,
 ];
 
 export const AdaptersHandlers = [
@@ -54,6 +73,7 @@ export const AdaptersHandlers = [
       useClass: HotelRepositoryStub,
     },
     ...CommandHandlers,
+    ...QueryHandlers,
     ...EventsHandlers,
     ...AdaptersHandlers,
   ],

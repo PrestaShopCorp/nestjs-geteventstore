@@ -39,6 +39,10 @@ export default class Hotel {
     return roomNumber;
   }
 
+  public async findKey(clientId: string): Promise<number> {
+    return this.roomRegistry.findRoomNumber(clientId);
+  }
+
   public async checksTheRoomOut(
     room: Room,
   ): Promise<'allIsOk' | 'towelsMissing'> {
@@ -47,17 +51,16 @@ export default class Hotel {
 
   public async makesTheClientPay(
     client: Client,
-    moneyAmount: number,
-  ): Promise<void> {
+    checkoutResult: 'allIsOk' | 'towelsMissing',
+  ): Promise<number> {
+    const moneyAmount: number = checkoutResult === 'allIsOk' ? 100 : 110;
     client.payTheBill(moneyAmount);
+    this.roomRegistry.registerBillPaiement(client.getId(), moneyAmount);
+    return moneyAmount;
   }
 
   public async cleansTheRoom(room: Room): Promise<void> {
     await this.houseMaid.cleansTheRoom(room);
     await this.roomRegistry.releaseRoom(room);
-  }
-
-  public async findKey(clientId: string): Promise<number> {
-    return this.roomRegistry.findRoomNumber(clientId);
   }
 }

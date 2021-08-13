@@ -28,4 +28,8 @@ export default class RoomRegistryHandler implements RoomRegistry {
   public async findRoomNumber(clientId: string): Promise<number> {
     return await this.hotelRepository.findRoomNumber(clientId);
   }
+
+  public registerBillPaiement(clientId: string, billAmount: number): void {
+    this.hotelRepository.registerBill(clientId, billAmount);
+  }
 }

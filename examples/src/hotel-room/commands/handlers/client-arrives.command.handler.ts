@@ -1,7 +1,5 @@
-import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
-import { NotifyClientCommand } from '../impl/notify-client.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import HotelRepository from '../../repositories/hotel.repository.stub';
-import { HotelAgreggate } from '../../hotel.agreggate';
 import { Inject, Logger } from '@nestjs/common';
 import { HOTEL_REPOSITORY } from '../../repositories/hotel.repository.interface';
 import { ROOM_REGISTRY, RoomRegistry } from '../../domain/ports/room-registry';
@@ -11,6 +9,9 @@ import {
 } from '../../domain/ports/client-notifier';
 import HouseMaid, { HOUSE_MAID } from '../../domain/ports/house-maid';
 import { ClientArrivesCommand } from '../impl/client-arrives.command';
+import Hotel from '../../domain/hotel';
+import Client from '../../domain/client';
+import CommandResponse from '../response/command.response';
 
 @CommandHandler(ClientArrivesCommand)
 export class ClientArrivesCommandHandler
@@ -27,22 +28,26 @@ export class ClientArrivesCommandHandler
     private readonly houseMaidHandler: HouseMaid,
     @Inject(HOTEL_REPOSITORY)
     private readonly repository: HotelRepository,
-
-    private readonly publisher: EventPublisher,
   ) {}
 
-  async execute(command: NotifyClientCommand) {
-    this.logger.log('Async NotifyClientCommand...');
+  async execute(command: ClientArrivesCommand) {
+    try {
+      this.logger.log('Async NotifyClientCommand...');
 
-    const { clientId } = command;
-    const hotel: HotelAgreggate = this.publisher.mergeObjectContext(
-      await this.repository.getHotel(
+      const { clientId } = command;
+      const hotel: Hotel = await this.repository.getHotel(
         this.roomRegistryHandler,
         this.clientNotifierHandler,
         this.houseMaidHandler,
-      ),
-    );
-    await hotel.clientArrives(clientId);
-    hotel.commit();
+      );
+
+      await hotel.givesKeyToClient(new Client(clientId));
+      // publish event
+      // ...
+      return new CommandResponse('success');
+    } catch (e) {
+      this.logger.error(e);
+      return new CommandResponse('fail');
+    }
   }
 }

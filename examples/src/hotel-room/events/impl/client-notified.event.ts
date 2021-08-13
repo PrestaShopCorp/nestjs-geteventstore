@@ -1,4 +1,4 @@
-export class NotifyClientEvent {
+export class ClientNotifiedEvent {
   constructor(
     public readonly clientId: string,
     public readonly dateArrival: Date,

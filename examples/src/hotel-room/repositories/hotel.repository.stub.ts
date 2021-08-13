@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { HotelAgreggate } from '../hotel.agreggate';
 import { ClientNotifier } from '../domain/ports/client-notifier';
 import HouseMaid from '../domain/ports/house-maid';
 import { RoomRegistry } from '../domain/ports/room-registry';
 import Room from '../domain/room';
 import HotelRepository from './hotel.repository.interface';
 import { isUndefined } from '@nestjs/common/utils/shared.utils';
+import Hotel from '../domain/hotel';
 
 @Injectable()
 export default class HotelRepositoryStub implements HotelRepository {
@@ -13,13 +13,14 @@ export default class HotelRepositoryStub implements HotelRepository {
 
   private usedRoomNumbers: Map<string, number> = new Map();
 
+  private accounting: Map<string, number> = new Map();
+
   public async getHotel(
     roomRegistryHandler: RoomRegistry,
     clientNotifierHandler: ClientNotifier,
     houseMaidHandler: HouseMaid,
-  ): Promise<HotelAgreggate> {
-    return new HotelAgreggate(
-      '1234',
+  ): Promise<Hotel> {
+    return new Hotel(
       roomRegistryHandler,
       clientNotifierHandler,
       houseMaidHandler,
@@ -47,5 +48,18 @@ export default class HotelRepositoryStub implements HotelRepository {
       throw new Error(`Client has not reserved a room`);
 
     return roomNumber;
+  }
+
+  public async getClientRoom(clientId: string): Promise<Room> {
+    const roomNumber: number = await this.usedRoomNumbers.get(clientId);
+    return new Room(roomNumber);
+  }
+
+  public registerBill(clientId: string, billAmount: number): void {
+    this.accounting.set(clientId, billAmount);
+  }
+
+  public getClientReceipt(clientId: string): number {
+    return this.accounting.get(clientId);
   }
 }

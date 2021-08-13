@@ -1,7 +1,6 @@
-import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { NotifyClientCommand } from '../impl/notify-client.command';
 import HotelRepository from '../../repositories/hotel.repository.stub';
-import { HotelAgreggate } from '../../hotel.agreggate';
 import { Inject, Logger } from '@nestjs/common';
 import { HOTEL_REPOSITORY } from '../../repositories/hotel.repository.interface';
 import { ROOM_REGISTRY, RoomRegistry } from '../../domain/ports/room-registry';
@@ -10,6 +9,7 @@ import {
   ClientNotifier,
 } from '../../domain/ports/client-notifier';
 import HouseMaid, { HOUSE_MAID } from '../../domain/ports/house-maid';
+import CommandResponse from '../response/command.response';
 
 @CommandHandler(NotifyClientCommand)
 export class NotifyClientCommandHandler
@@ -26,22 +26,19 @@ export class NotifyClientCommandHandler
     private readonly houseMaidHandler: HouseMaid,
     @Inject(HOTEL_REPOSITORY)
     private readonly repository: HotelRepository,
-
-    private readonly publisher: EventPublisher,
   ) {}
 
   async execute(command: NotifyClientCommand) {
-    this.logger.log('Async NotifyClientCommand...');
+    try {
+      this.logger.log('Async NotifyClientCommand...');
+      this.logger.log('Email sent');
 
-    const { clientId, dateArrival, dateLeaving } = command;
-    const hotel: HotelAgreggate = this.publisher.mergeObjectContext(
-      await this.repository.getHotel(
-        this.roomRegistryHandler,
-        this.clientNotifierHandler,
-        this.houseMaidHandler,
-      ),
-    );
-    await hotel.notifyClient(clientId, dateArrival, dateLeaving);
-    hotel.commit();
+      // publish event
+      // ...
+      return new CommandResponse('success');
+    } catch (e) {
+      this.logger.error(e);
+      return new CommandResponse('fail');
+    }
   }
 }

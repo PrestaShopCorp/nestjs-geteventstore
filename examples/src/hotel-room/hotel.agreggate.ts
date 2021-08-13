@@ -1,5 +1,5 @@
 import { AggregateRoot } from '@nestjs/cqrs';
-import { ClientReservesRoomEvent } from './events/impl/client-reserves-room.event';
+import { ClientReservedRoomEvent } from './events/impl/client-reserved-room.event';
 import { Inject, Logger } from '@nestjs/common';
 import { ROOM_REGISTRY, RoomRegistry } from './domain/ports/room-registry';
 import {
@@ -10,8 +10,11 @@ import HouseMaid, { HOUSE_MAID } from './domain/ports/house-maid';
 import Hotel from './domain/hotel';
 import Client from './domain/client';
 import Room from './domain/room';
-import { NotifyClientEvent } from './events/impl/notify-client.event';
-import { ClientArrivesEvent } from './events/impl/client-arrives.event';
+import { ClientNotifiedEvent } from './events/impl/client-notified.event';
+import { ClientArrivedEvent } from './events/impl/client-arrived.event';
+import { ClientLeavedEvent } from './events/impl/client-leaved.event';
+import { ClientPaidEvent } from './events/impl/client-paid.event';
+import { RoomCleanedEvent } from './events/impl/room-cleaned.event';
 
 export class HotelAgreggate extends AggregateRoot {
   private readonly logger = new Logger(this.constructor.name);
@@ -44,13 +47,14 @@ export class HotelAgreggate extends AggregateRoot {
       dateLeaving,
     );
     this.apply(
-      new ClientReservesRoomEvent(client, room, dateArrival, dateLeaving),
+      new ClientReservedRoomEvent(client, room, dateArrival, dateLeaving),
     );
+    return room;
   }
 
   async notifyClient(clientId: string, dateArrival: Date, dateLeaving: Date) {
     this.logger.log('HotelAgreggate notifyClient -> email sent');
-    this.apply(new NotifyClientEvent(clientId, dateArrival, dateLeaving));
+    this.apply(new ClientNotifiedEvent(clientId, dateArrival, dateLeaving));
   }
 
   async clientArrives(clientId: string) {
@@ -58,6 +62,26 @@ export class HotelAgreggate extends AggregateRoot {
     const roomNumber: number = await this.model.givesKeyToClient(
       new Client(clientId),
     );
-    this.apply(new ClientArrivesEvent(clientId, roomNumber));
+    this.apply(new ClientArrivedEvent(clientId, roomNumber));
+  }
+
+  public async clientLeaves(clientId: string) {
+    this.logger.log('HotelAgreggate client leaves');
+    const clientRoomNumber: number = await this.model.findKey(clientId);
+    const room: Room = new Room(clientRoomNumber);
+
+    const checkout: 'allIsOk' | 'towelsMissing' =
+      await this.model.checksTheRoomOut(room);
+    this.apply(new ClientLeavedEvent(clientId, room.getNumber()));
+
+    const bill: number = checkout === 'allIsOk' ? 100 : 110;
+
+    this.model
+      .makesTheClientPay(new Client(clientId), bill)
+      .then(() => this.apply(new ClientPaidEvent(clientId, bill)));
+
+    this.model
+      .cleansTheRoom(room)
+      .then(() => this.apply(new RoomCleanedEvent(room.getNumber(), checkout)));
   }
 }

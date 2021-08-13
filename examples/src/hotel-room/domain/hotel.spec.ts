@@ -1,9 +1,9 @@
 import Hotel from './hotel';
-import { RoomRegistry } from './room-registry';
-import { ClientNotifier } from './client-notifier';
+import { RoomRegistry } from './ports/room-registry';
+import { ClientNotifier } from './ports/client-notifier';
 import Room from './room';
 import Client from './client';
-import HouseMaid from './house-maid';
+import HouseMaid from './ports/house-maid';
 import spyOn = jest.spyOn;
 
 describe('Hotel use cases', () => {

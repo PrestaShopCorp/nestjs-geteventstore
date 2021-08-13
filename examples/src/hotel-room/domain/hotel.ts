@@ -1,8 +1,8 @@
-import { RoomRegistry } from './room-registry';
-import { ClientNotifier } from './client-notifier';
+import { RoomRegistry } from './ports/room-registry';
+import { ClientNotifier } from './ports/client-notifier';
 import Room from './room';
 import Client from './client';
-import HouseMaid from './house-maid';
+import HouseMaid from './ports/house-maid';
 
 export default class Hotel {
   constructor(

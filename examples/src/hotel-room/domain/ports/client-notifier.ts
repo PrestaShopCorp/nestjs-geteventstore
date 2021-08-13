@@ -1,4 +1,10 @@
+export const CLIENT_NOTIFIER = Symbol();
+
 export interface ClientNotifier {
   // Command
-  notifyClientByEmail(clientId: string): Promise<void>;
+  notifyClientByEmail(
+    clientId: string,
+    arrival: Date,
+    checkout: Date,
+  ): Promise<void>;
 }

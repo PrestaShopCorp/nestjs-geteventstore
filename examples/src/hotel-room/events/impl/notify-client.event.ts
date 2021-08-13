@@ -1,4 +1,4 @@
-export class ClientReservesRoomCommand {
+export class NotifyClientEvent {
   constructor(
     public readonly clientId: string,
     public readonly dateArrival: Date,

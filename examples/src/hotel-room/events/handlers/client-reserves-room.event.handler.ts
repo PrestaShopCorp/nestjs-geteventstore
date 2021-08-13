@@ -1,12 +1,14 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import * as clc from 'cli-color';
 import { ClientReservesRoomEvent } from '../impl/client-reserves-room.event';
+import { Logger } from '@nestjs/common';
 
 @EventsHandler(ClientReservesRoomEvent)
-export class HeroFoundItemHandler
+export class ClientReservesRoomEventHandler
   implements IEventHandler<ClientReservesRoomEvent>
 {
+  private readonly logger = new Logger(this.constructor.name);
+
   public handle(event: ClientReservesRoomEvent): void {
-    console.log(clc.yellowBright('Async ClientReservesRoomEvent...'));
+    this.logger.log(`Async ClientReservesRoomEvent... `);
   }
 }

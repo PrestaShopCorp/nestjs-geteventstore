@@ -6,8 +6,10 @@ import { ClientReservesRoomCommand } from './commands/impl/client-reserves-room.
 export default class HotelRoomController {
   constructor(private readonly commandBus: CommandBus) {}
 
-  @Get('reserves/:clientId/:date1/:date2')
-  async killDragon(@Param('clientId') clientId: string) {
-    return this.commandBus.execute(new ClientReservesRoomCommand(clientId));
+  @Get('reserves/:clientId/')
+  async reserveRoom(@Param('clientId') clientId: string) {
+    return this.commandBus.execute(
+      new ClientReservesRoomCommand(clientId, new Date(), new Date()),
+    );
   }
 }

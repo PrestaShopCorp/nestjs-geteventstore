@@ -24,7 +24,11 @@ export default class Hotel {
     if (availableRoom === null) {
       return null;
     }
-    await this.clientNotifier.notifyClientByEmail(client.getId());
+    await this.clientNotifier.notifyClientByEmail(
+      client.getId(),
+      arrival,
+      checkout,
+    );
     return availableRoom;
   }
 

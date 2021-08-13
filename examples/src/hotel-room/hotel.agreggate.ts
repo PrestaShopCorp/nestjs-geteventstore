@@ -11,6 +11,7 @@ import Hotel from './domain/hotel';
 import Client from './domain/client';
 import Room from './domain/room';
 import { NotifyClientEvent } from './events/impl/notify-client.event';
+import { ClientArrivesEvent } from './events/impl/client-arrives.event';
 
 export class HotelAgreggate extends AggregateRoot {
   private readonly logger = new Logger(this.constructor.name);
@@ -35,6 +36,7 @@ export class HotelAgreggate extends AggregateRoot {
   }
 
   async reserveRoom(clientId: string, dateArrival: Date, dateLeaving: Date) {
+    this.logger.log('HotelAgreggate client reserves a room');
     const client = new Client(clientId);
     const room: Room = await this.model.reserveRoom(
       client,
@@ -49,5 +51,13 @@ export class HotelAgreggate extends AggregateRoot {
   async notifyClient(clientId: string, dateArrival: Date, dateLeaving: Date) {
     this.logger.log('HotelAgreggate notifyClient -> email sent');
     this.apply(new NotifyClientEvent(clientId, dateArrival, dateLeaving));
+  }
+
+  async clientArrives(clientId: string) {
+    this.logger.log('HotelAgreggate client arrives');
+    const roomNumber: number = await this.model.givesKeyToClient(
+      new Client(clientId),
+    );
+    this.apply(new ClientArrivesEvent(clientId, roomNumber));
   }
 }

@@ -24,6 +24,9 @@ describe('Hotel use cases', () => {
     },
   };
   const roomRegistryMock: RoomRegistry = {
+    async findRoomNumber(clientId: string): Promise<number> {
+      return 101;
+    },
     releaseRoom(room: Room): Promise<void> {
       return Promise.resolve();
     },
@@ -99,13 +102,22 @@ describe('Hotel use cases', () => {
   });
 
   describe('when client arrives at the hotel', () => {
-    it('should give the client the room key when she arrives', () => {
+    it('should find the room reserved by the client', async () => {
+      spyOn(roomRegistryMock, 'findRoomNumber').mockResolvedValueOnce(101);
+
+      await hotel.findKey(clientId);
+
+      expect(roomRegistryMock.findRoomNumber).toHaveBeenCalled();
+    });
+
+    it('should give the client the room key when she arrives', async () => {
       spyOn(client, 'takeTheRoomKey');
 
-      hotel.givesKeyToClient(client, room);
+      const roomNumber = await hotel.givesKeyToClient(client);
 
       expect(client.shouldOwnsTheRoomKey()).toBeTruthy();
       expect(client.takeTheRoomKey).toHaveBeenCalledWith(room.getNumber());
+      expect(roomNumber).toEqual(room.getNumber());
     });
   });
 

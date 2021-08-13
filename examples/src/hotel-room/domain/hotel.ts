@@ -32,8 +32,11 @@ export default class Hotel {
     return availableRoom;
   }
 
-  public givesKeyToClient(client: Client, room: Room): void {
-    client.takeTheRoomKey(room.getNumber());
+  public async givesKeyToClient(client: Client): Promise<number | null> {
+    const roomNumber: number = await this.findKey(client.getId());
+    client.takeTheRoomKey(roomNumber);
+
+    return roomNumber;
   }
 
   public async checksTheRoomOut(
@@ -52,5 +55,9 @@ export default class Hotel {
   public async cleansTheRoom(room: Room): Promise<void> {
     await this.houseMaid.cleansTheRoom(room);
     await this.roomRegistry.releaseRoom(room);
+  }
+
+  public async findKey(clientId: string): Promise<number> {
+    return this.roomRegistry.findRoomNumber(clientId);
   }
 }

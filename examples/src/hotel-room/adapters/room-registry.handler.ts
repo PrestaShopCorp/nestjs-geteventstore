@@ -24,4 +24,8 @@ export default class RoomRegistryHandler implements RoomRegistry {
   ): Promise<Room | null> {
     return this.hotelRepository.getAvailableRoom(clientId, arrival, checkout);
   }
+
+  public async findRoomNumber(clientId: string): Promise<number> {
+    return await this.hotelRepository.findRoomNumber(clientId);
+  }
 }

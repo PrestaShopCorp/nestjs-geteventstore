@@ -10,7 +10,6 @@ import {
 import HouseMaid, { HOUSE_MAID } from '../../domain/ports/house-maid';
 import { ClientArrivesCommand } from '../impl/client-arrives.command';
 import Hotel from '../../domain/hotel';
-import Client from '../../domain/client';
 import CommandResponse from '../response/command.response';
 import { ClientArrivedEvent } from '../../events/impl/client-arrived.event';
 
@@ -45,9 +44,7 @@ export class ClientArrivesCommandHandler
         this.houseMaidHandler,
       );
 
-      const roomNumber: number = await hotel.givesKeyToClient(
-        new Client(clientId),
-      );
+      const roomNumber: number = await hotel.givesKeyToClient(clientId);
 
       this.eventBus.publish(new ClientArrivedEvent(clientId, roomNumber));
 

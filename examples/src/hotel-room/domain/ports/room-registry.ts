@@ -3,9 +3,11 @@ import Room from '../room';
 export const ROOM_REGISTRY = Symbol();
 
 export interface RoomRegistry {
+  registerClientHasKey(clientId: string): Promise<void>;
+
   findRoomNumber(clientId: string): Promise<number>;
 
-  releaseRoom(room: Room): Promise<void>;
+  releaseRoom(roomNumber: number): Promise<void>;
 
   reserveAvailableRoom(
     clientId: string,

@@ -13,7 +13,7 @@ export default class RoomRegistryAdapter implements RoomRegistry {
     private readonly hotelRepository: HotelRepository,
   ) {}
 
-  public async releaseRoom(room: Room): Promise<void> {
+  public async releaseRoom(roomId: number): Promise<void> {
     this.logger.log('Async RoomRegistry releaseRoom...');
   }
 
@@ -31,5 +31,9 @@ export default class RoomRegistryAdapter implements RoomRegistry {
 
   public registerBillPaiement(clientId: string, billAmount: number): void {
     this.hotelRepository.registerBill(clientId, billAmount);
+  }
+
+  public registerClientHasKey(clientId: string): Promise<void> {
+    return;
   }
 }

@@ -11,7 +11,6 @@ import HouseMaid, { HOUSE_MAID } from '../../domain/ports/house-maid';
 import { PayBillCommand } from '../impl/pay-bill.command';
 import Hotel from '../../domain/hotel';
 import CommandResponse from '../response/command.response';
-import Client from '../../domain/client';
 import { ClientPaidEvent } from '../../events/impl/client-paid.event';
 
 @CommandHandler(PayBillCommand)
@@ -44,7 +43,7 @@ export class PayBillCommandHandler implements ICommandHandler<PayBillCommand> {
       await this.checkClientWasThere(clientId);
 
       const bill: number = await hotel.makesTheClientPay(
-        new Client(clientId),
+        clientId,
         checkoutResult,
       );
 

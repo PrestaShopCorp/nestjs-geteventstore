@@ -1,7 +1,6 @@
 import { RoomRegistry } from './ports/room-registry';
 import { ClientNotifier } from './ports/client-notifier';
 import Room from './room';
-import Client from './client';
 import HouseMaid from './ports/house-maid';
 
 export default class Hotel {
@@ -12,30 +11,25 @@ export default class Hotel {
   ) {}
 
   public async reserveRoom(
-    client: Client,
+    clientId: string,
     arrival: Date,
     checkout: Date,
   ): Promise<Room> {
     const availableRoom: Room = await this.roomRegistry.reserveAvailableRoom(
-      client.getId(),
+      clientId,
       arrival,
       checkout,
     );
     if (availableRoom === null) {
       return null;
     }
-    await this.clientNotifier.notifyClientByEmail(
-      client.getId(),
-      arrival,
-      checkout,
-    );
+    await this.clientNotifier.notifyClientByEmail(clientId, arrival, checkout);
     return availableRoom;
   }
 
-  public async givesKeyToClient(client: Client): Promise<number | null> {
-    const roomNumber: number = await this.findKey(client.getId());
-    client.takeTheRoomKey(roomNumber);
-
+  public async givesKeyToClient(clientId: string): Promise<number | null> {
+    const roomNumber: number = await this.findKey(clientId);
+    await this.roomRegistry.registerClientHasKey(clientId);
     return roomNumber;
   }
 
@@ -44,23 +38,22 @@ export default class Hotel {
   }
 
   public async checksTheRoomOut(
-    room: Room,
+    roomNumber: number,
   ): Promise<'allIsOk' | 'towelsMissing'> {
-    return this.houseMaid.checksOutRoom(room);
+    return this.houseMaid.checksOutRoom(roomNumber);
   }
 
   public async makesTheClientPay(
-    client: Client,
+    clientId: string,
     checkoutResult: 'allIsOk' | 'towelsMissing',
   ): Promise<number> {
     const moneyAmount: number = checkoutResult === 'allIsOk' ? 100 : 110;
-    client.payTheBill(moneyAmount);
-    this.roomRegistry.registerBillPaiement(client.getId(), moneyAmount);
+    this.roomRegistry.registerBillPaiement(clientId, moneyAmount);
     return moneyAmount;
   }
 
-  public async cleansTheRoom(room: Room): Promise<void> {
-    await this.houseMaid.cleansTheRoom(room);
-    await this.roomRegistry.releaseRoom(room);
+  public async cleansTheRoom(roomNumber: number): Promise<void> {
+    await this.houseMaid.cleansTheRoom(roomNumber);
+    await this.roomRegistry.releaseRoom(roomNumber);
   }
 }

@@ -15,20 +15,24 @@ describe('Hotel use cases', () => {
   const arrival: Date = new Date();
   const checkout: Date = new Date();
 
-  const room: Room = new Room(101);
+  const roomNumber = 101;
+  const room: Room = new Room(roomNumber);
 
   const housemaidMock: HouseMaid = {
-    cleansTheRoom(room: Room): void {},
-    async checksOutRoom(room: Room): Promise<'allIsOk' | 'towelsMissing'> {
+    cleansTheRoom(roomNumber: number): void {},
+    async checksOutRoom(
+      roomNumber: number,
+    ): Promise<'allIsOk' | 'towelsMissing'> {
       return 'allIsOk';
     },
   };
   const roomRegistryMock: RoomRegistry = {
+    async registerClientHasKey(clientId: string): Promise<void> {},
     registerBillPaiement(clientId: string, billAmount: number): void {},
     async findRoomNumber(clientId: string): Promise<number> {
       return 101;
     },
-    releaseRoom(room: Room): Promise<void> {
+    releaseRoom(roomNumber: number): Promise<void> {
       return Promise.resolve();
     },
     async reserveAvailableRoom(): Promise<Room | null> {
@@ -54,7 +58,7 @@ describe('Hotel use cases', () => {
       );
 
       const needToCheckAnotherHotel: Room = await hotel.reserveRoom(
-        client,
+        clientId,
         arrival,
         checkout,
       );
@@ -71,7 +75,7 @@ describe('Hotel use cases', () => {
       );
       spyOn(clientNotifier, 'notifyClientByEmail');
 
-      await hotel.reserveRoom(client, arrival, checkout);
+      await hotel.reserveRoom(clientId, arrival, checkout);
 
       expect(clientNotifier.notifyClientByEmail).toHaveBeenCalled();
     });
@@ -80,7 +84,7 @@ describe('Hotel use cases', () => {
       spyOn(roomRegistryMock, 'reserveAvailableRoom');
 
       const availableRoom: Room = await hotel.reserveRoom(
-        client,
+        clientId,
         arrival,
         checkout,
       );
@@ -92,7 +96,7 @@ describe('Hotel use cases', () => {
     it('should associate a reserved room with client id, arrival and checkout dates when room is available', async () => {
       spyOn(roomRegistryMock, 'reserveAvailableRoom');
 
-      await hotel.reserveRoom(client, arrival, checkout);
+      await hotel.reserveRoom(clientId, arrival, checkout);
 
       expect(roomRegistryMock.reserveAvailableRoom).toHaveBeenCalledWith(
         client.getId(),
@@ -112,13 +116,14 @@ describe('Hotel use cases', () => {
     });
 
     it('should give the client the room key when she arrives', async () => {
-      spyOn(client, 'takeTheRoomKey');
+      spyOn(roomRegistryMock, 'registerClientHasKey');
 
-      const roomNumber = await hotel.givesKeyToClient(client);
+      const roomNumber = await hotel.givesKeyToClient(clientId);
 
-      expect(client.shouldOwnsTheRoomKey()).toBeTruthy();
-      expect(client.takeTheRoomKey).toHaveBeenCalledWith(room.getNumber());
-      expect(roomNumber).toEqual(room.getNumber());
+      expect(roomRegistryMock.registerClientHasKey).toHaveBeenCalledWith(
+        clientId,
+      );
+      expect(roomNumber).toEqual(roomNumber);
     });
   });
 
@@ -137,41 +142,18 @@ describe('Hotel use cases', () => {
       });
 
       const roomCheckout: 'allIsOk' | 'towelsMissing' =
-        await hotel.checksTheRoomOut(room);
+        await hotel.checksTheRoomOut(roomNumber);
 
-      expect(housemaidMock.checksOutRoom).toHaveBeenCalledWith(room);
+      expect(housemaidMock.checksOutRoom).toHaveBeenCalledWith(roomNumber);
       expect(roomCheckout).toEqual('allIsOk');
     });
 
     describe('when paying the bill', () => {
-      it('should pay standard bill when nothing is missing in the room', async () => {
-        spyOn(client, 'payTheBill');
-
-        const nbNights = 1;
-        const oneNightCost = 100;
-        const moneyAmount = nbNights * oneNightCost;
-        await hotel.makesTheClientPay(client, 'allIsOk');
-
-        expect(client.payTheBill).toHaveBeenCalledWith(moneyAmount);
-      });
-
-      it('should pay fine bill when towels are missing in the room', async () => {
-        spyOn(client, 'payTheBill');
-
-        const nbNights = 1;
-        const oneNightCost = 100;
-        const fine = 10;
-        const moneyAmount = nbNights * oneNightCost + fine;
-        await hotel.makesTheClientPay(client, 'towelsMissing');
-
-        expect(client.payTheBill).toHaveBeenCalledWith(moneyAmount);
-      });
-
       it('should write the bill transaction in the room registry at the end of the stay', async () => {
         spyOn(roomRegistryMock, 'registerBillPaiement');
 
         const billAmount: number = await hotel.makesTheClientPay(
-          client,
+          clientId,
           'towelsMissing',
         );
 
@@ -180,22 +162,51 @@ describe('Hotel use cases', () => {
           billAmount,
         );
       });
+
+      it('should pay standard bill when nothing is missing in the room', async () => {
+        spyOn(roomRegistryMock, 'registerBillPaiement');
+
+        const nbNights = 1;
+        const oneNightCost = 100;
+        const moneyAmount = nbNights * oneNightCost;
+        await hotel.makesTheClientPay(clientId, 'allIsOk');
+
+        expect(roomRegistryMock.registerBillPaiement).toHaveBeenCalledWith(
+          clientId,
+          moneyAmount,
+        );
+      });
+
+      it('should pay fine bill when towels are missing in the room', async () => {
+        spyOn(roomRegistryMock, 'registerBillPaiement');
+
+        const nbNights = 1;
+        const oneNightCost = 100;
+        const fine = 10;
+        const moneyAmount = nbNights * oneNightCost + fine;
+        await hotel.makesTheClientPay(clientId, 'towelsMissing');
+
+        expect(roomRegistryMock.registerBillPaiement).toHaveBeenCalledWith(
+          clientId,
+          moneyAmount,
+        );
+      });
     });
 
     it('should makes the room clean', async () => {
       spyOn(housemaidMock, 'cleansTheRoom');
 
-      await hotel.cleansTheRoom(room);
+      await hotel.cleansTheRoom(roomNumber);
 
-      expect(housemaidMock.cleansTheRoom).toHaveBeenCalledWith(room);
+      expect(housemaidMock.cleansTheRoom).toHaveBeenCalledWith(roomNumber);
     });
 
     it('should makes the room available again after cleaning', async () => {
       spyOn(roomRegistryMock, 'releaseRoom');
 
-      await hotel.cleansTheRoom(room);
+      await hotel.cleansTheRoom(roomNumber);
 
-      expect(roomRegistryMock.releaseRoom).toHaveBeenCalledWith(room);
+      expect(roomRegistryMock.releaseRoom).toHaveBeenCalledWith(roomNumber);
     });
   });
 });

@@ -11,7 +11,6 @@ import { HOTEL_REPOSITORY } from '../../repositories/hotel.repository.interface'
 import HotelRepository from '../../repositories/hotel.repository.stub';
 import QueryResponse from '../response/query.response';
 import Hotel from '../../domain/hotel';
-import Room from '../../domain/room';
 
 @QueryHandler(CheckoutRoomQuery)
 export default class CheckoutRoomQueryHandler
@@ -37,7 +36,7 @@ export default class CheckoutRoomQueryHandler
       this.clientNotifierHandler,
       this.houseMaidHandler,
     );
-    const checkoutResult = await hotel.checksTheRoomOut(new Room(roomNumber));
+    const checkoutResult = await hotel.checksTheRoomOut(roomNumber);
     return {
       result: {
         roomNumber: roomNumber,

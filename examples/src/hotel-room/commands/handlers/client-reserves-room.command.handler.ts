@@ -10,7 +10,6 @@ import {
 } from '../../domain/ports/client-notifier';
 import HouseMaid, { HOUSE_MAID } from '../../domain/ports/house-maid';
 import Hotel from '../../domain/hotel';
-import Client from '../../domain/client';
 import CommandResponse from '../response/command.response';
 import { ClientReservedRoomEvent } from '../../events/impl/client-reserved-room.event';
 import Room from '../../domain/room';
@@ -47,15 +46,15 @@ export class ClientReservesRoomCommandHandler
       );
 
       const room: Room = await hotel.reserveRoom(
-        new Client(clientId),
+        clientId,
         dateArrival,
         dateLeaving,
       );
 
       this.eventBus.publish(
         new ClientReservedRoomEvent(
-          new Client(clientId),
-          room,
+          clientId,
+          room.getNumber(),
           dateArrival,
           dateLeaving,
         ),

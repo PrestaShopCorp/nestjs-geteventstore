@@ -4,7 +4,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { NotifyClientCommand } from '../commands/impl/notify-client.command';
 
 @Injectable()
-export default class ClientNotifierHandler implements ClientNotifier {
+export default class ClientNotifierAdapter implements ClientNotifier {
   private readonly logger = new Logger(this.constructor.name);
 
   constructor(private readonly commandBus: CommandBus) {}

@@ -1,6 +1,6 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import CheckoutRoomQuery from '../impl/checkout-room.query';
-import { Inject } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { ROOM_REGISTRY, RoomRegistry } from '../../domain/ports/room-registry';
 import {
   CLIENT_NOTIFIER,
@@ -17,6 +17,7 @@ import Room from '../../domain/room';
 export default class CheckoutRoomQueryHandler
   implements IQueryHandler<CheckoutRoomQuery>
 {
+  private readonly logger = new Logger(this.constructor.name);
   constructor(
     @Inject(ROOM_REGISTRY)
     private readonly roomRegistryHandler: RoomRegistry,
@@ -29,6 +30,7 @@ export default class CheckoutRoomQueryHandler
   ) {}
 
   public async execute(query: CheckoutRoomQuery): Promise<QueryResponse> {
+    this.logger.log('Async CheckoutRoomQuery...');
     const { roomNumber } = query;
     const hotel: Hotel = await this.repository.getHotel(
       this.roomRegistryHandler,

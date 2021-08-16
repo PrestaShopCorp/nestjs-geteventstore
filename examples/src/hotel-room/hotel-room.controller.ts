@@ -2,7 +2,7 @@ import { Controller, Get, Param } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ClientReservesRoomCommand } from './commands/impl/client-reserves-room.command';
 import { ClientArrivesCommand } from './commands/impl/client-arrives.command';
-import { PayBillCommand } from './commands/impl/payBillCommand';
+import { PayBillCommand } from './commands/impl/pay-bill.command';
 import CommandResponse from './commands/response/command.response';
 import CheckoutRoomQuery from './queries/impl/checkout-room.query';
 import QueryResponse from './queries/response/query.response';

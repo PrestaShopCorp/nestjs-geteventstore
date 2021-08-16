@@ -32,7 +32,7 @@ export class ClientArrivesCommandHandler
 
   async execute(command: ClientArrivesCommand) {
     try {
-      this.logger.log('Async NotifyClientCommand...');
+      this.logger.log('Async ClientArrivesCommand...');
 
       const { clientId } = command;
       const hotel: Hotel = await this.repository.getHotel(

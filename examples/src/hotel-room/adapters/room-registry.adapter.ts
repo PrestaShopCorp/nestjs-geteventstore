@@ -5,7 +5,7 @@ import HotelRepository from '../repositories/hotel.repository.stub';
 import { HOTEL_REPOSITORY } from '../repositories/hotel.repository.interface';
 
 @Injectable()
-export default class RoomRegistryHandler implements RoomRegistry {
+export default class RoomRegistryAdapter implements RoomRegistry {
   private readonly logger = new Logger(this.constructor.name);
 
   constructor(

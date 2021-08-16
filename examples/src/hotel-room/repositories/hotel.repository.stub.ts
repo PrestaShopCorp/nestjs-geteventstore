@@ -51,7 +51,10 @@ export default class HotelRepositoryStub implements HotelRepository {
   }
 
   public async getClientRoom(clientId: string): Promise<Room> {
-    const roomNumber: number = await this.usedRoomNumbers.get(clientId);
+    const roomNumber: number = this.usedRoomNumbers.get(clientId);
+    if (!roomNumber) {
+      throw Error('Client is in no room');
+    }
     return new Room(roomNumber);
   }
 
@@ -60,6 +63,10 @@ export default class HotelRepositoryStub implements HotelRepository {
   }
 
   public getClientReceipt(clientId: string): number {
-    return this.accounting.get(clientId);
+    const bill: number = this.accounting.get(clientId);
+    if (!bill) {
+      throw Error('Client has not paid any bill in the hotel');
+    }
+    return bill;
   }
 }

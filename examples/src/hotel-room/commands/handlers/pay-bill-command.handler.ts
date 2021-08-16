@@ -8,7 +8,7 @@ import {
   ClientNotifier,
 } from '../../domain/ports/client-notifier';
 import HouseMaid, { HOUSE_MAID } from '../../domain/ports/house-maid';
-import { PayBillCommand } from '../impl/payBillCommand';
+import { PayBillCommand } from '../impl/pay-bill.command';
 import Hotel from '../../domain/hotel';
 import CommandResponse from '../response/command.response';
 import Client from '../../domain/client';
@@ -30,7 +30,7 @@ export class PayBillCommandHandler implements ICommandHandler<PayBillCommand> {
 
   async execute(command: PayBillCommand) {
     try {
-      this.logger.log('Async ClientReservesRoomCommand...');
+      this.logger.log('Async PayBillCommand...');
 
       const { clientId, checkoutResult } = command;
       const hotel: Hotel = await this.repository.getHotel(
@@ -38,6 +38,8 @@ export class PayBillCommandHandler implements ICommandHandler<PayBillCommand> {
         this.clientNotifierHandler,
         this.houseMaidHandler,
       );
+
+      await this.checkClientWasThere(clientId);
 
       await hotel.makesTheClientPay(new Client(clientId), checkoutResult);
 
@@ -48,5 +50,9 @@ export class PayBillCommandHandler implements ICommandHandler<PayBillCommand> {
       this.logger.error(e);
       return new CommandResponse('fail');
     }
+  }
+
+  private async checkClientWasThere(clientId: string) {
+    await this.repository.getClientRoom(clientId);
   }
 }

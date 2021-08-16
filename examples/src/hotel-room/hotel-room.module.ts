@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import HotelRoomController from './hotel-room.controller';
 import { CqrsModule } from '@nestjs/cqrs';
 import HotelRepositoryStub from './repositories/hotel.repository.stub';
-import RoomRegistryHandler from './adapters/room-registry.handler';
-import HouseMaidHandler from './adapters/house-maid.handler';
-import ClientNotifierHandler from './adapters/client-notifier.handler';
+import RoomRegistryAdapter from './adapters/room-registry.adapter';
+import HouseMaidAdapter from './adapters/house-maid.adapter';
+import ClientNotifierAdapter from './adapters/client-notifier.adapter';
 import { ROOM_REGISTRY } from './domain/ports/room-registry';
 import { HOUSE_MAID } from './domain/ports/house-maid';
 import { CLIENT_NOTIFIER } from './domain/ports/client-notifier';
@@ -52,15 +52,15 @@ export const EventsHandlers = [
 export const AdaptersHandlers = [
   {
     provide: ROOM_REGISTRY,
-    useClass: RoomRegistryHandler,
+    useClass: RoomRegistryAdapter,
   },
   {
     provide: HOUSE_MAID,
-    useClass: HouseMaidHandler,
+    useClass: HouseMaidAdapter,
   },
   {
     provide: CLIENT_NOTIFIER,
-    useClass: ClientNotifierHandler,
+    useClass: ClientNotifierAdapter,
   },
 ];
 

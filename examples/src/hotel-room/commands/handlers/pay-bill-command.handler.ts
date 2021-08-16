@@ -1,4 +1,4 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import HotelRepository from '../../repositories/hotel.repository.stub';
 import { Inject, Logger } from '@nestjs/common';
 import { HOTEL_REPOSITORY } from '../../repositories/hotel.repository.interface';
@@ -12,6 +12,7 @@ import { PayBillCommand } from '../impl/pay-bill.command';
 import Hotel from '../../domain/hotel';
 import CommandResponse from '../response/command.response';
 import Client from '../../domain/client';
+import { ClientPaidEvent } from '../../events/impl/client-paid.event';
 
 @CommandHandler(PayBillCommand)
 export class PayBillCommandHandler implements ICommandHandler<PayBillCommand> {
@@ -26,9 +27,10 @@ export class PayBillCommandHandler implements ICommandHandler<PayBillCommand> {
     private readonly houseMaidHandler: HouseMaid,
     @Inject(HOTEL_REPOSITORY)
     private readonly repository: HotelRepository,
+    private readonly eventBus: EventBus,
   ) {}
 
-  async execute(command: PayBillCommand) {
+  public async execute(command: PayBillCommand): Promise<CommandResponse> {
     try {
       this.logger.log('Async PayBillCommand...');
 
@@ -41,10 +43,13 @@ export class PayBillCommandHandler implements ICommandHandler<PayBillCommand> {
 
       await this.checkClientWasThere(clientId);
 
-      await hotel.makesTheClientPay(new Client(clientId), checkoutResult);
+      const bill: number = await hotel.makesTheClientPay(
+        new Client(clientId),
+        checkoutResult,
+      );
 
-      // publish event
-      // ...
+      this.eventBus.publish(new ClientPaidEvent(clientId, bill));
+
       return new CommandResponse('success');
     } catch (e) {
       this.logger.error(e);

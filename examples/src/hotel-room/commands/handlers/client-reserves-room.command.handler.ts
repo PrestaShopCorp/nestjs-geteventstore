@@ -1,4 +1,4 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import HotelRepository from '../../repositories/hotel.repository.stub';
 import { ClientReservesRoomCommand } from '../impl/client-reserves-room.command';
 import { Inject, Logger } from '@nestjs/common';
@@ -12,6 +12,8 @@ import HouseMaid, { HOUSE_MAID } from '../../domain/ports/house-maid';
 import Hotel from '../../domain/hotel';
 import Client from '../../domain/client';
 import CommandResponse from '../response/command.response';
+import { ClientReservedRoomEvent } from '../../events/impl/client-reserved-room.event';
+import Room from '../../domain/room';
 
 @CommandHandler(ClientReservesRoomCommand)
 export class ClientReservesRoomCommandHandler
@@ -28,9 +30,12 @@ export class ClientReservesRoomCommandHandler
     private readonly houseMaidHandler: HouseMaid,
     @Inject(HOTEL_REPOSITORY)
     private readonly repository: HotelRepository,
+    private readonly eventBus: EventBus,
   ) {}
 
-  async execute(command: ClientReservesRoomCommand) {
+  public async execute(
+    command: ClientReservesRoomCommand,
+  ): Promise<CommandResponse> {
     try {
       this.logger.log('Async ClientReservesRoomCommand...');
 
@@ -41,9 +46,21 @@ export class ClientReservesRoomCommandHandler
         this.houseMaidHandler,
       );
 
-      await hotel.reserveRoom(new Client(clientId), dateArrival, dateLeaving);
-      // publish event
-      // ...
+      const room: Room = await hotel.reserveRoom(
+        new Client(clientId),
+        dateArrival,
+        dateLeaving,
+      );
+
+      this.eventBus.publish(
+        new ClientReservedRoomEvent(
+          new Client(clientId),
+          room,
+          dateArrival,
+          dateLeaving,
+        ),
+      );
+
       return new CommandResponse('success');
     } catch (e) {
       this.logger.error(e);

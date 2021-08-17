@@ -7,10 +7,10 @@ import {
   ClientNotifier,
 } from '../../domain/ports/client-notifier';
 import HouseMaid, { HOUSE_MAID } from '../../domain/ports/house-maid';
-import { HOTEL_REPOSITORY } from '../../repositories/hotel.repository.interface';
-import HotelRepository from '../../repositories/hotel.repository.stub';
+import HotelRepository, {
+  HOTEL_REPOSITORY,
+} from '../../repositories/hotel.repository.interface';
 import QueryResponse from '../response/query.response';
-import Hotel from '../../domain/hotel';
 
 @QueryHandler(CheckoutRoomQuery)
 export default class CheckoutRoomQueryHandler
@@ -31,12 +31,7 @@ export default class CheckoutRoomQueryHandler
   public async execute(query: CheckoutRoomQuery): Promise<QueryResponse> {
     this.logger.debug('Async CheckoutRoomQuery...');
     const { roomNumber } = query;
-    const hotel: Hotel = await this.repository.getHotel(
-      this.roomRegistryHandler,
-      this.clientNotifierHandler,
-      this.houseMaidHandler,
-    );
-    const checkoutResult = await hotel.checksTheRoomOut(roomNumber);
+    const checkoutResult = await this.repository.checksTheRoomOut(roomNumber);
     return {
       result: {
         roomNumber: roomNumber,

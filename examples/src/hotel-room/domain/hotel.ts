@@ -20,7 +20,7 @@ export default class Hotel {
       arrival,
       checkout,
     );
-    if (availableRoom === null) {
+    if (availableRoom === null || availableRoom === undefined) {
       return null;
     }
     await this.clientNotifier.sendConfirmation(clientId, arrival, checkout);
@@ -47,6 +47,11 @@ export default class Hotel {
     clientId: string,
     checkoutResult: 'allIsOk' | 'towelsMissing',
   ): Promise<number> {
+    const roomNumber: number = await this.findKey(clientId);
+    if (roomNumber === null) {
+      return 0;
+    }
+
     const moneyAmount: number = checkoutResult === 'allIsOk' ? 100 : 110;
     this.roomRegistry.registerBillPaiement(clientId, moneyAmount);
     return moneyAmount;

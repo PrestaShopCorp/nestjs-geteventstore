@@ -1,4 +1,4 @@
-import { Module, OnApplicationBootstrap, Type } from '@nestjs/common';
+import { Module, OnApplicationBootstrap, Provider, Type } from '@nestjs/common';
 import HotelRoomController from './hotel-room.controller';
 import {
   CqrsModule,
@@ -6,7 +6,6 @@ import {
   IEventHandler,
   IQueryHandler,
 } from '@nestjs/cqrs';
-import HotelRepositoryStub from './repositories/hotel.repository.stub';
 import RoomRegistryAdapter from './adapters/room-registry.adapter';
 import HouseMaidAdapter from './adapters/house-maid.adapter';
 import ClientNotifierAdapter from './adapters/client-notifier.adapter';
@@ -20,38 +19,56 @@ import { ClientReservedRoomEventHandler } from './events/handlers/client-reserve
 import { HOTEL_REPOSITORY } from './repositories/hotel.repository.interface';
 import { ClientArrivesCommandHandler } from './commands/handlers/client-arrives.command.handler';
 import { ClientArrivedEventHandler } from './events/handlers/client-arrived.event.handler';
-import { ClientLeavedEventHandler } from './events/handlers/client-leaved.event.handler';
 import { ClientPaidEventHandler } from './events/handlers/client-paid.event.handler';
-import { RoomCleanedEventHandler } from './events/handlers/room-cleaned.event.handler';
 import { PayBillCommandHandler } from './commands/handlers/pay-bill-command.handler';
 import CheckoutRoomQueryHandler from './queries/handlers/checkout-room.query.handler';
 import GetClientRoomQueryHandler from './queries/handlers/get-client-room.query.handler';
 import GetClientReceiptQueryHandler from './queries/handlers/get-client-receipt.query.handler';
 import ESEventBus from './extention/es-event-bus';
-import { GrpcEventStoreConfig } from '@nestjs-geteventstore/event-store/config/grpc/grpc-event-store-config';
-import { EventStoreModule } from '@nestjs-geteventstore/event-store/event-store.module';
-import { IEventStoreConfig } from '@nestjs-geteventstore/event-store/config';
 import { ExplorerService } from '@nestjs/cqrs/dist/services/explorer.service';
 import ESEvent from './extention/es-event';
 import GetHotelStateQueryHandler from './queries/handlers/get-hotel-state.query.handler';
+import HotelEventStore, {
+  EVENT_STORE_CONNECTOR,
+} from './repositories/hotel.event-store.repository';
+import { Client } from '@eventstore/db-client/dist/Client';
+import { EventStoreDBClient } from '@eventstore/db-client';
 
-const eventStoreConfig: GrpcEventStoreConfig = {
-  connectionSettings: {
-    connectionString:
-      process.env.CONNECTION_STRING || 'esdb://localhost:20113?tls=false',
-  },
-  defaultUserCredentials: {
-    username: process.env.EVENTSTORE_CREDENTIALS_USERNAME || 'admin',
-    password: process.env.EVENTSTORE_CREDENTIALS_PASSWORD || 'changeit',
-  },
-};
+// const eventStoreConfig: GrpcEventStoreConfig = {
+// 	connectionSettings: {
+// 		connectionString:
+// 		  process.env.CONNECTION_STRING || 'esdb://localhost:20113?tls=false',
+// 	},
+// 	defaultUserCredentials: {
+// 		username: process.env.EVENTSTORE_CREDENTIALS_USERNAME || 'admin',
+// 		password: process.env.EVENTSTORE_CREDENTIALS_PASSWORD || 'changeit',
+// 	},
+// };
+//
+// const serviceConfig: IEventStoreServiceConfig = {
+// 	subscriptions: {
+// 		persistent: [
+// 			{
+// 				// Event stream category (before the -)
+// 				stream: 'hotel-stream',
+// 				group: 'data',
+// 				autoAck: false,
+// 				bufferSize: 500,
+// 				// Subscription is created with this options
+// 				options: {
+// 					resolveLinkTos: true,
+// 					minCheckPointCount: 1,
+// 				},
+// 			},
+// 		],
+//
+// 	},
+// };
 
 export const CommandHandlers: Type<ICommandHandler>[] = [
   ClientReservesRoomCommandHandler,
   NotifyClientCommandHandler,
-
   ClientArrivesCommandHandler,
-
   PayBillCommandHandler,
 ];
 
@@ -65,15 +82,11 @@ export const QueryHandlers: Type<IQueryHandler>[] = [
 export const EventsHandlers: Type<IEventHandler>[] = [
   ClientReservedRoomEventHandler,
   ClientNotifiedEventHandler,
-
   ClientArrivedEventHandler,
-
-  ClientLeavedEventHandler,
   ClientPaidEventHandler,
-  RoomCleanedEventHandler,
 ];
 
-export const AdaptersHandlers = [
+export const AdaptersHandlers: Provider[] = [
   {
     provide: ROOM_REGISTRY,
     useClass: RoomRegistryAdapter,
@@ -88,17 +101,22 @@ export const AdaptersHandlers = [
   },
 ];
 
+const eventStoreConnector: Client = EventStoreDBClient.connectionString(
+  process.env.CONNECTION_STRING || 'esdb://localhost:20113?tls=false',
+);
+
 @Module({
-  imports: [
-    CqrsModule,
-    EventStoreModule.register(eventStoreConfig as IEventStoreConfig, {}),
-  ],
+  imports: [CqrsModule],
   controllers: [HotelRoomController],
   providers: [
     ExplorerService,
     {
       provide: HOTEL_REPOSITORY,
-      useClass: HotelRepositoryStub,
+      useClass: HotelEventStore,
+    },
+    {
+      provide: EVENT_STORE_CONNECTOR,
+      useValue: eventStoreConnector,
     },
     ...QueryHandlers,
     ...CommandHandlers,

@@ -119,7 +119,7 @@ export class EventStoreService
 
   public async subscribeToPersistentSubscriptions(
     subscriptions: IPersistentSubscriptionConfig[],
-  ): Promise<unknown> {
+  ): Promise<any> {
     await Promise.all(
       subscriptions.map(async (subscription) => {
         try {
@@ -156,24 +156,26 @@ export class EventStoreService
       }),
     );
     return await Promise.all(
-      subscriptions.map(async (config) => {
-        this.logger.log(
-          `Connecting to persistent subscription "${config.group}" on stream ${config.stream}`,
-        );
-        return this.eventStore.subscribeToPersistentSubscription(
-          config.stream,
-          config.group,
-          (subscription, payload) => {
-            return this.config.onEvent
-              ? this.config.onEvent(subscription, payload)
-              : this.onEvent(subscription, payload);
-          },
-          config.autoAck,
-          config.bufferSize,
-          config.onSubscriptionStart,
-          config.onSubscriptionDropped,
-        );
-      }),
+      subscriptions.map(
+        async (config: IPersistentSubscriptionConfig): Promise<any> => {
+          this.logger.log(
+            `Connecting to persistent subscription "${config.group}" on stream ${config.stream}`,
+          );
+          return this.eventStore.subscribeToPersistentSubscription(
+            config.stream,
+            config.group,
+            (subscription, payload) => {
+              return this.config.onEvent
+                ? this.config.onEvent(subscription, payload)
+                : this.onEvent(subscription, payload);
+            },
+            config.autoAck,
+            config.bufferSize,
+            config.onSubscriptionStart,
+            config.onSubscriptionDropped,
+          );
+        },
+      ),
     );
   }
 

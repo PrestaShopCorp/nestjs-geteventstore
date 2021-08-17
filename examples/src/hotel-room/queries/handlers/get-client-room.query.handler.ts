@@ -1,9 +1,9 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
-import { HOTEL_REPOSITORY } from '../../repositories/hotel.repository.interface';
-import HotelRepository from '../../repositories/hotel.repository.stub';
+import HotelRepository, {
+  HOTEL_REPOSITORY,
+} from '../../repositories/hotel.repository.interface';
 import QueryResponse from '../response/query.response';
-import Room from '../../domain/room';
 import GetClientRoomQuery from '../impl/get-client-room.query';
 
 @QueryHandler(GetClientRoomQuery)
@@ -20,11 +20,13 @@ export default class GetClientRoomQueryHandler
     this.logger.debug('Async GetClientRoomQuery...');
     const { clientId } = query;
 
-    const clientRoom: Room = await this.repository.getClientRoom(clientId);
+    const clientRoomNumber: number = await this.repository.getClientRoom(
+      clientId,
+    );
 
     return {
       result: {
-        clientRoom,
+        clientRoomNumber,
       },
     };
   }

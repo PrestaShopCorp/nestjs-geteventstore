@@ -50,21 +50,23 @@ describe('Hotel use cases', () => {
   });
 
   describe('when client reserve a room', () => {
-    it('should refuse to provide no room is available', async () => {
-      spyOn(roomRegistryMock, 'reserveAvailableRoom').mockImplementationOnce(
-        async (): Promise<null> => {
-          return null;
-        },
-      );
+    [undefined, null].forEach((nullValue: undefined | null) => {
+      it(`should refuse to provide no room (repo sent ${nullValue})`, async () => {
+        spyOn(roomRegistryMock, 'reserveAvailableRoom').mockImplementationOnce(
+          async (): Promise<null> => {
+            return nullValue;
+          },
+        );
 
-      const needToCheckAnotherHotel: Room = await hotel.reserveRoom(
-        clientId,
-        arrival,
-        checkout,
-      );
+        const needToCheckAnotherHotel: Room = await hotel.reserveRoom(
+          clientId,
+          arrival,
+          checkout,
+        );
 
-      expect(roomRegistryMock.reserveAvailableRoom).toHaveBeenCalled();
-      expect(needToCheckAnotherHotel).toBeFalsy();
+        expect(roomRegistryMock.reserveAvailableRoom).toHaveBeenCalled();
+        expect(needToCheckAnotherHotel).toBeFalsy();
+      });
     });
 
     it('should send a confirmation when a room is reserved', async () => {
@@ -149,6 +151,17 @@ describe('Hotel use cases', () => {
     });
 
     describe('when paying the bill', () => {
+      it('should get a bill of 0 when client were had no room', async () => {
+        spyOn(roomRegistryMock, 'findRoomNumber').mockResolvedValueOnce(null);
+
+        const billAmount: number = await hotel.makesTheClientPay(
+          clientId,
+          'towelsMissing',
+        );
+
+        expect(billAmount).toEqual(0);
+      });
+
       it('should write the bill transaction in the room registry at the end of the stay', async () => {
         spyOn(roomRegistryMock, 'registerBillPaiement');
 

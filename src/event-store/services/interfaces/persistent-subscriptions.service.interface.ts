@@ -5,7 +5,7 @@ import { Credentials } from '@eventstore/db-client/dist/types';
 export interface IPersistentSubscriptionsService {
   subscribeToPersistentSubscriptions(
     subscriptions: IPersistentSubscriptionConfig[],
-  ): Promise<unknown>;
+  ): Promise<any>;
 
   createPersistentSubscription(
     streamName: string,

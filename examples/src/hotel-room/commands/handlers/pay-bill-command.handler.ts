@@ -1,7 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import HotelRepository from '../../repositories/hotel.repository.stub';
 import { Inject, Logger } from '@nestjs/common';
-import { HOTEL_REPOSITORY } from '../../repositories/hotel.repository.interface';
 import { ROOM_REGISTRY, RoomRegistry } from '../../domain/ports/room-registry';
 import {
   CLIENT_NOTIFIER,
@@ -25,8 +23,6 @@ export class PayBillCommandHandler implements ICommandHandler<PayBillCommand> {
     private readonly clientNotifierHandler: ClientNotifier,
     @Inject(HOUSE_MAID)
     private readonly houseMaidHandler: HouseMaid,
-    @Inject(HOTEL_REPOSITORY)
-    private readonly repository: HotelRepository,
     private readonly eventBus: ESEventBus,
   ) {}
 
@@ -35,13 +31,11 @@ export class PayBillCommandHandler implements ICommandHandler<PayBillCommand> {
       this.logger.debug('Async PayBillCommand...');
 
       const { clientId, checkoutResult } = command;
-      const hotel: Hotel = await this.repository.getHotel(
+      const hotel: Hotel = new Hotel(
         this.roomRegistryHandler,
         this.clientNotifierHandler,
         this.houseMaidHandler,
       );
-
-      await this.checkClientWasThere(clientId);
 
       const bill: number = await hotel.makesTheClientPay(
         clientId,
@@ -58,16 +52,10 @@ export class PayBillCommandHandler implements ICommandHandler<PayBillCommand> {
         ),
       );
 
-      this.repository.freeRoom(clientId);
-
       return new CommandResponse('success');
     } catch (e) {
       this.logger.error(e);
       return new CommandResponse('fail', e);
     }
-  }
-
-  private async checkClientWasThere(clientId: string) {
-    await this.repository.getClientRoom(clientId);
   }
 }

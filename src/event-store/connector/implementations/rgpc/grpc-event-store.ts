@@ -100,7 +100,7 @@ export class RGPCEventStore implements EventStoreConnector {
     bufferSize: number,
     onSubscriptionStart: (sub) => void,
     onSubscriptionDropped: (sub, reason, error) => void,
-  ): void {
+  ): PersistentSubscription {
     // once deprecated is removed, add observable mecchanism
     const persistentSubscription: PersistentSubscription =
       this.client.connectToPersistentSubscription(stream, group, {
@@ -115,6 +115,8 @@ export class RGPCEventStore implements EventStoreConnector {
     if (!isNil(onSubscriptionDropped)) {
       persistentSubscription.on('close', onSubscriptionDropped);
     }
+
+    return persistentSubscription;
   }
 
   public async subscribeToVolatileSubscription(

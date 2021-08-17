@@ -1,7 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import HotelRepository from '../../repositories/hotel.repository.stub';
 import { Inject, Logger } from '@nestjs/common';
-import { HOTEL_REPOSITORY } from '../../repositories/hotel.repository.interface';
 import { ROOM_REGISTRY, RoomRegistry } from '../../domain/ports/room-registry';
 import {
   CLIENT_NOTIFIER,
@@ -27,8 +25,6 @@ export class ClientArrivesCommandHandler
     private readonly clientNotifierHandler: ClientNotifier,
     @Inject(HOUSE_MAID)
     private readonly houseMaidHandler: HouseMaid,
-    @Inject(HOTEL_REPOSITORY)
-    private readonly repository: HotelRepository,
     private readonly eventBus: ESEventBus,
   ) {}
 
@@ -39,7 +35,7 @@ export class ClientArrivesCommandHandler
       this.logger.debug('Async ClientArrivesCommand...');
 
       const { clientId } = command;
-      const hotel: Hotel = await this.repository.getHotel(
+      const hotel: Hotel = new Hotel(
         this.roomRegistryHandler,
         this.clientNotifierHandler,
         this.houseMaidHandler,

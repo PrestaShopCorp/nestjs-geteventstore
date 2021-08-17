@@ -1,23 +1,23 @@
-import Room from '../domain/room';
-import { RoomRegistry } from '../domain/ports/room-registry';
-import { ClientNotifier } from '../domain/ports/client-notifier';
-import HouseMaid from '../domain/ports/house-maid';
-import Hotel from '../domain/hotel';
-
 export const HOTEL_REPOSITORY = Symbol();
 
 export default interface HotelRepository {
-  getHotel(
-    roomRegistryHandler: RoomRegistry,
-    clientNotifierHandler: ClientNotifier,
-    houseMaidHandler: HouseMaid,
-  ): Promise<Hotel>;
-
-  getClientRoom(clientId: string): Promise<Room>;
+  getClientRoom(clientId: string): Promise<number>;
 
   getAvailableRoom(
     clientId: string,
     arrival: Date,
     checkout: Date,
-  ): Promise<Room | null>;
+  ): Promise<number | null>;
+
+  checksTheRoomOut(roomNumber: number): Promise<'allIsOk' | 'towelsMissing'>;
+
+  getNbAvailableRooms(): Promise<number>;
+
+  findRoomNumber(clientId: string): Promise<number>;
+
+  registerBill(clientId: string, billAmount: number): void;
+
+  freeRoom(clientId: string): void;
+
+  getClientReceipt(clientId: string): number;
 }

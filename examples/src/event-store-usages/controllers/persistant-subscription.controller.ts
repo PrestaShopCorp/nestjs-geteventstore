@@ -13,6 +13,7 @@ import {
   EVENT_STORE_SERVICE,
   IEventStoreService,
 } from '@nestjs-geteventstore/event-store/services/interfaces/event-store.service.interface';
+import { PersistentSubscription } from '@eventstore/db-client';
 
 @Controller('persistent-subscription')
 export default class PersistantSubscriptionController {
@@ -51,13 +52,18 @@ export default class PersistantSubscriptionController {
     @Param('streamname') stream: string,
     @Param('group') group: string,
     @Body() persistentSubscriptionOptions: PersistentSubscriptionOptions,
-  ): Promise<unknown> {
-    return this.eventStoreService.subscribeToPersistentSubscriptions([
-      {
-        stream,
-        group,
-      },
-    ]);
+  ): Promise<any> {
+    const persSub: PersistentSubscription =
+      await this.eventStoreService.subscribeToPersistentSubscriptions([
+        {
+          stream,
+          group,
+        },
+      ]);
+
+    persSub.on('data', () => console.log('XXXXXXX'));
+
+    return persSub;
   }
 
   @Delete('delete/:streamname/:group')

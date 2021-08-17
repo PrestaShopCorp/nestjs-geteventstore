@@ -19,6 +19,7 @@ import {
   StreamSubscription,
 } from '@eventstore/db-client/dist/types';
 import EventStoreSubscription from '../../subscriptions/event-store-subscription';
+import { PersistentSubscription } from '@eventstore/db-client';
 
 export const EVENT_STORE_CONNECTOR = Symbol();
 
@@ -76,7 +77,7 @@ export default interface EventStoreConnector {
     bufferSize: number,
     onSubscriptionStart: (sub) => void,
     onSubscriptionDropped: (sub, reason, error) => void,
-  ): void | Promise<EventStorePersistentSubscription>;
+  ): void | Promise<EventStorePersistentSubscription> | PersistentSubscription;
 
   subscribeToVolatileSubscription(
     stream: string,

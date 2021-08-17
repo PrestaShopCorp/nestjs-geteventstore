@@ -1,7 +1,8 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
-import { HOTEL_REPOSITORY } from '../../repositories/hotel.repository.interface';
-import HotelRepository from '../../repositories/hotel.repository.stub';
+import HotelRepository, {
+  HOTEL_REPOSITORY,
+} from '../../repositories/hotel.repository.interface';
 import QueryResponse from '../response/query.response';
 import GetClientRoomQuery from '../impl/get-client-room.query';
 import GetClientReceiptQuery from '../impl/get-client-receipt.query';

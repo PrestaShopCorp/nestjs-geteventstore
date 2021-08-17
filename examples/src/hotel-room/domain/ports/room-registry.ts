@@ -5,7 +5,7 @@ export const ROOM_REGISTRY = Symbol();
 export interface RoomRegistry {
   registerClientHasKey(clientId: string): Promise<void>;
 
-  findRoomNumber(clientId: string): Promise<number>;
+  findRoomNumber(clientId: string): Promise<number | null>;
 
   releaseRoom(roomNumber: number): Promise<void>;
 

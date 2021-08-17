@@ -1,7 +1,7 @@
 export const CLIENT_NOTIFIER = Symbol();
 
 export interface ClientNotifier {
-  notifyClientByEmail(
+  sendConfirmation(
     clientId: string,
     arrival: Date,
     checkout: Date,

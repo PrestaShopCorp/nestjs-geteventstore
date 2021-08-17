@@ -9,7 +9,7 @@ export class ClientLeavedEventHandler
   private readonly logger = new Logger(this.constructor.name);
 
   public handle(event: ClientLeavedEvent): void {
-    this.logger.log(
+    this.logger.debug(
       `Async ClientLeavesEventHandler... client : ${event.clientId} leaves room ${event.roomNumber}`,
     );
   }

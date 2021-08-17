@@ -1,4 +1,4 @@
-import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import HotelRepository from '../../repositories/hotel.repository.stub';
 import { ClientReservesRoomCommand } from '../impl/client-reserves-room.command';
 import { Inject, Logger } from '@nestjs/common';
@@ -13,6 +13,7 @@ import Hotel from '../../domain/hotel';
 import CommandResponse from '../response/command.response';
 import { ClientReservedRoomEvent } from '../../events/impl/client-reserved-room.event';
 import Room from '../../domain/room';
+import ESEventBus from '../../extention/es-event-bus';
 
 @CommandHandler(ClientReservesRoomCommand)
 export class ClientReservesRoomCommandHandler
@@ -29,14 +30,14 @@ export class ClientReservesRoomCommandHandler
     private readonly houseMaidHandler: HouseMaid,
     @Inject(HOTEL_REPOSITORY)
     private readonly repository: HotelRepository,
-    private readonly eventBus: EventBus,
+    private readonly eventBus: ESEventBus,
   ) {}
 
   public async execute(
     command: ClientReservesRoomCommand,
   ): Promise<CommandResponse> {
     try {
-      this.logger.log('Async ClientReservesRoomCommand...');
+      this.logger.debug('Async ClientReservesRoomCommand...');
 
       const { clientId, dateArrival, dateLeaving } = command;
       const hotel: Hotel = await this.repository.getHotel(
@@ -51,8 +52,17 @@ export class ClientReservesRoomCommandHandler
         dateLeaving,
       );
 
-      this.eventBus.publish(
+      if (room === null) {
+        const message = 'Hotel is full';
+        this.logger.error(message);
+        return new CommandResponse('fail', message);
+      }
+
+      await this.eventBus.publish(
         new ClientReservedRoomEvent(
+          {
+            streamName: 'hotel-stream',
+          },
           clientId,
           room.getNumber(),
           dateArrival,
@@ -63,7 +73,7 @@ export class ClientReservesRoomCommandHandler
       return new CommandResponse('success');
     } catch (e) {
       this.logger.error(e);
-      return new CommandResponse('fail');
+      return new CommandResponse('fail', e);
     }
   }
 }

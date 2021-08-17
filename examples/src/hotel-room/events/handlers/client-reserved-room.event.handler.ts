@@ -9,6 +9,6 @@ export class ClientReservedRoomEventHandler
   private readonly logger = new Logger(this.constructor.name);
 
   public handle(event: ClientReservedRoomEvent): void {
-    this.logger.log(`Async ClientReservesRoomEvent... `);
+    this.logger.debug(`Async ClientReservesRoomEvent... `);
   }
 }

@@ -1,8 +1,9 @@
-import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { NotifyClientCommand } from '../impl/notify-client.command';
 import { Logger } from '@nestjs/common';
 import CommandResponse from '../response/command.response';
 import { ClientNotifiedEvent } from '../../events/impl/client-notified.event';
+import ESEventBus from '../../extention/es-event-bus';
 
 @CommandHandler(NotifyClientCommand)
 export class NotifyClientCommandHandler
@@ -10,23 +11,30 @@ export class NotifyClientCommandHandler
 {
   private readonly logger = new Logger(this.constructor.name);
 
-  constructor(private readonly eventBus: EventBus) {}
+  constructor(private readonly eventBus: ESEventBus) {}
 
   public async execute(command: NotifyClientCommand): Promise<CommandResponse> {
     try {
-      this.logger.log('Async NotifyClientCommand...');
-      this.logger.log('Email sent');
-
+      this.logger.debug('Async NotifyClientCommand...');
       const { clientId, dateArrival, dateLeaving } = command;
 
-      this.eventBus.publish(
-        new ClientNotifiedEvent(clientId, dateArrival, dateLeaving),
+      await this.eventBus.publish(
+        new ClientNotifiedEvent(
+          {
+            streamName: 'hotel-stream',
+          },
+          clientId,
+          dateArrival,
+          dateLeaving,
+        ),
       );
+
+      this.logger.debug('Email sent');
 
       return new CommandResponse('success');
     } catch (e) {
       this.logger.error(e);
-      return new CommandResponse('fail');
+      return new CommandResponse('fail', e);
     }
   }
 }

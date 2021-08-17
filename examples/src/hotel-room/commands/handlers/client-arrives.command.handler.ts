@@ -1,4 +1,4 @@
-import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import HotelRepository from '../../repositories/hotel.repository.stub';
 import { Inject, Logger } from '@nestjs/common';
 import { HOTEL_REPOSITORY } from '../../repositories/hotel.repository.interface';
@@ -12,6 +12,7 @@ import { ClientArrivesCommand } from '../impl/client-arrives.command';
 import Hotel from '../../domain/hotel';
 import CommandResponse from '../response/command.response';
 import { ClientArrivedEvent } from '../../events/impl/client-arrived.event';
+import ESEventBus from '../../extention/es-event-bus';
 
 @CommandHandler(ClientArrivesCommand)
 export class ClientArrivesCommandHandler
@@ -28,14 +29,14 @@ export class ClientArrivesCommandHandler
     private readonly houseMaidHandler: HouseMaid,
     @Inject(HOTEL_REPOSITORY)
     private readonly repository: HotelRepository,
-    private readonly eventBus: EventBus,
+    private readonly eventBus: ESEventBus,
   ) {}
 
   public async execute(
     command: ClientArrivesCommand,
   ): Promise<CommandResponse> {
     try {
-      this.logger.log('Async ClientArrivesCommand...');
+      this.logger.debug('Async ClientArrivesCommand...');
 
       const { clientId } = command;
       const hotel: Hotel = await this.repository.getHotel(
@@ -46,12 +47,20 @@ export class ClientArrivesCommandHandler
 
       const roomNumber: number = await hotel.givesKeyToClient(clientId);
 
-      this.eventBus.publish(new ClientArrivedEvent(clientId, roomNumber));
+      await this.eventBus.publish(
+        new ClientArrivedEvent(
+          {
+            streamName: 'hotel-stream',
+          },
+          clientId,
+          roomNumber,
+        ),
+      );
 
       return new CommandResponse('success');
     } catch (e) {
       this.logger.error(e);
-      return new CommandResponse('fail');
+      return new CommandResponse('fail', e);
     }
   }
 }

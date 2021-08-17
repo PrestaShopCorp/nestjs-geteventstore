@@ -1,4 +1,4 @@
-import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import HotelRepository from '../../repositories/hotel.repository.stub';
 import { Inject, Logger } from '@nestjs/common';
 import { HOTEL_REPOSITORY } from '../../repositories/hotel.repository.interface';
@@ -12,6 +12,7 @@ import { PayBillCommand } from '../impl/pay-bill.command';
 import Hotel from '../../domain/hotel';
 import CommandResponse from '../response/command.response';
 import { ClientPaidEvent } from '../../events/impl/client-paid.event';
+import ESEventBus from '../../extention/es-event-bus';
 
 @CommandHandler(PayBillCommand)
 export class PayBillCommandHandler implements ICommandHandler<PayBillCommand> {
@@ -26,12 +27,12 @@ export class PayBillCommandHandler implements ICommandHandler<PayBillCommand> {
     private readonly houseMaidHandler: HouseMaid,
     @Inject(HOTEL_REPOSITORY)
     private readonly repository: HotelRepository,
-    private readonly eventBus: EventBus,
+    private readonly eventBus: ESEventBus,
   ) {}
 
   public async execute(command: PayBillCommand): Promise<CommandResponse> {
     try {
-      this.logger.log('Async PayBillCommand...');
+      this.logger.debug('Async PayBillCommand...');
 
       const { clientId, checkoutResult } = command;
       const hotel: Hotel = await this.repository.getHotel(
@@ -47,12 +48,22 @@ export class PayBillCommandHandler implements ICommandHandler<PayBillCommand> {
         checkoutResult,
       );
 
-      this.eventBus.publish(new ClientPaidEvent(clientId, bill));
+      await this.eventBus.publish(
+        new ClientPaidEvent(
+          {
+            streamName: 'hotel-stream',
+          },
+          clientId,
+          bill,
+        ),
+      );
+
+      this.repository.freeRoom(clientId);
 
       return new CommandResponse('success');
     } catch (e) {
       this.logger.error(e);
-      return new CommandResponse('fail');
+      return new CommandResponse('fail', e);
     }
   }
 

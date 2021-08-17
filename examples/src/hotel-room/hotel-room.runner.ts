@@ -1,5 +1,4 @@
 import { NestFactory } from '@nestjs/core';
-import { Logger } from 'nestjs-pino-stackdriver';
 import { AllExceptionFilter } from '../all-exception.filter';
 import HotelRoomModule from './hotel-room.module';
 
@@ -7,7 +6,7 @@ declare const module: any;
 
 async function bootstrap() {
   const app = await NestFactory.create(HotelRoomModule, {
-    logger: new Logger(),
+    logger: ['debug', 'error'],
   });
 
   if (module.hot) {

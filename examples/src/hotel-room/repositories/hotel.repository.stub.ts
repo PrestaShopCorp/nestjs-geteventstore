@@ -69,4 +69,14 @@ export default class HotelRepositoryStub implements HotelRepository {
     }
     return bill;
   }
+
+  public getNbAvailableRooms(): number {
+    return this.availableRoomNumbers.length;
+  }
+
+  public freeRoom(clientId: string): void {
+    const roomNumber: number = this.usedRoomNumbers.get(clientId);
+    this.usedRoomNumbers.delete(clientId);
+    this.availableRoomNumbers.push(roomNumber);
+  }
 }

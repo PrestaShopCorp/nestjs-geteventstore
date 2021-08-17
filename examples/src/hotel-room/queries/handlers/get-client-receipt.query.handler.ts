@@ -17,7 +17,7 @@ export default class GetClientReceiptQueryHandler
   ) {}
 
   public async execute(query: GetClientRoomQuery): Promise<QueryResponse> {
-    this.logger.log('Async GetClientRoomQuery...');
+    this.logger.debug('Async GetClientRoomQuery...');
     try {
       const receipt: number = this.repository.getClientReceipt(query.clientId);
       return {

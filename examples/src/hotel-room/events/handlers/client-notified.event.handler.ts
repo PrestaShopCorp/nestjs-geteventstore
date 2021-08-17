@@ -9,6 +9,6 @@ export class ClientNotifiedEventHandler
   private readonly logger = new Logger(this.constructor.name);
 
   public handle(event: ClientNotifiedEvent): void {
-    this.logger.log(`Async NotifyClientEvent... `);
+    this.logger.debug(`Async NotifyClientEvent... `);
   }
 }

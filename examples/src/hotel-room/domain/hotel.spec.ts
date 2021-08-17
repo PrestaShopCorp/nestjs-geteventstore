@@ -40,7 +40,7 @@ describe('Hotel use cases', () => {
     },
   };
   const clientNotifier: ClientNotifier = {
-    notifyClientByEmail(clientId: string): Promise<void> {
+    sendConfirmation(clientId: string): Promise<void> {
       return Promise.resolve();
     },
   };
@@ -67,17 +67,17 @@ describe('Hotel use cases', () => {
       expect(needToCheckAnotherHotel).toBeFalsy();
     });
 
-    it('should send a confirmation email when a room is reserved', async () => {
+    it('should send a confirmation when a room is reserved', async () => {
       spyOn(roomRegistryMock, 'reserveAvailableRoom').mockImplementationOnce(
         async (): Promise<Room> => {
           return new Room(101);
         },
       );
-      spyOn(clientNotifier, 'notifyClientByEmail');
+      spyOn(clientNotifier, 'sendConfirmation');
 
       await hotel.reserveRoom(clientId, arrival, checkout);
 
-      expect(clientNotifier.notifyClientByEmail).toHaveBeenCalled();
+      expect(clientNotifier.sendConfirmation).toHaveBeenCalled();
     });
 
     it('should get available room identifier when reserving and hotel is not full', async () => {

@@ -9,7 +9,7 @@ export class RoomCleanedEventHandler
   private readonly logger = new Logger(this.constructor.name);
 
   public handle(event: RoomCleanedEvent): void {
-    this.logger.log(
+    this.logger.debug(
       `Async CleanRoomEventHandler... room ${event.roomNumber} cleaned and ${event.result}`,
     );
   }

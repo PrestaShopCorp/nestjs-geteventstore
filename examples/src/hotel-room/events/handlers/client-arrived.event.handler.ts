@@ -9,7 +9,7 @@ export class ClientArrivedEventHandler
   private readonly logger = new Logger(this.constructor.name);
 
   public handle(event: ClientArrivedEvent): void {
-    this.logger.log(
+    this.logger.debug(
       `Async ClientArrivesEvent... client : ${event.clientId} took room ${event.roomNumber}`,
     );
   }

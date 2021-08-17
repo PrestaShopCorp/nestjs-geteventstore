@@ -8,11 +8,11 @@ export default class HouseMaidAdapter implements HouseMaid {
   public async checksOutRoom(
     roomId: number,
   ): Promise<'allIsOk' | 'towelsMissing'> {
-    this.logger.log('Async HouseMaidHandler checksOutRoom...');
+    this.logger.debug('Async HouseMaidAdapter checksOutRoom...');
     return 'allIsOk';
   }
 
   public cleansTheRoom(roomId: number): void {
-    this.logger.log('Async HouseMaidHandler cleansTheRoom...');
+    this.logger.debug('Async HouseMaidAdapter cleansTheRoom...');
   }
 }

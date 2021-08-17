@@ -7,7 +7,7 @@ export class ClientPaidEventHandler implements IEventHandler<ClientPaidEvent> {
   private readonly logger = new Logger(this.constructor.name);
 
   public handle(event: ClientPaidEvent): void {
-    this.logger.log(
+    this.logger.debug(
       `Async ClientPayEventHandler... client : ${event.clientId} paid ${event.bill}`,
     );
   }

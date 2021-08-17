@@ -1,6 +1,11 @@
-import { Module } from '@nestjs/common';
+import { Module, OnApplicationBootstrap, Type } from '@nestjs/common';
 import HotelRoomController from './hotel-room.controller';
-import { CqrsModule } from '@nestjs/cqrs';
+import {
+  CqrsModule,
+  ICommandHandler,
+  IEventHandler,
+  IQueryHandler,
+} from '@nestjs/cqrs';
 import HotelRepositoryStub from './repositories/hotel.repository.stub';
 import RoomRegistryAdapter from './adapters/room-registry.adapter';
 import HouseMaidAdapter from './adapters/house-maid.adapter';
@@ -22,8 +27,26 @@ import { PayBillCommandHandler } from './commands/handlers/pay-bill-command.hand
 import CheckoutRoomQueryHandler from './queries/handlers/checkout-room.query.handler';
 import GetClientRoomQueryHandler from './queries/handlers/get-client-room.query.handler';
 import GetClientReceiptQueryHandler from './queries/handlers/get-client-receipt.query.handler';
+import ESEventBus from './extention/es-event-bus';
+import { GrpcEventStoreConfig } from '@nestjs-geteventstore/event-store/config/grpc/grpc-event-store-config';
+import { EventStoreModule } from '@nestjs-geteventstore/event-store/event-store.module';
+import { IEventStoreConfig } from '@nestjs-geteventstore/event-store/config';
+import { ExplorerService } from '@nestjs/cqrs/dist/services/explorer.service';
+import ESEvent from './extention/es-event';
+import GetHotelStateQueryHandler from './queries/handlers/get-hotel-state.query.handler';
 
-export const CommandHandlers = [
+const eventStoreConfig: GrpcEventStoreConfig = {
+  connectionSettings: {
+    connectionString:
+      process.env.CONNECTION_STRING || 'esdb://localhost:20113?tls=false',
+  },
+  defaultUserCredentials: {
+    username: process.env.EVENTSTORE_CREDENTIALS_USERNAME || 'admin',
+    password: process.env.EVENTSTORE_CREDENTIALS_PASSWORD || 'changeit',
+  },
+};
+
+export const CommandHandlers: Type<ICommandHandler>[] = [
   ClientReservesRoomCommandHandler,
   NotifyClientCommandHandler,
 
@@ -32,13 +55,14 @@ export const CommandHandlers = [
   PayBillCommandHandler,
 ];
 
-export const QueryHandlers = [
+export const QueryHandlers: Type<IQueryHandler>[] = [
   CheckoutRoomQueryHandler,
   GetClientRoomQueryHandler,
   GetClientReceiptQueryHandler,
+  GetHotelStateQueryHandler,
 ];
 
-export const EventsHandlers = [
+export const EventsHandlers: Type<IEventHandler>[] = [
   ClientReservedRoomEventHandler,
   ClientNotifiedEventHandler,
 
@@ -65,17 +89,30 @@ export const AdaptersHandlers = [
 ];
 
 @Module({
-  imports: [CqrsModule],
+  imports: [
+    CqrsModule,
+    EventStoreModule.register(eventStoreConfig as IEventStoreConfig, {}),
+  ],
   controllers: [HotelRoomController],
   providers: [
+    ExplorerService,
     {
       provide: HOTEL_REPOSITORY,
       useClass: HotelRepositoryStub,
     },
-    ...CommandHandlers,
     ...QueryHandlers,
+    ...CommandHandlers,
     ...EventsHandlers,
     ...AdaptersHandlers,
+    ESEventBus,
   ],
 })
-export default class HotelRoomModule {}
+export default class HotelRoomModule<EventBase extends ESEvent = ESEvent>
+  implements OnApplicationBootstrap
+{
+  constructor(private readonly eventsBus: ESEventBus<EventBase>) {}
+
+  public onApplicationBootstrap(): void {
+    this.eventsBus.register(EventsHandlers);
+  }
+}

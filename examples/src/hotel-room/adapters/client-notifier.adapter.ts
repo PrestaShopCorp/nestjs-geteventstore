@@ -9,12 +9,12 @@ export default class ClientNotifierAdapter implements ClientNotifier {
 
   constructor(private readonly commandBus: CommandBus) {}
 
-  public async notifyClientByEmail(
+  public async sendConfirmation(
     clientId: string,
     arrival: Date,
     checkout: Date,
   ): Promise<void> {
-    this.logger.log('Async ClientNotifierHandler notifyClientByEmail...');
+    this.logger.debug('Async ClientNotifierAdapter notifyClientByEmail...');
     return this.commandBus.execute(
       new NotifyClientCommand(clientId, arrival, checkout),
     );

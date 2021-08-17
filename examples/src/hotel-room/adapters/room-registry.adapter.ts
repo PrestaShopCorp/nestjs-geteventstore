@@ -14,7 +14,7 @@ export default class RoomRegistryAdapter implements RoomRegistry {
   ) {}
 
   public async releaseRoom(roomId: number): Promise<void> {
-    this.logger.log('Async RoomRegistry releaseRoom...');
+    this.logger.debug('Async RoomRegistryAdapter releaseRoom...');
   }
 
   public async reserveAvailableRoom(

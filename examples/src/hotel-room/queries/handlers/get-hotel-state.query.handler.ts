@@ -3,12 +3,11 @@ import { Inject, Logger } from '@nestjs/common';
 import { HOTEL_REPOSITORY } from '../../repositories/hotel.repository.interface';
 import HotelRepository from '../../repositories/hotel.repository.stub';
 import QueryResponse from '../response/query.response';
-import Room from '../../domain/room';
-import GetClientRoomQuery from '../impl/get-client-room.query';
+import GetHotelStateQuery from '../impl/get-hotel-state.query';
 
-@QueryHandler(GetClientRoomQuery)
-export default class GetClientRoomQueryHandler
-  implements IQueryHandler<GetClientRoomQuery>
+@QueryHandler(GetHotelStateQuery)
+export default class GetHotelStateQueryHandler
+  implements IQueryHandler<GetHotelStateQuery>
 {
   private readonly logger = new Logger(this.constructor.name);
   constructor(
@@ -16,15 +15,16 @@ export default class GetClientRoomQueryHandler
     private readonly repository: HotelRepository,
   ) {}
 
-  public async execute(query: GetClientRoomQuery): Promise<QueryResponse> {
-    this.logger.debug('Async GetClientRoomQuery...');
-    const { clientId } = query;
+  public async execute(): Promise<QueryResponse> {
+    this.logger.debug('Async GetHotelStateQuery...');
 
-    const clientRoom: Room = await this.repository.getClientRoom(clientId);
+    const nbAvailableRooms: number = this.repository.getNbAvailableRooms();
+
+    this.logger.debug(`Hotel free rooms : ${nbAvailableRooms}`);
 
     return {
       result: {
-        clientRoom,
+        nbAvailableRooms,
       },
     };
   }

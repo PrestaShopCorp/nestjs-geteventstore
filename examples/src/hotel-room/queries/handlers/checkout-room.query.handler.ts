@@ -29,7 +29,7 @@ export default class CheckoutRoomQueryHandler
   ) {}
 
   public async execute(query: CheckoutRoomQuery): Promise<QueryResponse> {
-    this.logger.log('Async CheckoutRoomQuery...');
+    this.logger.debug('Async CheckoutRoomQuery...');
     const { roomNumber } = query;
     const hotel: Hotel = await this.repository.getHotel(
       this.roomRegistryHandler,

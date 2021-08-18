@@ -11,8 +11,12 @@ yarn install
 You have to run a eventstore container with correct ports. You can put the ports you want, but it will work natively with this conf :
 
 ```
-docker run --name esdb-node -it -p 20113:2113 -p 10113:1113 \
-    eventstore/eventstore:latest --insecure --run-projections=All
+docker run --name esdb-node \
+    -it -p 20113:2113 -p 10113:1113 \
+    eventstore/eventstore:latest \
+    --insecure \
+    --run-projections=All \
+    --enable-atom-pub-over-http
 ```
 
 Then, you can see in the directory `/examples/src/event-store-usages` a serie of sub directory showing some example. You can run it by using the `/examples/src/package.json`, by running the corresponding example you want to try. For instance, if you want to play with persistent subscriptions, you can run :

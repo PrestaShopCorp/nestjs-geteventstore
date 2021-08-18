@@ -9,6 +9,7 @@ import QueryResponse from './queries/response/query.response';
 import GetClientRoomQuery from './queries/impl/get-client-room.query';
 import GetClientReceiptQuery from './queries/impl/get-client-receipt.query';
 import GetHotelStateQuery from './queries/impl/get-hotel-state.query';
+import { BuildNewHotelCommand } from './commands/impl/build-new-hotel.command';
 
 @Controller('hotel-room')
 export default class HotelRoomController {
@@ -67,5 +68,12 @@ export default class HotelRoomController {
   @Get('hotelstate')
   public async getHotelState(): Promise<QueryResponse> {
     return this.queryBus.execute(new GetHotelStateQuery());
+  }
+
+  @Get('build/:nbRooms')
+  public async buildNewHotel(
+    @Param('nbRooms') nbRooms: number,
+  ): Promise<CommandResponse> {
+    return this.commandBus.execute(new BuildNewHotelCommand(nbRooms));
   }
 }

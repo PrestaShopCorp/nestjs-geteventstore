@@ -16,7 +16,7 @@ export class ClientPaidEventHandler implements IEventHandler<ClientPaidEvent> {
 
   public handle(event: ClientPaidEvent): void {
     this.logger.debug(
-      `Async ClientPayEventHandler... client : ${event.clientId} paid ${event.bill}`,
+      `Async ClientPaidEvent... client : ${event.clientId} paid ${event.bill}`,
     );
     this.repository.freeRoom(event.clientId);
   }

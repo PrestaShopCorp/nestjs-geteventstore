@@ -28,7 +28,7 @@ import { Credentials } from '@eventstore/db-client/dist/types';
 import { PersistentSubscriptionOptions } from '../connector/interface/persistent-subscriptions-options';
 import { IEventStoreService } from './interfaces/event-store.service.interface';
 import {
-  EVENT_STORE_EVENT_HANDLER,
+  EVENT_STORE_EVENT_HANDLERS,
   IEventHandler,
 } from './event.handler.interface';
 import { AppendResult } from '../connector/interface/append-result';
@@ -44,7 +44,7 @@ export class EventStoreService
     private readonly eventStore: EventStoreConnector,
     @Inject(EVENT_STORE_SERVICE_CONFIG)
     private readonly config: IEventStoreServiceConfig,
-    @Inject(EVENT_STORE_EVENT_HANDLER)
+    @Inject(EVENT_STORE_EVENT_HANDLERS)
     private readonly eventHandler: IEventHandler,
     @Optional() private readonly eventBus?: ReadEventBus,
   ) {}

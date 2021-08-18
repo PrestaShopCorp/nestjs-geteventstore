@@ -32,9 +32,7 @@ export default class RoomRegistryAdapter implements RoomRegistry {
     return await this.hotelRepository.findRoomNumber(clientId);
   }
 
-  public registerBillPaiement(clientId: string, billAmount: number): void {
-    this.hotelRepository.registerBill(clientId, billAmount);
-  }
+  public registerBillPaiement(clientId: string, billAmount: number): void {}
 
   public registerClientHasKey(clientId: string): Promise<void> {
     return;

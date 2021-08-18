@@ -14,7 +14,7 @@ import {
 import { RGPCEventStore } from './connector/implementations/rgpc/grpc-event-store';
 import { GrpcEventStoreConfig } from './config/grpc/grpc-event-store-config';
 import TcpHttpEventStoreConfig from './config/tcp-http/tcp-http-event-store.config';
-import { EVENT_STORE_EVENT_HANDLER } from './services/event.handler.interface';
+import { EVENT_STORE_EVENT_HANDLERS } from './services/event.handler.interface';
 import EventHandler from './services/event.handler';
 import { EVENT_STORE_SERVICE } from './services/interfaces/event-store.service.interface';
 
@@ -23,7 +23,7 @@ import { EVENT_STORE_SERVICE } from './services/interfaces/event-store.service.i
     EventStoreHealthIndicator,
     EventStoreSubscriptionHealthIndicator,
     {
-      provide: EVENT_STORE_EVENT_HANDLER,
+      provide: EVENT_STORE_EVENT_HANDLERS,
       useClass: EventHandler,
     },
     {
@@ -33,7 +33,7 @@ import { EVENT_STORE_SERVICE } from './services/interfaces/event-store.service.i
   ],
   exports: [
     EVENT_STORE_SERVICE,
-    EVENT_STORE_EVENT_HANDLER,
+    EVENT_STORE_EVENT_HANDLERS,
 
     EventStoreHealthIndicator,
     EventStoreSubscriptionHealthIndicator,

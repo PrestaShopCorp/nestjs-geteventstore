@@ -1,9 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import HotelRepository from './hotel.repository.interface';
 import { Client } from '@eventstore/db-client/dist/Client';
-import { STARTING_ROOM_INDEX, TOTAL_NUMBER_OF_ROOMS } from '../hotel.constant';
-
-export const EVENT_STORE_CONNECTOR = Symbol();
+import { EVENT_STORE_CONNECTOR } from '../hotel-room.constant';
 
 @Injectable()
 export default class HotelEventStore implements HotelRepository {
@@ -22,23 +20,23 @@ export default class HotelEventStore implements HotelRepository {
     return Math.floor(Math.random() * 2) === 0 ? 'allIsOk' : 'towelsMissing';
   }
 
-  public getAvailableRoom(
+  public async getAvailableRoom(
     clientId: string,
     arrival: Date,
     checkout: Date,
-  ): Promise<number | null> {
-    return Promise.resolve(undefined);
+  ): Promise<number> {
+    return await this.getNbAvailableRooms();
   }
 
   public async getClientRoom(clientId: string): Promise<number> {
     const roomUsage = await this.eventStoreConnector.getProjectionState(
-      'hotel-state-projection',
+      'hotel-state',
     );
     const allocatedRooms = (roomUsage as { rooms: [string] }).rooms;
     let clientRoom = null;
     allocatedRooms.forEach((client: string, index: number) => {
       if (clientId === client) {
-        clientRoom = index + STARTING_ROOM_INDEX;
+        clientRoom = index;
       }
     });
     return clientRoom;
@@ -46,12 +44,10 @@ export default class HotelEventStore implements HotelRepository {
 
   public async getNbAvailableRooms(): Promise<number> {
     const roomUsage = await this.eventStoreConnector.getProjectionState(
-      'hotel-state-projection',
+      'hotel-state',
     );
-    return (
-      (roomUsage as { rooms: [[number, string]] }).rooms.length -
-      TOTAL_NUMBER_OF_ROOMS
-    );
+    return (roomUsage as { rooms: [string]; nbAvailableRooms: number })
+      .nbAvailableRooms;
   }
 
   public findRoomNumber(clientId: string): Promise<number> {

@@ -1,4 +1,4 @@
-import { ExpectedRevisionType } from '@nestjs-geteventstore/event-store/events';
+import { ExpectedRevisionType } from '../event-store/events';
 
 export interface ESContext {
   streamName?: string;

@@ -1,11 +1,6 @@
-import { Module, OnApplicationBootstrap, Provider, Type } from '@nestjs/common';
+import { Module, Provider, Type } from '@nestjs/common';
 import HotelRoomController from './hotel-room.controller';
-import {
-  CqrsModule,
-  ICommandHandler,
-  IEventHandler,
-  IQueryHandler,
-} from '@nestjs/cqrs';
+import { ICommandHandler, IEventHandler, IQueryHandler } from '@nestjs/cqrs';
 import RoomRegistryAdapter from './adapters/room-registry.adapter';
 import HouseMaidAdapter from './adapters/house-maid.adapter';
 import ClientNotifierAdapter from './adapters/client-notifier.adapter';
@@ -26,16 +21,14 @@ import GetClientReceiptQueryHandler from './queries/handlers/get-client-receipt.
 import GetHotelStateQueryHandler from './queries/handlers/get-hotel-state.query.handler';
 import { BuildNewHotelCommandHandler } from './commands/handlers/build-new-hotel.command.handler';
 import { HotelBuiltEventHandler } from './events/handlers/hotel-built.event.handler';
-import { ProjectionOnetime } from './extention/es-subsystems/projection.onetime';
 import { resolve } from 'path';
-import EsSubsystemConfiguration from './extention/es-subsystems/es-subsystem.configuration';
 import { HOTEL_REPOSITORY } from './repositories/hotel.repository.interface';
 import HotelEventStore from './repositories/hotel.event-store.repository';
-import ESEventBus from './extention/es-event-bus';
-import ESEvent from './extention/es-event';
-import { EventStoreDBClient } from '@eventstore/db-client';
-import { Client } from '@eventstore/db-client/dist/Client';
-import { EVENT_STORE_CONNECTOR } from './hotel-room.constant';
+// import ESEventBus from '@nestjs-geteventstore/cqrs2/es-event-bus';
+// import ESEvent from '@nestjs-geteventstore/cqrs2/es-event';
+import EsSubsystemConfiguration from '@nestjs-geteventstore/cqrs2/es-subsystems/es-subsystem.configuration';
+import { ProjectionOnetime } from '@nestjs-geteventstore/cqrs2';
+import EventStoreCqrsModule from '@nestjs-geteventstore/cqrs2/event-store-cqrs-module';
 
 export const EVENT_STORE_SUBSYSTEMS = Symbol();
 export const EVENT_STORE_EVENTS_HANDLERS = Symbol();
@@ -115,18 +108,13 @@ export const AdaptersHandlers: Provider[] = [
     useClass: ClientNotifierAdapter,
   },
 ];
-const eventStoreConnector: Client = EventStoreDBClient.connectionString(
-  process.env.CONNECTION_STRING || 'esdb://localhost:20113?tls=false',
-);
-
 @Module({
   imports: [
-    // EventStoreCqrsModule.connect(
-    //   process.env.CONNECTION_STRING || 'esdb://localhost:20113?tls=false',
-    //   esConfig,
-    //   EventsHandlers,
-    // ),
-    CqrsModule,
+    EventStoreCqrsModule.connect(
+      process.env.CONNECTION_STRING || 'esdb://localhost:20113?tls=false',
+      esConfig,
+      EventsHandlers,
+    ),
   ],
   controllers: [HotelRoomController],
   providers: [
@@ -138,24 +126,6 @@ const eventStoreConnector: Client = EventStoreDBClient.connectionString(
     ...CommandHandlers,
     ...AdaptersHandlers,
     ...EventsHandlers,
-
-    {
-      provide: EVENT_STORE_CONNECTOR,
-      useFactory: () => {
-        const connectionString =
-          process.env.CONNECTION_STRING || 'esdb://localhost:20113?tls=false';
-        return EventStoreDBClient.connectionString(connectionString);
-      },
-    },
-    ESEventBus,
   ],
 })
-export default class HotelRoomModule<EventBase extends ESEvent = ESEvent>
-  implements OnApplicationBootstrap
-{
-  constructor(private readonly eventsBus: ESEventBus<EventBase>) {}
-
-  public onApplicationBootstrap(): void {
-    this.eventsBus.init(EventsHandlers, esConfig);
-  }
-}
+export default class HotelRoomModule {}

@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import HotelRepository from './hotel.repository.interface';
 import { Client } from '@eventstore/db-client/dist/Client';
-import { EVENT_STORE_CONNECTOR } from '../hotel-room.constant';
+import { EVENT_STORE_CONNECTOR } from '@nestjs-geteventstore/cqrs2';
 
 @Injectable()
 export default class HotelEventStore implements HotelRepository {

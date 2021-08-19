@@ -10,7 +10,7 @@ import { PayBillCommand } from '../impl/pay-bill.command';
 import Hotel from '../../domain/hotel';
 import CommandResponse from '../response/command.response';
 import { ClientPaidEvent } from '../../events/impl/client-paid.event';
-import ESEventBus from '../../extention/es-event-bus';
+import ESEventBus from '@nestjs-geteventstore/cqrs2/es-event-bus';
 
 @CommandHandler(PayBillCommand)
 export class PayBillCommandHandler implements ICommandHandler<PayBillCommand> {

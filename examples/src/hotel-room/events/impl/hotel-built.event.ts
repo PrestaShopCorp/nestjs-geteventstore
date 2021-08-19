@@ -1,5 +1,5 @@
-import ESEvent from '../../extention/es-event';
-import { ESContext } from '../../extention/es-context';
+import ESEvent from '@nestjs-geteventstore/cqrs2/es-event';
+import { ESContext } from '@nestjs-geteventstore/cqrs2/es-context';
 
 export class HotelBuiltEvent implements ESEvent {
   constructor(

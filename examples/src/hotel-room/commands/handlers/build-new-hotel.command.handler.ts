@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import CommandResponse from '../response/command.response';
-import ESEventBus from '../../extention/es-event-bus';
+import ESEventBus from '@nestjs-geteventstore/cqrs2/es-event-bus';
 import { BuildNewHotelCommand } from '../impl/build-new-hotel.command';
 import { HotelBuiltEvent } from '../../events/impl/hotel-built.event';
 

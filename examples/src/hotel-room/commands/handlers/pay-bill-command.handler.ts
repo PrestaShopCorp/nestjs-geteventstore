@@ -11,6 +11,7 @@ import Hotel from '../../domain/hotel';
 import CommandResponse from '../response/command.response';
 import { ClientPaidEvent } from '../../events/impl/client-paid.event';
 import ESEventBus from '@nestjs-geteventstore/cqrs2/es-event-bus';
+import { HOTEL_STREAM_NAME } from '../../hotel-stream.constants';
 
 @CommandHandler(PayBillCommand)
 export class PayBillCommandHandler implements ICommandHandler<PayBillCommand> {
@@ -45,7 +46,7 @@ export class PayBillCommandHandler implements ICommandHandler<PayBillCommand> {
       await this.eventBus.publish(
         new ClientPaidEvent(
           {
-            streamName: 'hotel-stream',
+            streamName: HOTEL_STREAM_NAME,
           },
           clientId,
           bill,

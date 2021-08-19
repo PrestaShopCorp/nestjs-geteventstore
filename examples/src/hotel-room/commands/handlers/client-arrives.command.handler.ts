@@ -11,6 +11,7 @@ import Hotel from '../../domain/hotel';
 import CommandResponse from '../response/command.response';
 import { ClientArrivedEvent } from '../../events/impl/client-arrived.event';
 import ESEventBus from '@nestjs-geteventstore/cqrs2/es-event-bus';
+import { HOTEL_STREAM_NAME } from '../../hotel-stream.constants';
 
 @CommandHandler(ClientArrivesCommand)
 export class ClientArrivesCommandHandler
@@ -46,7 +47,7 @@ export class ClientArrivesCommandHandler
       await this.eventBus.publish(
         new ClientArrivedEvent(
           {
-            streamName: 'hotel-stream',
+            streamName: HOTEL_STREAM_NAME,
           },
           clientId,
           roomNumber,

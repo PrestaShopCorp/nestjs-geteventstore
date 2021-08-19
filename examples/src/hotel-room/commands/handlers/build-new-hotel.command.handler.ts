@@ -4,6 +4,7 @@ import CommandResponse from '../response/command.response';
 import ESEventBus from '@nestjs-geteventstore/cqrs2/es-event-bus';
 import { BuildNewHotelCommand } from '../impl/build-new-hotel.command';
 import { HotelBuiltEvent } from '../../events/impl/hotel-built.event';
+import { HOTEL_STREAM_NAME } from '../../hotel-stream.constants';
 
 @CommandHandler(BuildNewHotelCommand)
 export class BuildNewHotelCommandHandler
@@ -24,7 +25,7 @@ export class BuildNewHotelCommandHandler
       await this.eventBus.publish(
         new HotelBuiltEvent(
           {
-            streamName: 'hotel-stream',
+            streamName: HOTEL_STREAM_NAME,
           },
           nbRooms,
         ),

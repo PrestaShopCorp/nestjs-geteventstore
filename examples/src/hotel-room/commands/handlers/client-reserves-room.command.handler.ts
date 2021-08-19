@@ -12,6 +12,7 @@ import CommandResponse from '../response/command.response';
 import { ClientReservedRoomEvent } from '../../events/impl/client-reserved-room.event';
 import Room from '../../domain/room';
 import ESEventBus from '@nestjs-geteventstore/cqrs2/es-event-bus';
+import { HOTEL_STREAM_NAME } from '../../hotel-stream.constants';
 
 @CommandHandler(ClientReservesRoomCommand)
 export class ClientReservesRoomCommandHandler
@@ -58,7 +59,7 @@ export class ClientReservesRoomCommandHandler
       await this.eventBus.publish(
         new ClientReservedRoomEvent(
           {
-            streamName: 'hotel-stream',
+            streamName: HOTEL_STREAM_NAME,
           },
           clientId,
           room.getNumber(),

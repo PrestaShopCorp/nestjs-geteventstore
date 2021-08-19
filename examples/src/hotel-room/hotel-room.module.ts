@@ -24,14 +24,17 @@ import { HotelBuiltEventHandler } from './events/handlers/hotel-built.event.hand
 import { resolve } from 'path';
 import { HOTEL_REPOSITORY } from './repositories/hotel.repository.interface';
 import HotelEventStore from './repositories/hotel.event-store.repository';
-// import ESEventBus from '@nestjs-geteventstore/cqrs2/es-event-bus';
-// import ESEvent from '@nestjs-geteventstore/cqrs2/es-event';
 import EsSubsystemConfiguration from '@nestjs-geteventstore/cqrs2/es-subsystems/es-subsystem.configuration';
-import { ProjectionOnetime } from '@nestjs-geteventstore/cqrs2';
+import {
+  ProjectionOnetimeConfiguration,
+  SubscriptionConfiguration,
+} from '@nestjs-geteventstore/cqrs2';
 import EventStoreCqrsModule from '@nestjs-geteventstore/cqrs2/event-store-cqrs-module';
-
-export const EVENT_STORE_SUBSYSTEMS = Symbol();
-export const EVENT_STORE_EVENTS_HANDLERS = Symbol();
+import { persistentSubscriptionSettingsFromDefaults } from '@eventstore/db-client';
+import {
+  HOTEL_STREAM_GROUP,
+  HOTEL_STREAM_NAME,
+} from './hotel-stream.constants';
 
 // const eventStoreConfig: GrpcEventStoreConfig = {
 // 	connectionSettings: {
@@ -65,9 +68,18 @@ export const EVENT_STORE_EVENTS_HANDLERS = Symbol();
 // };
 const esConfig: EsSubsystemConfiguration = {
   projections: [
-    ProjectionOnetime.fromFile(
+    ProjectionOnetimeConfiguration.fromFile(
       resolve(`${__dirname}/projections/hotel-state.js`),
     ),
+  ],
+  subscriptions: [
+    {
+      stream: HOTEL_STREAM_NAME,
+      group: HOTEL_STREAM_GROUP,
+      options: persistentSubscriptionSettingsFromDefaults({
+        resolveLinkTos: false,
+      }),
+    } as SubscriptionConfiguration,
   ],
 };
 
@@ -113,7 +125,6 @@ export const AdaptersHandlers: Provider[] = [
     EventStoreCqrsModule.connect(
       process.env.CONNECTION_STRING || 'esdb://localhost:20113?tls=false',
       esConfig,
-      EventsHandlers,
     ),
   ],
   controllers: [HotelRoomController],
@@ -122,9 +133,9 @@ export const AdaptersHandlers: Provider[] = [
       provide: HOTEL_REPOSITORY,
       useClass: HotelEventStore,
     },
-    ...QueryHandlers,
-    ...CommandHandlers,
     ...AdaptersHandlers,
+    ...CommandHandlers,
+    ...QueryHandlers,
     ...EventsHandlers,
   ],
 })

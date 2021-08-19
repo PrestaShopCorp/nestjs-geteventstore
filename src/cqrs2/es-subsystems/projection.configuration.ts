@@ -1,7 +1,7 @@
 import { Client } from '@eventstore/db-client/dist/Client';
 
-export abstract class EventStoreProjection {
-  // name: string;
+export abstract class ProjectionConfiguration {
+  name?: string;
   content: string;
 
   // 'transient' mode won't work with deprecated connector

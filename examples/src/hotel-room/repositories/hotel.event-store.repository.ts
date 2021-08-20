@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import HotelRepository from './hotel.repository.interface';
 import { Client } from '@eventstore/db-client/dist/Client';
-import { EVENT_STORE_CONNECTOR } from '@nestjs-geteventstore/cqrs2';
+import { EVENT_STORE_CONNECTOR } from '@nestjs-geteventstore/cqrs-eventstore';
 import { HOTEL_STREAM_NAME } from '../hotel-stream.constants';
 import { HotelBuiltEvent } from '../events/impl/hotel-built.event';
 import { ClientReservedRoomEvent } from '../events/impl/client-reserved-room.event';

@@ -24,12 +24,12 @@ import { HotelBuiltEventHandler } from './events/handlers/hotel-built.event.hand
 import { resolve } from 'path';
 import { HOTEL_REPOSITORY } from './repositories/hotel.repository.interface';
 import HotelEventStore from './repositories/hotel.event-store.repository';
-import EsSubsystemConfiguration from '@nestjs-geteventstore/cqrs2/es-subsystems/es-subsystem.configuration';
+import EsSubsystemConfiguration from '@nestjs-geteventstore/cqrs-eventstore/es-subsystems/es-subsystem.configuration';
 import {
   ProjectionOnetimeConfiguration,
   SubscriptionConfiguration,
-} from '@nestjs-geteventstore/cqrs2';
-import EventStoreCqrsModule from '@nestjs-geteventstore/cqrs2/event-store-cqrs-module';
+} from '@nestjs-geteventstore/cqrs-eventstore';
+import EventStoreCqrsModule from '@nestjs-geteventstore/cqrs-eventstore/event-store-cqrs-module';
 import { persistentSubscriptionSettingsFromDefaults } from '@eventstore/db-client';
 import {
   HOTEL_STREAM_GROUP,

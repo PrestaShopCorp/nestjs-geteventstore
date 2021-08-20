@@ -1,6 +1,6 @@
 export * from './cloudevents';
 export * from './cqrs';
-export * from './cqrs2';
+export * from './cqrs-eventstore';
 export * from './dto';
 export * from './event-store';
 export * from './event-store/events';

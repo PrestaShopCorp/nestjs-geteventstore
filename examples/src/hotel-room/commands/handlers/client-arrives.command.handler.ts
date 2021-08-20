@@ -10,7 +10,7 @@ import { ClientArrivesCommand } from '../impl/client-arrives.command';
 import Hotel from '../../domain/hotel';
 import CommandResponse from '../response/command.response';
 import { ClientArrivedEvent } from '../../events/impl/client-arrived.event';
-import ESEventBus from '@nestjs-geteventstore/cqrs2/event-bus/es-event-bus';
+import ESEventBus from '@nestjs-geteventstore/cqrs-eventstore/event-bus/es-event-bus';
 import { HOTEL_STREAM_NAME } from '../../hotel-stream.constants';
 
 @CommandHandler(ClientArrivesCommand)

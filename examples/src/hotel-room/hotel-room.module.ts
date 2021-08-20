@@ -46,26 +46,7 @@ import {
 // 		password: process.env.EVENTSTORE_CREDENTIALS_PASSWORD || 'changeit',
 // 	},
 // };
-//
-// const serviceConfig: IEventStoreServiceConfig = {
-// 	subscriptions: {
-// 		persistent: [
-// 			{
-// 				// Event stream category (before the -)
-// 				stream: 'hotel-stream',
-// 				group: 'data',
-// 				autoAck: false,
-// 				bufferSize: 500,
-// 				// Subscription is created with this options
-// 				options: {
-// 					resolveLinkTos: true,
-// 					minCheckPointCount: 1,
-// 				},
-// 			},
-// 		],
-//
-// 	},
-// };
+
 const esConfig: EsSubsystemConfiguration = {
   projections: [
     ProjectionOnetimeConfiguration.fromFile(

@@ -47,7 +47,88 @@ curl -XGET localhost:3000/event-writer/write-event-batch/<optional : the stream 
 curl -XGET localhost:3000/stream-reader/$test-stream/<optional : the stream name>
 ```
 
-# Trying CQRS
+# Trying CQRS with event store - Hotel reservation example
+
+# Story
+
+You are a hotel manager, and you want to be able to take reservations, welcome clients,checkout rooms, get the bills etc.
+
+#Installation
+
+```
+cd examples/
+yarn
+```
+
+#Start server
+
+```
+cd examples/
+yarn run start:hotel-room
+```
+
+Listening on port 3000 you have now a rest API that you can request to see the behavior of the hotel.
+
+#Usage
+Using curl, you can request this API. You can find all possible request into the controller file :
+
+```
+examples/src/hotel-room/hotel-room.controller.ts
+```
+
+Then, you can use curl to request the API :
+
+```
+curl -i localhost:3000/path-to-api/arg1/arg2/...
+```
+
+For example, if you want to reinit the hotel, by rebuilding it with 10 rooms, then run :
+
+```
+curl -i localhost:3000/hotel-room/build/10
+```
+
+#Behavior in a nutshell
+(prerequisite : you need to know cqrs basic concepts)
+
+Staying in the example of the previous command (reinit hotel state), here is what happens :
+
+First it will execute corresponding command on the commandBus. The command will be dispatch to its handlers by the cqrs lib asynchronously. Then, the `BuildNewHotelCommandHandler` will execute this command, and send back a commandResponse chen it's done. Then you can see if something failed or if everything went ok.
+
+First, the commandHandler loads the last state of the aggregate, which is the model (here, it's in the domain folder, in this hexagonal architecture). It will run the correct command with the given args, and get a response. At this stage, if anything went ok, the corresponding event where emitted (`HotelBuiltEvent`).
+
+The point is that this example uses event store to... store events. You can see that the eventBus is not the standard nestjs cqrs one. this ESEventBus is a overlay on the standard EventBus. Basically, its behavior is to publish an event while the system standardly publish one. The other particularity is that at module init, it will connect and keep in memory all subscriptions, and projection that you want to get. You can see that in this module :
+
+```
+examples/src/hotel-room/hotel-room.module.ts
+```
+
+Let's see the import :
+
+```
+  imports: [
+    EventStoreCqrsModule.connect(
+      process.env.CONNECTION_STRING || 'esdb://localhost:20113?tls=false',
+      esConfig
+    )
+  ]
+```
+
+As you can see, no more need for importing CqrsModule, juste this one, fed with the connection string to EventStore, and the configuration esConfig, strongly typed to help you giving it what you need.
+
+Other interesting point : the hotel repository, that you can find here :
+
+```
+examples/src/hotel-room/repositories/hotel.event-store.repository.ts
+```
+
+This repo is able to replay all events appends to the hotel main stream, and is able to "reconstruct" the state of the model. It makes that you can ask it anything at anytime, it's always up to date (hat is how it know free rooms remaining and who are the room owners). A big ugly if/else is here to add behavior to the model at startup
+
+Note that using `EventStoreCqrsModule` still allows you to use standard NestJS CQRS standard EventBus.
+
+You can basically find in the sources of this example the same behavior either for command, or queries or events. And you can see example of how you can unit test that.
+
+# Trying CQRS - Hero example
 
 [Nest](https://github.com/kamilmysliwiec/nest) framework Eventstore [CQRS module](https://github.com/kamilmysliwiec/nest-cqrs) usage example.
 

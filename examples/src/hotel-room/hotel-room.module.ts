@@ -35,6 +35,7 @@ import {
   HOTEL_STREAM_GROUP,
   HOTEL_STREAM_NAME,
 } from './hotel-stream.constants';
+import BenchmarkController from './benchmark.controller';
 
 // const eventStoreConfig: GrpcEventStoreConfig = {
 // 	connectionSettings: {
@@ -109,7 +110,7 @@ export const AdaptersHandlers: Provider[] = [
       esConfig,
     ),
   ],
-  controllers: [HotelRoomController],
+  controllers: [HotelRoomController, BenchmarkController],
   providers: [
     {
       provide: HOTEL_REPOSITORY,

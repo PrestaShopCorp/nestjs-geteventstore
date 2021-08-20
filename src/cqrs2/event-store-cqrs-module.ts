@@ -1,11 +1,14 @@
 import { DynamicModule, Module, OnModuleInit } from '@nestjs/common';
 import { CommandBus, CqrsModule, QueryBus } from '@nestjs/cqrs';
-import ESEventBus from './es-event-bus';
-import ESEvent from './es-event';
+import ESEventBus from './event-bus/es-event-bus';
+import ESEvent from './events/es-event';
 import EsSubsystemConfiguration from './es-subsystems/es-subsystem.configuration';
 import { Client } from '@eventstore/db-client/dist/Client';
 import { EventStoreDBClient } from '@eventstore/db-client';
-import { EVENT_STORE_CONNECTOR, EVENT_STORE_SUBSYSTEMS } from './es.constant';
+import {
+  EVENT_STORE_CONNECTOR,
+  EVENT_STORE_SUBSYSTEMS,
+} from './constants/es-injectors.constant';
 import { ExplorerService } from '@nestjs/cqrs/dist/services/explorer.service';
 
 @Module({

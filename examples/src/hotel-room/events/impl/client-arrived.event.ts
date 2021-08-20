@@ -1,5 +1,5 @@
-import ESEvent from '@nestjs-geteventstore/cqrs2/es-event';
-import { ESContext } from '@nestjs-geteventstore/cqrs2/es-context';
+import ESEvent from '@nestjs-geteventstore/cqrs2/events/es-event';
+import { ESContext } from '@nestjs-geteventstore/cqrs2/events/es-context';
 
 export class ClientArrivedEvent implements ESEvent {
   constructor(

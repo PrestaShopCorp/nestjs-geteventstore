@@ -3,7 +3,7 @@ import { NotifyClientCommand } from '../impl/notify-client.command';
 import { Logger } from '@nestjs/common';
 import CommandResponse from '../response/command.response';
 import { ClientNotifiedEvent } from '../../events/impl/client-notified.event';
-import ESEventBus from '@nestjs-geteventstore/cqrs2/es-event-bus';
+import ESEventBus from '@nestjs-geteventstore/cqrs2/event-bus/es-event-bus';
 import { HOTEL_STREAM_NAME } from '../../hotel-stream.constants';
 
 @CommandHandler(NotifyClientCommand)

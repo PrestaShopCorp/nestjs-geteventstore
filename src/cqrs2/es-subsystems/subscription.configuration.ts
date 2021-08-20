@@ -2,15 +2,14 @@ import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils
 
 export interface SubscriptionConfiguration {
   stream: string;
-  resolveLinkTos?: boolean;
   group: string;
 
   options: PersistentSubscriptionSettings;
 
-  bufferSize?: number;
-
+  // kept but might be useless
   onSubscriptionStart?: (sub: SubscriptionConfiguration) => void | undefined;
 
+  // kept but might be useless
   onSubscriptionDropped?: (
     sub: SubscriptionConfiguration,
     reason: string,

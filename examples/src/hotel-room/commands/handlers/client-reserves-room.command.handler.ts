@@ -11,7 +11,7 @@ import Hotel from '../../domain/hotel';
 import CommandResponse from '../response/command.response';
 import { ClientReservedRoomEvent } from '../../events/impl/client-reserved-room.event';
 import Room from '../../domain/room';
-import ESEventBus from '@nestjs-geteventstore/cqrs2/es-event-bus';
+import ESEventBus from '@nestjs-geteventstore/cqrs2/event-bus/es-event-bus';
 import { HOTEL_STREAM_NAME } from '../../hotel-stream.constants';
 
 @CommandHandler(ClientReservesRoomCommand)

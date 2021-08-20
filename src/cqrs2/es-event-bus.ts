@@ -69,9 +69,8 @@ export default class ESEventBus<EventType extends ESEvent = ESEvent>
               );
             subscription.on('data', (event) => {
               this.logger.debug(
-                `Event on stream : ${subscriptionConf.stream} : `,
+                `Event on stream : ${subscriptionConf.stream} : ${event.event.type}`,
               );
-              console.log(event);
             });
             this.persistentSubscriptions.push(subscription);
           }

@@ -23,9 +23,13 @@ export default class RoomRegistryAdapter implements RoomRegistry {
     arrival: Date,
     checkout: Date,
   ): Promise<Room | null> {
-    return new Room(
-      await this.hotelRepository.getAvailableRoom(clientId, arrival, checkout),
-    );
+    const availableRoomNumber: number | null =
+      await this.hotelRepository.getAvailableRoomNumber(
+        clientId,
+        arrival,
+        checkout,
+      );
+    return availableRoomNumber ? new Room(availableRoomNumber) : null;
   }
 
   public async findRoomNumber(clientId: string): Promise<number> {

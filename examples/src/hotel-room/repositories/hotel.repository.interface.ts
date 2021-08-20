@@ -3,7 +3,7 @@ export const HOTEL_REPOSITORY = Symbol();
 export default interface HotelRepository {
   getClientRoom(clientId: string): Promise<number>;
 
-  getAvailableRoom(
+  getAvailableRoomNumber(
     clientId: string,
     arrival: Date,
     checkout: Date,
@@ -14,10 +14,6 @@ export default interface HotelRepository {
   getNbAvailableRooms(): Promise<number>;
 
   findRoomNumber(clientId: string): Promise<number>;
-
-  registerBill(clientId: string, billAmount: number): void;
-
-  freeRoom(clientId: string): void;
 
   getClientReceipt(clientId: string): number;
 }

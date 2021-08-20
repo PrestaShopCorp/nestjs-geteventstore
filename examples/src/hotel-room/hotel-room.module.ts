@@ -77,7 +77,8 @@ const esConfig: EsSubsystemConfiguration = {
       stream: HOTEL_STREAM_NAME,
       group: HOTEL_STREAM_GROUP,
       options: persistentSubscriptionSettingsFromDefaults({
-        resolveLinkTos: false,
+        resolveLinkTos: true,
+        fromRevision: 'end',
       }),
     } as SubscriptionConfiguration,
   ],

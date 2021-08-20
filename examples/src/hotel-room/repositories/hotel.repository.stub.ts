@@ -26,7 +26,7 @@ export default class HotelRepositoryStub implements HotelRepository {
     );
   }
 
-  public async getAvailableRoom(
+  public async getAvailableRoomNumber(
     clientId: string,
     arrival: Date,
     checkout: Date,
@@ -57,10 +57,6 @@ export default class HotelRepositoryStub implements HotelRepository {
     return roomNumber;
   }
 
-  public registerBill(clientId: string, billAmount: number): void {
-    this.accounting.set(clientId, billAmount);
-  }
-
   public getClientReceipt(clientId: string): number {
     const bill: number = this.accounting.get(clientId);
     if (!bill) {
@@ -71,12 +67,6 @@ export default class HotelRepositoryStub implements HotelRepository {
 
   public async getNbAvailableRooms(): Promise<number> {
     return this.availableRoomNumbers.length;
-  }
-
-  public freeRoom(clientId: string): void {
-    const roomNumber: number = this.usedRoomNumbers.get(clientId);
-    this.usedRoomNumbers.delete(clientId);
-    this.availableRoomNumbers.push(roomNumber);
   }
 
   public async checksTheRoomOut(

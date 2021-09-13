@@ -1,9 +1,6 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { EventStoreService } from './index';
-import {
-  EventStoreHealthIndicator,
-  EventStoreSubscriptionHealthIndicator,
-} from './health';
+import { EventStoreHealthIndicator } from './health';
 import { EVENT_STORE_SUBSYSTEMS } from '../constants';
 import { IEventStoreSubsystems } from './config';
 import { EventStoreConnectionConfig } from './config/event-store-connection-config';
@@ -17,18 +14,12 @@ import InMemoryEventsAndMetadatasStacker from './reliability/implementations/in-
 @Module({
   providers: [
     EventStoreHealthIndicator,
-    EventStoreSubscriptionHealthIndicator,
     {
       provide: EVENT_STORE_SERVICE,
       useClass: EventStoreService,
     },
   ],
-  exports: [
-    EVENT_STORE_SERVICE,
-
-    EventStoreHealthIndicator,
-    EventStoreSubscriptionHealthIndicator,
-  ],
+  exports: [EVENT_STORE_SERVICE, EventStoreHealthIndicator],
 })
 export class EventStoreModule {
   static async register(

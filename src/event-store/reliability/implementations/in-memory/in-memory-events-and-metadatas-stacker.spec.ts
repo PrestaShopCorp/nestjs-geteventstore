@@ -4,12 +4,16 @@ import { EventData } from '@eventstore/db-client/dist/types/events';
 import MetadatasContextDatas from '../../interface/metadatas-context-datas';
 import { AppendToStreamOptions } from '@eventstore/db-client/dist/streams';
 import { ANY } from '@eventstore/db-client';
+import { Logger as logger } from '@nestjs/common';
 
 describe('InMemoryEventsAndMetadatasStacker', () => {
   let service: InMemoryEventsAndMetadatasStacker;
 
+  jest.mock('@nestjs/common');
   beforeEach(() => {
-    jest.resetAllMocks();
+    jest.spyOn(logger, 'log').mockImplementation(() => null);
+    jest.spyOn(logger, 'error').mockImplementation(() => null);
+    jest.spyOn(logger, 'debug').mockImplementation(() => null);
     service = new InMemoryEventsAndMetadatasStacker();
   });
 

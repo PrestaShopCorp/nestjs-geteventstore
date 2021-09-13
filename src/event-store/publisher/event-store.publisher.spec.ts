@@ -9,9 +9,10 @@ import { EventStoreService } from '../services/event-store.service';
 import * as constants from '@eventstore/db-client/dist/constants';
 import { AppendExpectedRevision } from '@eventstore/db-client/dist/types';
 import { StreamMetadata } from '@eventstore/db-client/dist/utils/streamMetadata';
-import { Logger as logger } from '@nestjs/common/services/logger.service';
+import { Logger as logger } from '@nestjs/common';
 import InMemoryEventsAndMetadatasStacker from '../reliability/implementations/in-memory/in-memory-events-and-metadatas-stacker';
 import { Client } from '@eventstore/db-client/dist/Client';
+import { EventStoreHealthIndicator } from '../health';
 import spyOn = jest.spyOn;
 
 describe('EventStorePublisher', () => {
@@ -44,12 +45,19 @@ describe('EventStorePublisher', () => {
       appendToStream: jest.fn(),
       setStreamMetadata: jest.fn(),
     } as unknown as Client;
+
+    const eventStoreHealthIndicatorMock: EventStoreHealthIndicator = {
+      updateStatus: jest.fn(),
+      check: jest.fn(),
+    } as unknown as EventStoreHealthIndicator;
+
     eventStoreService = new EventStoreService(
       eventStore,
       {
         onConnectionFail: () => {},
       },
       eventsStackerMock,
+      eventStoreHealthIndicatorMock,
     );
     publisher = new EventStorePublisher<IWriteEvent>(
       eventStoreService,

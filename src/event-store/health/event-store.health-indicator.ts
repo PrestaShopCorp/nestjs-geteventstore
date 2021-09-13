@@ -1,30 +1,23 @@
 import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
-import { Inject, Injectable } from '@nestjs/common';
-import { EVENT_STORE_CONNECTOR } from '../services/event-store.constants';
-import { Client } from '@eventstore/db-client/dist/Client';
+import { Injectable } from '@nestjs/common';
+import EventStoreHealthStatus from './event-store-health.status';
 
 @Injectable()
 export class EventStoreHealthIndicator extends HealthIndicator {
-  constructor(
-    @Inject(EVENT_STORE_CONNECTOR)
-    private readonly eventStore: Client,
-  ) {
+  private esStatus: EventStoreHealthStatus;
+
+  constructor() {
     super();
   }
 
   public check(): HealthIndicatorResult {
-    // if (!this.eventStore.isConnected()) {
-    //   throw new HealthCheckError(`EventStore connection lost`, {
-    //     eventStore: `Connection lost to ${this.eventStore.getConfig().tcp.host}:${this.eventStore.getConfig().tcp.port}`,
-    //   });
-    // }
-    // return super.getStatus('eventStore', true, {
-    //   message: `Connected to ${this.eventStore.getConfig().tcp.host}:${this.eventStore.getConfig().tcp.port}`,
-    // });
+    return {
+      connection: { status: this.esStatus.connection },
+      subscriptions: { status: this.esStatus.subscriptions },
+    };
+  }
 
-    // TODO : improve this
-    return super.getStatus('eventStore', true, {
-      // message: this.eventStore.isConnected(),
-    });
+  public updateStatus(esHealthStatus: EventStoreHealthStatus): void {
+    this.esStatus = { ...this.esStatus, ...esHealthStatus };
   }
 }

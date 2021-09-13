@@ -13,6 +13,7 @@ import { EventData } from '@eventstore/db-client/dist/types/events';
 import InMemoryEventsAndMetadatasStacker from '../reliability/implementations/in-memory/in-memory-events-and-metadatas-stacker';
 import { AppendResult } from '@eventstore/db-client/dist/types';
 import MetadatasContextDatas from '../reliability/interface/metadatas-context-datas';
+import { EventStoreHealthIndicator } from '../health';
 import spyOn = jest.spyOn;
 
 describe('EventStoreService', () => {
@@ -72,9 +73,15 @@ describe('EventStoreService', () => {
     onConnectionFail: jest.fn(),
   };
 
+  const eventStoreHealthIndicatorMock: EventStoreHealthIndicator = {
+    updateStatus: jest.fn(),
+    check: jest.fn(),
+  } as unknown as EventStoreHealthIndicator;
+
   jest.mock('@nestjs/common');
 
   beforeEach(() => {
+    jest.resetAllMocks();
     jest.spyOn(logger, 'log').mockImplementationOnce(() => null);
     jest.spyOn(logger, 'error').mockImplementationOnce(() => null);
     jest.spyOn(logger, 'debug').mockImplementationOnce(() => null);
@@ -83,27 +90,40 @@ describe('EventStoreService', () => {
       eventStoreConnectorMock as unknown as Client,
       subsystemsMock,
       eventsStackerMock,
+      eventStoreHealthIndicatorMock,
     );
   });
 
-  afterEach(() => {
-    jest.useRealTimers();
-    jest.resetAllMocks();
+  describe('at init', () => {
+    it('should be created', () => {
+      expect(service).toBeTruthy();
+    });
+
+    it('should subscribe to given subscriptions in conf', async () => {
+      service = new EventStoreService(
+        eventStoreConnectorMock as unknown as Client,
+        subsystemsMock,
+        eventsStackerMock,
+        eventStoreHealthIndicatorMock,
+      );
+
+      spyOn(service, 'subscribeToPersistentSubscriptions');
+
+      await service.onModuleInit();
+
+      expect(service.subscribeToPersistentSubscriptions).toHaveBeenCalled();
+    });
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
+  describe('when asserting projections', () => {
+    it('should assert projections at init', async () => {
+      spyOn(service, 'assertProjections');
 
-  it('should assert projections at init', async () => {
-    spyOn(service, 'assertProjections');
+      await service.onModuleInit();
 
-    await service.onModuleInit();
+      expect(service.assertProjections).toHaveBeenCalled();
+    });
 
-    expect(service.assertProjections).toHaveBeenCalled();
-  });
-
-  describe('When asserting projections', () => {
     it('should try to create projection at first', async () => {
       spyOn(service, 'createProjection').mockImplementationOnce(() => {
         throw { code: PROJECTION_ALREADY_EXIST_ERROR_CODE };
@@ -157,20 +177,6 @@ describe('EventStoreService', () => {
     });
   });
 
-  it('should subscribe to given subscriptions in conf', async () => {
-    service = new EventStoreService(
-      eventStoreConnectorMock as unknown as Client,
-      subsystemsMock,
-      eventsStackerMock,
-    );
-
-    spyOn(service, 'subscribeToPersistentSubscriptions');
-
-    await service.onModuleInit();
-
-    expect(service.subscribeToPersistentSubscriptions).toHaveBeenCalled();
-  });
-
   describe('when assert a persistent subscription', () => {
     it('should try to create persistent subscription at first', async () => {
       spyOn(eventStoreConnectorMock, 'createPersistentSubscription');
@@ -220,13 +226,93 @@ describe('EventStoreService', () => {
     });
   });
 
-  it('should allow to get all subscriptions', async () => {
-    await service.onModuleInit();
+  describe('about health', () => {
+    it('should allow to get all subscriptions', async () => {
+      await service.onModuleInit();
 
-    const subscriptions: PersistentSubscription[] =
-      service.getPersistentSubscriptions();
+      const subscriptions: PersistentSubscription[] =
+        service.getPersistentSubscriptions();
 
-    expect(subscriptions.length).toEqual(1);
+      expect(subscriptions.length).toEqual(1);
+    });
+
+    /**
+     * V should init its health status at 'up' when all is ok at init
+     * V should init its health status at 'down' when an error occurred at init
+     * V should notify the health indicator when error occurred with subscriptions
+     * should notify the health indicator when error occurred with writing events
+     * should notify the health indicator when error occurred with writing metadatas
+     */
+
+    it('should init its health status when all is ok at init', async () => {
+      spyOn(eventStoreHealthIndicatorMock, 'updateStatus');
+
+      await service.onModuleInit();
+
+      expect(eventStoreHealthIndicatorMock.updateStatus).toHaveBeenCalledWith({
+        connection: 'up',
+        subscriptions: 'up',
+      });
+    });
+
+    it('should init its health status when all is ok at init', async () => {
+      spyOn(eventStoreHealthIndicatorMock, 'updateStatus');
+      spyOn(service, 'assertProjections').mockImplementation(() => {
+        throw Error();
+      });
+      await service.onModuleInit();
+
+      expect(eventStoreHealthIndicatorMock.updateStatus).toHaveBeenCalledWith({
+        connection: 'down',
+        subscriptions: 'down',
+      });
+    });
+
+    it('should update connection health status when appending events raises error', () => {
+      spyOn(eventStoreHealthIndicatorMock, 'updateStatus');
+      let cpt = 2;
+      spyOn(
+        eventsStackerMock,
+        'getEventBatchesWaitingLineLength',
+      ).mockImplementationOnce(() => {
+        return cpt--;
+      });
+      spyOn(eventStoreConnectorMock, 'appendToStream').mockImplementationOnce(
+        () => {
+          throw Error();
+        },
+      );
+
+      service.writeEvents('testStream', [getDumbEvent()], {
+        expectedRevision: ANY,
+      });
+
+      expect(eventStoreHealthIndicatorMock.updateStatus).toHaveBeenCalledWith({
+        connection: 'down',
+      });
+    });
+
+    it('should update status connection when appending metadata raises an error', async () => {
+      spyOn(eventStoreHealthIndicatorMock, 'updateStatus');
+      spyOn(
+        eventsStackerMock,
+        'getMetadatasWaitingLineLength',
+      ).mockReturnValueOnce(1);
+      spyOn(
+        eventStoreConnectorMock,
+        'setStreamMetadata',
+      ).mockImplementationOnce(() => {
+        throw Error();
+      });
+
+      const metadata: MetadatasContextDatas = getDumbMetadatas('abc');
+
+      await service.writeMetadata(metadata.streamName, metadata.metadata);
+
+      expect(eventStoreHealthIndicatorMock.updateStatus).toHaveBeenCalledWith({
+        connection: 'down',
+      });
+    });
   });
 
   describe('when adding callbacks to persistent subscriptions', () => {
@@ -271,57 +357,62 @@ describe('EventStoreService', () => {
     );
   });
 
-  it('should run the connection hook when connection raises an error while reading stream', async () => {
-    spyOn(eventStoreConnectorMock, 'readStream').mockImplementationOnce(() => {
-      throw Error();
-    });
-
-    await service.readFromStream('', {});
-
-    expect(subsystemsMock.onConnectionFail).toHaveBeenCalled();
-  });
-
-  it('should run the connection hook when connection raises an error while reading metadatas', async () => {
-    spyOn(eventStoreConnectorMock, 'getStreamMetadata').mockImplementationOnce(
-      () => {
-        throw Error();
-      },
-    );
-
-    await service.readMetadata('');
-
-    expect(subsystemsMock.onConnectionFail).toHaveBeenCalled();
-  });
-
-  it('should run the connection hook when connection raises an error while deleting persistent subscription', async () => {
-    spyOn(
-      eventStoreConnectorMock,
-      'deletePersistentSubscription',
-    ).mockImplementationOnce(() => {
-      throw Error();
-    });
-
-    await service.deletePersistentSubscription('', '');
-
-    expect(subsystemsMock.onConnectionFail).toHaveBeenCalled();
-  });
-
-  it(`should catch the error and try to reconnect
+  describe('when connection raises an error', () => {
+    it(`should catch the error and try to reconnect
 		at module startup (interval of ${RECONNECTION_TRY_DELAY_IN_MS} ms)
 		when event store client raises error`, async () => {
-    spyOn(service, 'assertProjections').mockImplementation(() => {
-      throw Error();
+      spyOn(service, 'assertProjections').mockImplementation(() => {
+        throw Error();
+      });
+      spyOn(service, 'onModuleInit');
+
+      jest.useFakeTimers();
+
+      service.onModuleInit().then(() => {
+        // do nothing
+      });
+      jest.advanceTimersByTime(RECONNECTION_TRY_DELAY_IN_MS);
+
+      expect(service.assertProjections).toHaveBeenCalledTimes(2);
     });
-    spyOn(service, 'onModuleInit');
 
-    jest.useFakeTimers();
+    it('should run the connection hook when connection raises an error while reading stream', async () => {
+      spyOn(eventStoreConnectorMock, 'readStream').mockImplementationOnce(
+        () => {
+          throw Error();
+        },
+      );
 
-    service.onModuleInit().then(() => {
-      // do nothing
+      await service.readFromStream('', {});
+
+      expect(subsystemsMock.onConnectionFail).toHaveBeenCalled();
     });
-    jest.advanceTimersByTime(RECONNECTION_TRY_DELAY_IN_MS);
 
-    expect(service.assertProjections).toHaveBeenCalledTimes(2);
+    it('should run the connection hook when connection raises an error while reading metadatas', async () => {
+      spyOn(
+        eventStoreConnectorMock,
+        'getStreamMetadata',
+      ).mockImplementationOnce(() => {
+        throw Error();
+      });
+
+      await service.readMetadata('');
+
+      expect(subsystemsMock.onConnectionFail).toHaveBeenCalled();
+    });
+
+    it('should run the connection hook when connection raises an error while deleting persistent subscription', async () => {
+      spyOn(
+        eventStoreConnectorMock,
+        'deletePersistentSubscription',
+      ).mockImplementationOnce(() => {
+        throw Error();
+      });
+
+      await service.deletePersistentSubscription('', '');
+
+      expect(subsystemsMock.onConnectionFail).toHaveBeenCalled();
+    });
   });
 
   describe('when writing events', () => {

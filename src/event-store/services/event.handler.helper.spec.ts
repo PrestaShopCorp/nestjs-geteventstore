@@ -1,17 +1,20 @@
 import EventHandlerHelper from './event.handler.helper';
-import { Logger } from '@nestjs/common';
+import { Logger, Logger as logger } from '@nestjs/common';
 
 describe('EventHandlerHelper', () => {
-  const loggerMock: Logger = new Logger(EventHandlerHelper.name);
-
+  jest.mock('@nestjs/common');
   beforeEach(() => {
-    jest.spyOn(loggerMock, 'log').mockImplementation(() => null);
-    jest.spyOn(loggerMock, 'error').mockImplementation(() => null);
-    jest.spyOn(loggerMock, 'debug').mockImplementation(() => null);
+    jest.spyOn(logger, 'log').mockImplementation(() => null);
+    jest.spyOn(logger, 'error').mockImplementation(() => null);
+    jest.spyOn(logger, 'debug').mockImplementation(() => null);
   });
 
   it('should be callable', () => {
-    const result = EventHandlerHelper.onEvent(loggerMock, {}, {});
+    const result = EventHandlerHelper.onEvent(
+      logger as unknown as Logger,
+      {},
+      {},
+    );
     expect(result).toBeTruthy();
   });
 });

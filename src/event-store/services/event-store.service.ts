@@ -50,12 +50,14 @@ import { DeletePersistentSubscriptionOptions } from '@eventstore/db-client/dist/
 import {
   PERSISTENT_SUBSCRIPTION_ALREADY_EXIST_ERROR_CODE,
   PROJECTION_ALREADY_EXIST_ERROR_CODE,
+  RECONNECTION_TRY_DELAY_IN_MS,
 } from './errors.constant';
 import EventHandlerHelper from './event.handler.helper';
 import IEventsAndMetadatasStacker, {
   EVENTS_AND_METADATAS_STACKER,
 } from '../reliability/interface/events-and-metadatas-stacker';
 import EventBatch from '../reliability/interface/event-batch';
+import { EventStoreHealthIndicator } from '../health';
 
 @Injectable()
 export class EventStoreService implements OnModuleInit, IEventStoreService {
@@ -74,6 +76,7 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
     private readonly subsystems: IEventStoreSubsystems,
     @Inject(EVENTS_AND_METADATAS_STACKER)
     private readonly eventsStacker: IEventsAndMetadatasStacker,
+    private readonly eventStoreHealthIndicator: EventStoreHealthIndicator,
     @Optional() private readonly eventBus?: ReadEventBus,
   ) {}
 
@@ -94,15 +97,23 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
       this.isOnError = false;
       this.isTryingToConnect = false;
       this.logger.log(`EventStore connected`);
+      this.eventStoreHealthIndicator.updateStatus({
+        connection: 'up',
+        subscriptions: 'up',
+      });
     } catch (e) {
       this.isTryingToConnect = true;
+      this.eventStoreHealthIndicator.updateStatus({
+        connection: 'down',
+        subscriptions: 'down',
+      });
       await this.retryToConnect();
     }
   }
 
   private async retryToConnect(): Promise<void> {
     this.logger.log(`EventStore connection failed : trying to reconnect`);
-    setTimeout(async () => await this.connect(), 1000);
+    setTimeout(async () => await this.connect(), RECONNECTION_TRY_DELAY_IN_MS);
   }
 
   public async createProjection(
@@ -116,21 +127,21 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
   ): Promise<void> {
     switch (type) {
       case 'continuous':
-        this.eventStore
-          .createContinuousProjection(projectionName, query, options ?? {})
-          .catch(() => {
-            // do nothing
-          });
+        await this.eventStore.createContinuousProjection(
+          projectionName,
+          query,
+          options ?? {},
+        );
         break;
       case 'transient':
-        this.eventStore.createTransientProjection(
+        await this.eventStore.createTransientProjection(
           projectionName,
           query,
           options ?? {},
         );
         break;
       case 'oneTime': {
-        this.eventStore.createOneTimeProjection(query, options ?? {});
+        await this.eventStore.createOneTimeProjection(query, options ?? {});
         break;
       }
       default:
@@ -305,6 +316,9 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
           persistentSubscription.on('error', config.onError);
 
           persistentSubscription.on('error', async (): Promise<void> => {
+            this.eventStoreHealthIndicator.updateStatus({
+              subscriptions: 'down',
+            });
             if (!this.isTryingToConnect) await this.connect();
           });
 
@@ -411,6 +425,7 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
       this.isTryingToWriteMetadatas = false;
       return lastValidAppendResult;
     } catch (e) {
+      this.eventStoreHealthIndicator.updateStatus({ connection: 'down' });
       this.subsystems.onConnectionFail(e);
       return null;
     }
@@ -458,7 +473,7 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
     return lastValidAppendResult;
   }
 
-  private async tryToWriteEventsFromBatch() {
+  private async tryToWriteEventsFromBatch(): Promise<null | AppendResult> {
     try {
       const batch: EventBatch =
         this.eventsStacker.getFirstOutFromEventsBatchesWaitingLine();
@@ -471,6 +486,7 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
 
       return appendResult;
     } catch (e) {
+      this.eventStoreHealthIndicator.updateStatus({ connection: 'down' });
       this.subsystems.onConnectionFail(e);
       return null;
     }

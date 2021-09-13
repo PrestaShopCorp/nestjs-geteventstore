@@ -6,8 +6,7 @@
   "scripts": {
     "postinstall": "link-module-alias",
     "start:cqrs": "ts-node-dev src/bin/cqrs.ts",
-    "start:heroes:cqrs": "ts-node-dev src/bin/full.ts",
-    "start:event-store-usages": "ts-node-dev src/event-store-usages/event-store-usages.runner.ts"
+    "start:heroes:cqrs": "ts-node-dev src/bin/full.ts"
   },
   "_moduleAliases": {
     "@nestjs-geteventstore": "../src"

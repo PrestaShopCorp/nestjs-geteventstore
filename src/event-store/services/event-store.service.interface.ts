@@ -47,7 +47,7 @@ export interface IEventStoreService {
 
   updateProjections(projections: EventStoreProjection[]): Promise<void>;
 
-  assertProjections(projections: EventStoreProjection[]): Promise<void>;
+  upsertProjections(projections: EventStoreProjection[]): Promise<void>;
 
   createPersistentSubscription(
     streamName: string,

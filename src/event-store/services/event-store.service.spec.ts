@@ -115,13 +115,13 @@ describe('EventStoreService', () => {
     });
   });
 
-  describe('when asserting projections', () => {
-    it('should assert projections at init', async () => {
-      spyOn(service, 'assertProjections');
+  describe('when upserting projections', () => {
+    it('should upsert projections at init', async () => {
+      spyOn(service, 'upsertProjections');
 
       await service.onModuleInit();
 
-      expect(service.assertProjections).toHaveBeenCalled();
+      expect(service.upsertProjections).toHaveBeenCalled();
     });
 
     it('should try to create projection at first', async () => {
@@ -173,11 +173,11 @@ describe('EventStoreService', () => {
         // e
       }
 
-      await expect(service.assertProjections).rejects.toThrow();
+      await expect(service.upsertProjections).rejects.toThrow();
     });
   });
 
-  describe('when assert a persistent subscription', () => {
+  describe('when upsert a persistent subscription', () => {
     it('should try to create persistent subscription at first', async () => {
       spyOn(eventStoreConnectorMock, 'createPersistentSubscription');
 
@@ -257,7 +257,7 @@ describe('EventStoreService', () => {
 
     it('should init its health status when all is ok at init', async () => {
       spyOn(eventStoreHealthIndicatorMock, 'updateStatus');
-      spyOn(service, 'assertProjections').mockImplementation(() => {
+      spyOn(service, 'upsertProjections').mockImplementation(() => {
         throw Error();
       });
       await service.onModuleInit();
@@ -361,7 +361,7 @@ describe('EventStoreService', () => {
     it(`should catch the error and try to reconnect
 		at module startup (interval of ${RECONNECTION_TRY_DELAY_IN_MS} ms)
 		when event store client raises error`, async () => {
-      spyOn(service, 'assertProjections').mockImplementation(() => {
+      spyOn(service, 'upsertProjections').mockImplementation(() => {
         throw Error();
       });
       spyOn(service, 'onModuleInit');
@@ -373,7 +373,7 @@ describe('EventStoreService', () => {
       });
       jest.advanceTimersByTime(RECONNECTION_TRY_DELAY_IN_MS);
 
-      expect(service.assertProjections).toHaveBeenCalledTimes(2);
+      expect(service.upsertProjections).toHaveBeenCalledTimes(2);
     });
 
     it('should run the connection hook when connection raises an error while reading stream', async () => {

@@ -87,7 +87,7 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
   private async connect(): Promise<void> {
     try {
       if (this.subsystems.projections)
-        await this.assertProjections(this.subsystems.projections);
+        await this.upsertProjections(this.subsystems.projections);
       if (this.subsystems.subscriptions)
         this.persistentSubscriptions =
           await this.subscribeToPersistentSubscriptions(
@@ -183,20 +183,20 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
     return content;
   }
 
-  public async assertProjections(
+  public async upsertProjections(
     projections: EventStoreProjection[],
   ): Promise<void> {
     for (const projection of projections) {
-      this.logger.log(`Asserting projection "${projection.name}"...`);
+      this.logger.log(`Upserting projection "${projection.name}"...`);
 
       const content = this.extractProjectionContent(projection);
-      await this.assertProjection(content, projection);
+      await this.upsertProjection(content, projection);
 
-      this.logger.log(`Projection "${projection.name}" asserted !`);
+      this.logger.log(`Projection "${projection.name}" upserted !`);
     }
   }
 
-  private async assertProjection(
+  private async upsertProjection(
     content: string,
     projection: EventStoreProjection,
   ): Promise<void> {
@@ -280,7 +280,7 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
   public async subscribeToPersistentSubscriptions(
     subscriptions: IPersistentSubscriptionConfig[] = [],
   ): Promise<PersistentSubscription[]> {
-    await this.assertPersistentSubscriptions(subscriptions);
+    await this.upsertPersistentSubscriptions(subscriptions);
 
     return Promise.all(
       subscriptions.map(
@@ -328,15 +328,15 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
     );
   }
 
-  private async assertPersistentSubscriptions(
+  private async upsertPersistentSubscriptions(
     subscriptions: IPersistentSubscriptionConfig[],
   ): Promise<void> {
     for (const subscription of subscriptions) {
-      await this.assertPersistentSubscription(subscription);
+      await this.upsertPersistentSubscription(subscription);
     }
   }
 
-  private async assertPersistentSubscription(
+  private async upsertPersistentSubscription(
     subscription: IPersistentSubscriptionConfig,
   ): Promise<void> {
     try {

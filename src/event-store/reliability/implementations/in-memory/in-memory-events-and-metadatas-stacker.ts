@@ -1,29 +1,26 @@
 import IEventsAndMetadatasStacker from '../../interface/events-and-metadatas-stacker';
-import { Logger } from '@nestjs/common';
-import EventCommitDatas from '../../interface/event-commit.datas';
+import EventBatch from '../../interface/event-batch';
 import MetadatasContextDatas from '../../interface/metadatas-context-datas';
 
 export default class InMemoryEventsAndMetadatasStacker
   implements IEventsAndMetadatasStacker
 {
-  private readonly logger = new Logger(this.constructor.name);
-
-  private eventBatchesFifo: EventCommitDatas[] = [];
+  private eventBatchesFifo: EventBatch[] = [];
 
   private metadatasFifo: MetadatasContextDatas[] = [];
 
-  public shiftEventsBatchFromWaitingLine(): EventCommitDatas {
+  public shiftEventsBatchFromWaitingLine(): EventBatch {
     return this.eventBatchesFifo.shift();
   }
 
-  public getFirstOutFromEventsBatchesWaitingLine(): EventCommitDatas {
+  public getFirstOutFromEventsBatchesWaitingLine(): EventBatch {
     if (this.eventBatchesFifo.length === 0) {
       return null;
     }
     return this.eventBatchesFifo[0];
   }
 
-  public putEventsInWaitingLine(batch: EventCommitDatas): void {
+  public putEventsInWaitingLine(batch: EventBatch): void {
     this.eventBatchesFifo.push(batch);
   }
 

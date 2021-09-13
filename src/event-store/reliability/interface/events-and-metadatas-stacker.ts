@@ -1,14 +1,14 @@
-import EventCommitDatas from './event-commit.datas';
+import EventBatch from './event-batch';
 import MetadatasContextDatas from './metadatas-context-datas';
 
-export const EVENT_AND_METADATAS_STACKER = Symbol();
+export const EVENTS_AND_METADATAS_STACKER = Symbol();
 
 export default interface IEventsAndMetadatasStacker {
-  putEventsInWaitingLine(events: EventCommitDatas): void;
+  putEventsInWaitingLine(events: EventBatch): void;
 
-  shiftEventsBatchFromWaitingLine(): EventCommitDatas;
+  shiftEventsBatchFromWaitingLine(): EventBatch;
 
-  getFirstOutFromEventsBatchesWaitingLine(): EventCommitDatas;
+  getFirstOutFromEventsBatchesWaitingLine(): EventBatch;
 
   getEventBatchesWaitingLineLength(): number;
 

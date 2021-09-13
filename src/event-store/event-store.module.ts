@@ -11,8 +11,8 @@ import { EVENT_STORE_SERVICE } from './services/event-store.service.interface';
 import { Client } from '@eventstore/db-client/dist/Client';
 import { EventStoreDBClient } from '@eventstore/db-client';
 import { EVENT_STORE_CONNECTOR } from './services/event-store.constants';
-import { EVENT_AND_METADATAS_STACKER } from './config/connection-fallback/interface/events-and-metadatas-stacker';
-import InMemoryEventsAndMetadatasStacker from './config/connection-fallback/implementations/in-memory/in-memory-events-and-metadatas-stacker';
+import { EVENTS_AND_METADATAS_STACKER } from './reliability/interface/events-and-metadatas-stacker';
+import InMemoryEventsAndMetadatasStacker from './reliability/implementations/in-memory/in-memory-events-and-metadatas-stacker';
 
 @Module({
   providers: [
@@ -45,7 +45,7 @@ export class EventStoreModule {
           useValue: eventStoreSubsystems,
         },
         {
-          provide: EVENT_AND_METADATAS_STACKER,
+          provide: EVENTS_AND_METADATAS_STACKER,
           useClass: InMemoryEventsAndMetadatasStacker,
         },
         await this.getEventStoreConnector(config),

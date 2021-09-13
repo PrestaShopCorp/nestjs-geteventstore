@@ -53,9 +53,9 @@ import {
 } from './errors.constant';
 import EventHandlerHelper from './event.handler.helper';
 import IEventsAndMetadatasStacker, {
-  EVENT_AND_METADATAS_STACKER,
-} from '../config/connection-fallback/interface/events-and-metadatas-stacker';
-import EventCommitDatas from '../config/connection-fallback/interface/event-commit.datas';
+  EVENTS_AND_METADATAS_STACKER,
+} from '../reliability/interface/events-and-metadatas-stacker';
+import EventBatch from '../reliability/interface/event-batch';
 
 @Injectable()
 export class EventStoreService implements OnModuleInit, IEventStoreService {
@@ -72,7 +72,7 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
     private readonly eventStore: Client,
     @Inject(EVENT_STORE_SUBSYSTEMS)
     private readonly subsystems: IEventStoreSubsystems,
-    @Inject(EVENT_AND_METADATAS_STACKER)
+    @Inject(EVENTS_AND_METADATAS_STACKER)
     private readonly eventsStacker: IEventsAndMetadatasStacker,
     @Optional() private readonly eventBus?: ReadEventBus,
   ) {}
@@ -460,7 +460,7 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
 
   private async tryToWriteEventsFromBatch() {
     try {
-      const batch: EventCommitDatas =
+      const batch: EventBatch =
         this.eventsStacker.getFirstOutFromEventsBatchesWaitingLine();
       const appendResult: AppendResult = await this.eventStore.appendToStream(
         batch.stream,

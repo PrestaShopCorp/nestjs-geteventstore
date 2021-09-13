@@ -10,7 +10,7 @@ import * as constants from '@eventstore/db-client/dist/constants';
 import { AppendExpectedRevision } from '@eventstore/db-client/dist/types';
 import { StreamMetadata } from '@eventstore/db-client/dist/utils/streamMetadata';
 import { Logger as logger } from '@nestjs/common/services/logger.service';
-import InMemoryEventsAndMetadatasStacker from '../config/connection-fallback/implementations/in-memory/in-memory-events-and-metadatas-stacker';
+import InMemoryEventsAndMetadatasStacker from '../reliability/implementations/in-memory/in-memory-events-and-metadatas-stacker';
 import { Client } from '@eventstore/db-client/dist/Client';
 import spyOn = jest.spyOn;
 

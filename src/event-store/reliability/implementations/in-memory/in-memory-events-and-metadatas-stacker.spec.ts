@@ -1,6 +1,5 @@
 import InMemoryEventsAndMetadatasStacker from './in-memory-events-and-metadatas-stacker';
-import EventCommitDatas from '../../interface/event-commit.datas';
-import { Logger as logger } from '@nestjs/common/services/logger.service';
+import EventBatch from '../../interface/event-batch';
 import { EventData } from '@eventstore/db-client/dist/types/events';
 import MetadatasContextDatas from '../../interface/metadatas-context-datas';
 import { AppendToStreamOptions } from '@eventstore/db-client/dist/streams';
@@ -11,11 +10,6 @@ describe('InMemoryEventsAndMetadatasStacker', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.mock('@nestjs/common');
-    jest.spyOn(logger, 'log').mockImplementation(() => null);
-    jest.spyOn(logger, 'error').mockImplementation(() => null);
-    jest.spyOn(logger, 'debug').mockImplementation(() => null);
-
     service = new InMemoryEventsAndMetadatasStacker();
   });
 
@@ -25,7 +19,7 @@ describe('InMemoryEventsAndMetadatasStacker', () => {
       let events: EventData[] = [event];
       let stream = 'poj';
       let expectedVersion: AppendToStreamOptions = { expectedRevision: ANY };
-      const batch1: EventCommitDatas = {
+      const batch1: EventBatch = {
         events,
         stream,
         expectedVersion,
@@ -56,8 +50,8 @@ describe('InMemoryEventsAndMetadatasStacker', () => {
     });
 
     it('should be able to give the fifo length ', () => {
-      const batch1: EventCommitDatas = getDumbBatch('1', 'poj');
-      const batch2: EventCommitDatas = getDumbBatch('2', 'oiu');
+      const batch1: EventBatch = getDumbBatch('1', 'poj');
+      const batch2: EventBatch = getDumbBatch('2', 'oiu');
 
       service.putEventsInWaitingLine(batch1);
       service.putEventsInWaitingLine(batch2);
@@ -66,15 +60,15 @@ describe('InMemoryEventsAndMetadatasStacker', () => {
     });
 
     it('should be able to remove the first element of the waiting line', () => {
-      const batch1: EventCommitDatas = getDumbBatch('1', 'poj');
-      const batch2: EventCommitDatas = getDumbBatch('2', 'oiu');
+      const batch1: EventBatch = getDumbBatch('1', 'poj');
+      const batch2: EventBatch = getDumbBatch('2', 'oiu');
 
       service.putEventsInWaitingLine(batch1);
       service.putEventsInWaitingLine(batch2);
 
-      const unstackedBatch1: EventCommitDatas =
+      const unstackedBatch1: EventBatch =
         service.shiftEventsBatchFromWaitingLine();
-      const unstackedBatch2: EventCommitDatas =
+      const unstackedBatch2: EventBatch =
         service.shiftEventsBatchFromWaitingLine();
 
       expect(unstackedBatch1.stream).toEqual('poj');
@@ -136,7 +130,7 @@ describe('InMemoryEventsAndMetadatasStacker', () => {
   });
 });
 
-function getDumbBatch(eventId: string, stream: string): EventCommitDatas {
+function getDumbBatch(eventId: string, stream: string): EventBatch {
   const events: EventData[] = [getDumbEvent(eventId)];
   const expectedVersion: AppendToStreamOptions = { expectedRevision: ANY };
   return {

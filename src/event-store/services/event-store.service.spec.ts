@@ -10,9 +10,9 @@ import {
 import { IPersistentSubscriptionConfig } from '../subscriptions';
 import { Logger as logger } from '@nestjs/common';
 import { EventData } from '@eventstore/db-client/dist/types/events';
-import InMemoryEventsAndMetadatasStacker from '../config/connection-fallback/implementations/in-memory/in-memory-events-and-metadatas-stacker';
+import InMemoryEventsAndMetadatasStacker from '../reliability/implementations/in-memory/in-memory-events-and-metadatas-stacker';
 import { AppendResult } from '@eventstore/db-client/dist/types';
-import MetadatasContextDatas from '../config/connection-fallback/interface/metadatas-context-datas';
+import MetadatasContextDatas from '../reliability/interface/metadatas-context-datas';
 import spyOn = jest.spyOn;
 
 describe('EventStoreService', () => {

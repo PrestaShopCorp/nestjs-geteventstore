@@ -169,6 +169,6 @@ You may want to override this mechanism. To do so, the only thing you have to pr
         }
 ```
 
-`InMemoryEventsAndMetadatasStacker` is the devault value. you juste have to add a service that matches the interface [IEventsAndMetadatasStacker](./src/event-store/config/connection-fallback/interface/events-and-metadatas-stacker.ts)
+`InMemoryEventsAndMetadatasStacker` is the devault value. you juste have to add a service that matches the interface [IEventsAndMetadatasStacker](src/event-store/reliability/interface/events-and-metadatas-stacker.ts)
 
 Note that it works the same way for the metadatas.

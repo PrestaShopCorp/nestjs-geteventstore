@@ -45,7 +45,10 @@ export interface IEventStoreService {
     options?: GetProjectionStateOptions,
   ): Promise<T>;
 
-  updateProjections(projections: EventStoreProjection[]): Promise<void>;
+  updateProjection(
+    projection: EventStoreProjection,
+    content: string,
+  ): Promise<void>;
 
   upsertProjections(projections: EventStoreProjection[]): Promise<void>;
 

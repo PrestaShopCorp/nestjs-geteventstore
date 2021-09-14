@@ -58,6 +58,7 @@ import IEventsAndMetadatasStacker, {
 } from '../reliability/interface/events-and-metadatas-stacker';
 import EventBatch from '../reliability/interface/event-batch';
 import { EventStoreHealthIndicator } from '../health';
+import MetadatasContextDatas from '../reliability/interface/metadatas-context-datas';
 
 @Injectable()
 export class EventStoreService implements OnModuleInit, IEventStoreService {
@@ -86,13 +87,13 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
 
   private async connect(): Promise<void> {
     try {
-      if (this.subsystems.projections)
-        await this.upsertProjections(this.subsystems.projections);
       if (this.subsystems.subscriptions)
         this.persistentSubscriptions =
           await this.subscribeToPersistentSubscriptions(
             this.subsystems.subscriptions.persistent,
           );
+      if (this.subsystems.projections)
+        this.upsertProjections(this.subsystems.projections).then(() => {});
 
       this.isOnError = false;
       this.isTryingToConnect = false;
@@ -101,6 +102,8 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
         connection: 'up',
         subscriptions: 'up',
       });
+      await this.tryToWriteStackedEventBatches();
+      await this.tryToWriteStackedMetadatas();
     } catch (e) {
       this.isTryingToConnect = true;
       this.eventStoreHealthIndicator.updateStatus({
@@ -156,18 +159,12 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
     return this.eventStore.getProjectionState<T>(streamName, options);
   }
 
-  public async updateProjections(
-    projections: EventStoreProjection[],
+  public async updateProjection(
+    projection: EventStoreProjection,
+    content: string,
   ): Promise<void> {
-    projections.map(async (projection: EventStoreProjection) => {
-      projection.content = this.extractProjectionContent(projection);
-      await this.eventStore.updateProjection(
-        projection.name,
-        projection.content,
-        {
-          trackEmittedStreams: projection.trackEmittedStreams,
-        },
-      );
+    await this.eventStore.updateProjection(projection.name, content, {
+      trackEmittedStreams: projection.trackEmittedStreams,
     });
   }
 
@@ -200,22 +197,20 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
     content: string,
     projection: EventStoreProjection,
   ): Promise<void> {
-    try {
-      await this.createProjection(
-        content ?? projection.content,
-        projection.mode,
-        projection.name,
-        {
-          trackEmittedStreams: projection.trackEmittedStreams,
-        },
-      );
-    } catch (e) {
+    await this.createProjection(
+      content ?? projection.content,
+      projection.mode,
+      projection.name,
+      {
+        trackEmittedStreams: projection.trackEmittedStreams,
+      },
+    ).catch(async (e) => {
       if (EventStoreService.isNotAProjectionAlreadyExistsError(e)) {
         this.logger.error(e);
         throw Error(e);
       }
-      await this.updateProjections([projection]);
-    }
+      await this.updateProjection(projection, content);
+    });
   }
 
   public async createPersistentSubscription(
@@ -286,7 +281,7 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
       subscriptions.map(
         (config: IPersistentSubscriptionConfig): PersistentSubscription => {
           this.logger.log(
-            `Connecting to persistent subscription "${config.group}" on stream "${config.stream}"`,
+            `Connecting to persistent subscription "${config.group}" on stream "${config.stream}"...`,
           );
           const onEvent = (subscription, payload) => {
             return this.subsystems.onEvent
@@ -321,7 +316,9 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
             });
             if (!this.isTryingToConnect) await this.connect();
           });
-
+          this.logger.log(
+            `Connected to persistent subscription "${config.group}" on stream "${config.stream}" !`,
+          );
           return persistentSubscription;
         },
       ),
@@ -373,7 +370,7 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
     return e.code !== PERSISTENT_SUBSCRIPTION_ALREADY_EXIST_ERROR_CODE;
   }
 
-  private static isNotAProjectionAlreadyExistsError(e) {
+  private static isNotAProjectionAlreadyExistsError(e): boolean {
     return e.code !== PROJECTION_ALREADY_EXIST_ERROR_CODE;
   }
 
@@ -403,22 +400,20 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
 
     return this.isTryingToWriteMetadatas
       ? null
-      : await this.writeStackedMetadatas(streamName, metadata, options);
+      : await this.tryToWriteStackedMetadatas();
   }
 
-  private async writeStackedMetadatas(
-    streamName: string,
-    metadata: StreamMetadata,
-    options: SetStreamMetadataOptions,
-  ) {
+  private async tryToWriteStackedMetadatas(): Promise<null | AppendResult> {
     try {
       this.isTryingToWriteMetadatas = true;
       let lastValidAppendResult: AppendResult = null;
       while (this.eventsStacker.getMetadatasWaitingLineLength() > 0) {
+        const metadata: MetadatasContextDatas =
+          this.eventsStacker.getFirstOutFromMetadatasWaitingLine();
         lastValidAppendResult = await this.eventStore.setStreamMetadata(
-          streamName,
-          metadata,
-          options,
+          metadata.streamName,
+          metadata.metadata,
+          metadata.options,
         );
         this.eventsStacker.shiftMetadatasFromWaitingLine();
       }
@@ -462,34 +457,33 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
   }
 
   private async tryToWriteStackedEventBatches(): Promise<AppendResult> {
-    let lastValidAppendResult: AppendResult = null;
-    this.isTryingToWriteEvents = true;
-
-    while (this.eventsStacker.getEventBatchesWaitingLineLength() > 0) {
-      lastValidAppendResult = await this.tryToWriteEventsFromBatch();
-    }
-
-    this.isTryingToWriteEvents = false;
-    return lastValidAppendResult;
-  }
-
-  private async tryToWriteEventsFromBatch(): Promise<null | AppendResult> {
     try {
-      const batch: EventBatch =
-        this.eventsStacker.getFirstOutFromEventsBatchesWaitingLine();
-      const appendResult: AppendResult = await this.eventStore.appendToStream(
-        batch.stream,
-        batch.events,
-        batch.expectedVersion,
-      );
-      this.eventsStacker.shiftEventsBatchFromWaitingLine();
+      let lastValidAppendResult: AppendResult = null;
+      this.isTryingToWriteEvents = true;
 
-      return appendResult;
+      while (this.eventsStacker.getEventBatchesWaitingLineLength() > 0) {
+        lastValidAppendResult = await this.tryToWriteEventsFromBatch();
+      }
+
+      this.isTryingToWriteEvents = false;
+      return lastValidAppendResult;
     } catch (e) {
       this.eventStoreHealthIndicator.updateStatus({ connection: 'down' });
       this.subsystems.onConnectionFail(e);
       return null;
     }
+  }
+
+  private async tryToWriteEventsFromBatch(): Promise<null | AppendResult> {
+    const batch: EventBatch =
+      this.eventsStacker.getFirstOutFromEventsBatchesWaitingLine();
+    const appendResult: AppendResult = await this.eventStore.appendToStream(
+      batch.stream,
+      batch.events,
+      batch.expectedVersion,
+    );
+    this.eventsStacker.shiftEventsBatchFromWaitingLine();
+    return appendResult;
   }
 
   private async onEvent(

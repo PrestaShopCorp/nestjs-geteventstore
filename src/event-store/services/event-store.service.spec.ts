@@ -46,6 +46,7 @@ describe('EventStoreService', () => {
     updateProjection: jest.fn(),
     getStreamMetadata: jest.fn(),
     deletePersistentSubscription: jest.fn(),
+    createContinuousProjection: jest.fn(),
   };
 
   const subsystemsMock: IEventStoreSubsystems = {
@@ -64,6 +65,7 @@ describe('EventStoreService', () => {
     },
     projections: [
       {
+        mode: 'continuous',
         name: 'tutu',
         content: 'toto',
         file: 'theGoodFile',
@@ -113,6 +115,43 @@ describe('EventStoreService', () => {
 
       expect(service.subscribeToPersistentSubscriptions).toHaveBeenCalled();
     });
+
+    it('should try to write pending events when all is ok', async () => {
+      spyOn(
+        eventsStackerMock,
+        'getEventBatchesWaitingLineLength',
+      ).mockReturnValueOnce(1);
+      spyOn(
+        eventsStackerMock,
+        'getFirstOutFromEventsBatchesWaitingLine',
+      ).mockReturnValue({
+        stream: 'tutu',
+        events: [],
+        expectedVersion: { expectedRevision: ANY },
+      });
+      spyOn(eventStoreConnectorMock, 'appendToStream').mockResolvedValue(null);
+
+      await service.onModuleInit();
+
+      expect(eventStoreConnectorMock.appendToStream).toHaveBeenCalled();
+    });
+
+    it('should try to write pending metadatas when all is ok', async () => {
+      spyOn(
+        eventsStackerMock,
+        'getMetadatasWaitingLineLength',
+      ).mockReturnValueOnce(1);
+
+      const metadata: MetadatasContextDatas = getDumbMetadatas('abc');
+      spyOn(
+        eventsStackerMock,
+        'getFirstOutFromMetadatasWaitingLine',
+      ).mockReturnValue(metadata);
+
+      await service.onModuleInit();
+
+      expect(eventStoreConnectorMock.setStreamMetadata).toHaveBeenCalled();
+    });
   });
 
   describe('when upserting projections', () => {
@@ -135,14 +174,17 @@ describe('EventStoreService', () => {
     });
 
     it('should try to update projection at if it already exists', async () => {
-      spyOn(service, 'createProjection').mockImplementationOnce(() => {
+      spyOn(
+        eventStoreConnectorMock,
+        'createContinuousProjection',
+      ).mockImplementationOnce(() => {
         throw { code: PROJECTION_ALREADY_EXIST_ERROR_CODE };
       });
-      spyOn(service, 'updateProjections');
+      spyOn(service, 'updateProjection');
 
       await service.onModuleInit();
 
-      expect(service.updateProjections).toHaveBeenCalled();
+      expect(service.updateProjection).toHaveBeenCalled();
     });
 
     it('should not try to update when projection does not already exist and creation raises error', async () => {
@@ -150,7 +192,7 @@ describe('EventStoreService', () => {
         const UNKNOWN_ERROR = -666;
         throw { code: UNKNOWN_ERROR };
       });
-      spyOn(service, 'updateProjections');
+      spyOn(service, 'updateProjection');
 
       try {
         await service.onModuleInit();
@@ -158,7 +200,7 @@ describe('EventStoreService', () => {
         // e
       }
 
-      expect(service.updateProjections).not.toHaveBeenCalled();
+      expect(service.updateProjection).not.toHaveBeenCalled();
     });
 
     it('should raise an error when created has failed and does not already exist', async () => {
@@ -236,14 +278,6 @@ describe('EventStoreService', () => {
       expect(subscriptions.length).toEqual(1);
     });
 
-    /**
-     * V should init its health status at 'up' when all is ok at init
-     * V should init its health status at 'down' when an error occurred at init
-     * V should notify the health indicator when error occurred with subscriptions
-     * should notify the health indicator when error occurred with writing events
-     * should notify the health indicator when error occurred with writing metadatas
-     */
-
     it('should init its health status when all is ok at init', async () => {
       spyOn(eventStoreHealthIndicatorMock, 'updateStatus');
 
@@ -268,8 +302,7 @@ describe('EventStoreService', () => {
       });
     });
 
-    it('should update connection health status when appending events raises error', () => {
-      spyOn(eventStoreHealthIndicatorMock, 'updateStatus');
+    it('should update connection health status when appending events raises error', async () => {
       let cpt = 2;
       spyOn(
         eventsStackerMock,
@@ -282,8 +315,9 @@ describe('EventStoreService', () => {
           throw Error();
         },
       );
+      spyOn(eventStoreHealthIndicatorMock, 'updateStatus');
 
-      service.writeEvents('testStream', [getDumbEvent()], {
+      await service.writeEvents('testStream', [getDumbEvent()], {
         expectedRevision: ANY,
       });
 
@@ -361,19 +395,18 @@ describe('EventStoreService', () => {
     it(`should catch the error and try to reconnect
 		at module startup (interval of ${RECONNECTION_TRY_DELAY_IN_MS} ms)
 		when event store client raises error`, async () => {
-      spyOn(service, 'upsertProjections').mockImplementation(() => {
+      spyOn(service, 'upsertProjections').mockImplementationOnce(() => {
         throw Error();
       });
       spyOn(service, 'onModuleInit');
 
       jest.useFakeTimers();
 
-      service.onModuleInit().then(() => {
-        // do nothing
-      });
+      await service.onModuleInit();
       jest.advanceTimersByTime(RECONNECTION_TRY_DELAY_IN_MS);
 
-      expect(service.upsertProjections).toHaveBeenCalledTimes(2);
+      expect(service.upsertProjections).toHaveBeenCalled();
+      jest.useRealTimers();
     });
 
     it('should run the connection hook when connection raises an error while reading stream', async () => {

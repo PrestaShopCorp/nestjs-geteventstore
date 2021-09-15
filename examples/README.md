@@ -1,5 +1,9 @@
 # Trying EventStoreDb connector
 
+## Note on nodeJS version
+
+You'll find a compatible version you refer to in [this .nvmrc](../.nvmrc). You might want to use nvm direcly, and in this case, nvm will read direcly this configuration file and adjust the version.
+
 ## Installation
 
 ```
@@ -19,118 +23,17 @@ docker run --name esdb-node \
     --enable-atom-pub-over-http
 ```
 
-Then, you can see in the directory `/examples/src/event-store-usages` a serie of sub directory showing some example. You can run it by using the `/examples/src/package.json`, by running the corresponding example you want to try. For instance, if you want to play with persistent subscriptions, you can run :
+Then, the REST API will start by running :
 
 ```
-yarn start:esdb:pers-sub
+yarn start
 ```
-
-Then, the REST API will start.
 
 ## Usage
 
-#### Writing one event
+#### running basic CQRS example with eventStore
 
-```
-curl -XGET localhost:3000/event-writer/write-one-event/<optional : the stream name>
-```
-
-#### Writing a batch of events
-
-```
-curl -XGET localhost:3000/event-writer/write-event-batch/<optional : the stream name>
-```
-
-#### Reading on a stream
-
-```
-curl -XGET localhost:3000/stream-reader/$test-stream/<optional : the stream name>
-```
-
-# Trying CQRS with event store - Hotel reservation example
-
-# Story
-
-You are a hotel manager, and you want to be able to take reservations, welcome clients,checkout rooms, get the bills etc.
-
-#Installation
-
-```
-cd examples/
-yarn
-```
-
-#Start server
-
-```
-cd examples/
-yarn run start:hotel-room
-```
-
-Listening on port 3000 you have now a rest API that you can request to see the behavior of the hotel.
-
-#Usage
-Using curl, you can request this API. You can find all possible request into the controller file :
-
-```
-examples/src/hotel-room/hotel-room.controller.ts
-```
-
-Then, you can use curl to request the API :
-
-```
-curl -i localhost:3000/path-to-api/arg1/arg2/...
-```
-
-For example, if you want to reinit the hotel, by rebuilding it with 10 rooms, then run :
-
-```
-curl -i localhost:3000/hotel-room/build/10
-```
-
-#Behavior in a nutshell
-(prerequisite : you need to know cqrs basic concepts)
-
-Staying in the example of the previous command (reinit hotel state), here is what happens :
-
-First it will execute corresponding command on the commandBus. The command will be dispatch to its handlers by the cqrs lib asynchronously. Then, the `BuildNewHotelCommandHandler` will execute this command, and send back a commandResponse chen it's done. Then you can see if something failed or if everything went ok.
-
-First, the commandHandler loads the last state of the aggregate, which is the model (here, it's in the domain folder, in this hexagonal architecture). It will run the correct command with the given args, and get a response. At this stage, if anything went ok, the corresponding event where emitted (`HotelBuiltEvent`).
-
-The point is that this example uses event store to... store events. You can see that the eventBus is not the standard nestjs cqrs one. this ESEventBus is a overlay on the standard EventBus. Basically, its behavior is to publish an event while the system standardly publish one. The other particularity is that at module init, it will connect and keep in memory all subscriptions, and projection that you want to get. You can see that in this module :
-
-```
-examples/src/hotel-room/hotel-room.module.ts
-```
-
-Let's see the import :
-
-```
-  imports: [
-    EventStoreCqrsModule.connect(
-      process.env.CONNECTION_STRING || 'esdb://localhost:20113?tls=false',
-      esConfig
-    )
-  ]
-```
-
-As you can see, no more need for importing CqrsModule, juste this one, fed with the connection string to EventStore, and the configuration esConfig, strongly typed to help you giving it what you need.
-
-Other interesting point : the hotel repository, that you can find here :
-
-```
-examples/src/hotel-room/repositories/hotel.event-store.repository.ts
-```
-
-This repo is able to replay all events appends to the hotel main stream, and is able to "reconstruct" the state of the model. It makes that you can ask it anything at anytime, it's always up to date (hat is how it know free rooms remaining and who are the room owners). A big ugly if/else is here to add behavior to the model at startup
-
-Note that using `EventStoreCqrsModule` still allows you to use standard NestJS CQRS standard EventBus.
-
-You can basically find in the sources of this example the same behavior either for command, or queries or events. And you can see example of how you can unit test that.
-
-# Trying CQRS - Hero example
-
-[Nest](https://github.com/kamilmysliwiec/nest) framework Eventstore [CQRS module](https://github.com/kamilmysliwiec/nest-cqrs) usage example.
+The example is based on [CQRS module](https://github.com/kamilmysliwiec/nest-cqrs) usage example of [Nest](https://github.com/kamilmysliwiec/nest) framework.
 
 # Story
 
@@ -141,29 +44,30 @@ We need to keep only the last 5 move of the fight and delete them after 3 days f
 When it's done the hero search and find an item.  
 He can find this special item only once until he drop hit.
 
-## Installation
+#### How to connect
 
-```
-yarn install
-```
+You can see how the import is done in the [EventStoreHeroesModule](./src/heroes/event-store-heroes.module.ts) :
 
-## Start
-
-```
-docker run -d -p 2113:2113 -p 1113:1113 -e EVENSTORE_RUN_PROJECTIONS=System --name geteventstore eventstore/eventstore
-yarn start // or yarn start:<cqrs | eventstore | subscription | write>
-```
-
-## Usage
-
-```
-curl -XPUT localhost:3000/hero/hero-5421/kill -d'{
-  "dragonId" : "test3"
-}'
+```typescript
+    CqrsEventStoreModule.register(
+      eventStoreConnectionConfig,
+      eventStoreSubsystems,
+      eventBusConfig,
+    ),
 ```
 
-Call it multiple time to try idemptotency
-see events on http://localhost:2113/web/index.html#/streams/hero-5421 (admin/changeit)
+# Let's run it
+
+Once the API is running, you only have to run this REST request :
+
+```
+curl -XPUT localhost:3000/hero/hero-200/kill -d'{ "dragonId" : "test3" }'
+```
+
+All the events emitted by the example will be stored in the event store.
+
+You can call it multiple time to try idemptotency
+see events on [the dashboard](http://localhost:20113/web/index.html#/streams/hero-200) of event store
 
 ## What the code does
 
@@ -189,7 +93,7 @@ Stupid data object with optionnals validation rules
 
 ## Repository
 
-Link with the database
+Link with the database (mocked here)
 
 ## Aggregate Root
 

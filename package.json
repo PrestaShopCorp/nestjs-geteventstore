@@ -1,6 +1,6 @@
 {
   "name": "nestjs-geteventstore",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "Event Store connector for NestJS-Cqrs",
   "author": "Vincent Vermersch <vincent.vermersch@prestashop.com >",
   "contributors": [
@@ -23,10 +23,9 @@
   "scripts": {
     "start:dev": "tsc -w",
     "build": "tsc",
-    "prepare": "npm run build",
+    "prepare": "npm run build && husky install",
     "format": "prettier --write \"src/**/*.ts\"",
-    "lint": "tslint -p tsconfig.json -c tslint.json",
-    "lint:fix": "tslint -p tsconfig.json -c tslint.json --fix",
+    "lint": "eslint .",
     "check-lite": "npm run lint:fix && npm run prepare",
     "test": "jest",
     "semantic-release": "semantic-release",
@@ -50,7 +49,7 @@
     "@nestjs/terminus": "*",
     "class-transformer": "*",
     "class-validator": "*",
-    "nestjs-context": "^0.11.1",
+    "nestjs-context": "^0.12.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^6.6.3"
@@ -61,9 +60,8 @@
     }
   },
   "dependencies": {
-    "geteventstore-promise": "3.2.5",
+    "@eventstore/db-client": "^2.1.0",
     "lodash": "^4.17.20",
-    "node-eventstore-client": "0.2.18",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
@@ -76,11 +74,20 @@
     "@types/jest": "^26.0.20",
     "@types/node": "^14.14.25",
     "@types/supertest": "^2.0.10",
+    "@typescript-eslint/eslint-plugin": "^4.28.4",
+    "@typescript-eslint/parser": "^4.28.4",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
+    "eslint": "^7.31.0",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-jest": "^24.4.0",
+    "eslint-plugin-local": "^1.0.0",
+    "husky": "^7.0.1",
     "jest": "^26.6.3",
+    "lint-staged": "^11.1.1",
     "nestjs-context": "^0.11.0",
     "prettier": "^2.2.1",
+    "pretty-quick": "^3.1.1",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.0.0",
     "supertest": "6.1.3",
@@ -88,8 +95,6 @@
     "ts-node": "^9.1.1",
     "tsc-watch": "^4.2.9",
     "tsconfig-paths": "^3.9.0",
-    "tslint": "^5.20.1",
-    "tslint-config-airbnb": "^5.11.2",
     "typescript": "^4.3.4"
   },
   "jest": {
@@ -98,12 +103,33 @@
       "json",
       "ts"
     ],
-    "rootDir": "src",
+    "rootDir": "./",
     "testRegex": ".spec.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "globals": {
+      "ts-jest": {
+        "tsconfig": "./tsconfig.spec.json"
+      }
+    },
+    "globalSetup": "./jest.setup.ts",
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "lint-staged": {
+    "./src/**/*.{ts}": [
+      "eslint . --fix",
+      "git add"
+    ],
+    "examples/src/**/*.{ts}": [
+      "eslint . --fix",
+      "git add"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn lint-staged && yarn pretty-quick --staged && yarn jest --forceExit"
+    }
   }
 }

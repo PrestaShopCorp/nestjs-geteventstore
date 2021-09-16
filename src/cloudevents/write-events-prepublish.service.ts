@@ -14,7 +14,7 @@ import {
   IEventBusPrepublishValidateProvider,
   IWriteEventBusConfig,
 } from '../interfaces';
-import { EventStoreEvent } from '../events';
+import { EventStoreEvent } from '../event-store/events';
 import { EventMetadataDto } from '../dto';
 import { WRITE_EVENT_BUS_CONFIG } from '../constants';
 import { createEventDefaultMetadata } from '../tools/create-event-default-metadata';
@@ -22,10 +22,11 @@ import { isIPv4 } from 'net';
 
 @Injectable()
 export class WriteEventsPrepublishService<
-  T extends IBaseEvent = EventStoreEvent
+  T extends IBaseEvent = EventStoreEvent,
 > implements
     IEventBusPrepublishValidateProvider<T>,
-    IEventBusPrepublishPrepareProvider<T> {
+    IEventBusPrepublishPrepareProvider<T>
+{
   private readonly logger = new Logger(this.constructor.name);
   constructor(
     private readonly context: Context,

@@ -4,7 +4,6 @@
     "module": "commonjs",
     "declaration": false,
     "noImplicitAny": false,
-    "noUnusedLocals": true,
     "removeComments": true,
     "noLib": false,
     "emitDecoratorMetadata": true,
@@ -14,13 +13,10 @@
     "target": "ES2020",
     "sourceMap": true,
     "allowJs": true,
-    "outDir": "./dist"
-  },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.spec.ts"
-  ]
+    "outDir": "./dist",
+    "composite": false,
+    "paths": {
+      "@nestjs-geteventstore/*": ["../src/*"]
+    }
+  }
 }

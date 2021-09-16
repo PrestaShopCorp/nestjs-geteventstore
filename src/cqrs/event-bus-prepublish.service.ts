@@ -10,14 +10,14 @@ import {
 
 @Injectable()
 export class EventBusPrepublishService<
-  EventBase extends IBaseEvent = IBaseEvent
+  EventBase extends IBaseEvent = IBaseEvent,
 > {
   constructor(private readonly moduleRef: ModuleRef) {}
 
   private async getProvider<
     T =
       | IEventBusPrepublishPrepareProvider<EventBase>
-      | IEventBusPrepublishValidateProvider<EventBase>
+      | IEventBusPrepublishValidateProvider<EventBase>,
   >(name): Promise<T> {
     try {
       return await this.moduleRef.resolve(name);
@@ -61,7 +61,7 @@ export class EventBusPrepublishService<
     const provider = await this.getProvider<
       IEventBusPrepublishPrepareProvider<T>
     >(prepare);
-    return !!provider
+    return provider
       ? provider.prepare(events)
       : (prepare as EventBusPrepublishPrepareCallbackType<T>)(events);
   }

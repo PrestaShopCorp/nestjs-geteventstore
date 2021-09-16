@@ -1,8 +1,10 @@
-import { ExpectedVersion } from '../../enum';
+import { StreamMetadata } from '@eventstore/db-client/dist/utils/streamMetadata';
+import { SetStreamMetadataOptions } from '@eventstore/db-client/dist/streams';
+import { AppendExpectedRevision } from '@eventstore/db-client/dist/types';
 
 export interface PublicationContextInterface {
   streamName?: string;
-  expectedVersion?: ExpectedVersion;
-  streamMetadata?: any;
-  expectedMetadataVersion?: ExpectedVersion;
+  expectedRevision?: AppendExpectedRevision;
+  streamMetadata?: StreamMetadata;
+  options?: SetStreamMetadataOptions;
 }

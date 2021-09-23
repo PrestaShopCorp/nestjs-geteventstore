@@ -6,7 +6,7 @@ import { LoggerModule } from 'nestjs-pino-stackdriver/dist';
 import { resolve } from 'path';
 import * as util from 'util';
 
-import { CqrsEventStoreModule } from '../../../src';
+import { CqrsEventStoreModule, EventBusConfigType } from '../../../src';
 import { CommandHandlers } from './commands/handlers';
 import { EventHandlers } from './events/handlers';
 import { heroesEvents } from './events/impl';
@@ -90,7 +90,7 @@ const projections = [
     emitEnabled: true,
   },
 ];
-const eventBusConfig = {
+const eventBusConfig: EventBusConfigType = {
   read: {
     allowedEvents: { ...heroesEvents },
   },

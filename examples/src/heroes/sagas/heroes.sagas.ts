@@ -4,7 +4,7 @@ import * as clc from 'cli-color';
 import { v4 } from 'uuid';
 import { Context, CONTEXT_CORRELATION_ID } from 'nestjs-context';
 import { Observable } from 'rxjs';
-import { delay, filter, map } from 'rxjs/operators';
+import { delay, filter, map, tap } from 'rxjs/operators';
 import { DropAncientItemCommand } from '../commands/impl/drop-ancient-item.command';
 import { HeroKilledDragonEvent } from '../events/impl/hero-killed-dragon.event';
 
@@ -21,7 +21,7 @@ export class HeroesGameSagas {
       //@ts-ignore
       delay(400),
       //@ts-ignore
-      map((event: HeroKilledDragonEvent) => {
+      tap(async (event: HeroKilledDragonEvent) => {
         this.context.setCachedValue(
           CONTEXT_CORRELATION_ID,
           event?.metadata?.correlation_id || v4(),
@@ -30,6 +30,9 @@ export class HeroesGameSagas {
           clc.redBright('Inside [HeroesGameSagas] Saga after a little sleep'),
         );
         console.log(event);
+        await event.ack();
+      }),
+      map((event: HeroKilledDragonEvent) => {
         return new DropAncientItemCommand(event.data.heroId, itemId);
       }),
     );

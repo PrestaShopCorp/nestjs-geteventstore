@@ -1,6 +1,6 @@
-import { EventStoreEvent } from '../../../../../src';
+import { EventStoreAcknowledgeableEvent } from '../../../../../src';
 
-export class HeroDropItemEvent extends EventStoreEvent {
+export class HeroDropItemEvent extends EventStoreAcknowledgeableEvent {
   constructor(
     public readonly data: {
       heroId: string;

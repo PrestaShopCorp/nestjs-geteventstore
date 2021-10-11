@@ -1,3 +1,4 @@
+export * from '@eventstore/db-client/dist/constants';
 export * from './cloudevents';
 export * from './cqrs';
 export * from './dto';

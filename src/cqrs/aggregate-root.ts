@@ -62,7 +62,10 @@ export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
 
     // publish the event
     for (const publisher of this.publishers) {
-      await publisher(events);
+      await publisher(events).catch((error) => {
+        this[INTERNAL_EVENTS].unshift(...events);
+        throw error;
+      });
     }
     return this;
   }

@@ -55,10 +55,15 @@ export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
         this.publishers.length
       } publishers`,
     );
-    for (const publisher of this.publishers) {
-      await publisher(this.getUncommittedEvents());
-    }
+
+    // flush the queue first to avoid multiple commit of the same event on concurrent calls
+    const events = this.getUncommittedEvents();
     this.clearEvents();
+
+    // publish the event
+    for (const publisher of this.publishers) {
+      await publisher(events);
+    }
     return this;
   }
 

@@ -36,13 +36,13 @@ export class WriteEventsPrepublishService<
     );
   }
 
-  private getErrorDetails(error: ValidationError, parent = null) {
+  private getErrorDetails(event, error: ValidationError, parent = null) {
     const field = parent ? `${parent}.${error.property}` : error.property;
     const details = [];
     if (error.constraints) {
       for (const [issue, description] of Object.entries(error.constraints)) {
         const errorDetail = {
-          event: error.target.constructor.name,
+          event,
           field,
           value: error.value,
           issue,
@@ -62,7 +62,11 @@ export class WriteEventsPrepublishService<
     return details;
   }
 
-  private flattenDetails(validationErrors: ValidationError[], parent = null) {
+  private flattenDetails(
+    validationErrors: ValidationError[],
+    parent = null,
+    event = null,
+  ) {
     return validationErrors
       .map((validationError) => {
         if (validationError.children.length) {
@@ -71,9 +75,10 @@ export class WriteEventsPrepublishService<
             parent
               ? `${parent}.${validationError.property}`
               : validationError.property,
+            event || validationError.target.constructor.name,
           );
         } else {
-          return this.getErrorDetails(validationError, parent);
+          return this.getErrorDetails(event, validationError, parent);
         }
       })
       .flat();

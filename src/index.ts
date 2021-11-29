@@ -8,3 +8,4 @@ export * from './event-store/health';
 export * from './interfaces';
 export * from './event-store/event-store.module';
 export * from './cqrs-event-store.module';
+export * from './exceptions';

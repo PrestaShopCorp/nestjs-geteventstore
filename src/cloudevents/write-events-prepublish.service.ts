@@ -1,6 +1,6 @@
-import { Logger, Injectable, Inject } from '@nestjs/common';
+import { Logger, Injectable } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
-import { validate } from 'class-validator';
+import { validate, ValidationError } from 'class-validator';
 import {
   Context,
   CONTEXT_BIN,
@@ -12,32 +12,75 @@ import {
   IBaseEvent,
   IEventBusPrepublishPrepareProvider,
   IEventBusPrepublishValidateProvider,
-  IWriteEventBusConfig,
 } from '../interfaces';
 import { EventStoreEvent } from '../event-store/events';
 import { EventMetadataDto } from '../dto';
-import { WRITE_EVENT_BUS_CONFIG } from '../constants';
 import { createEventDefaultMetadata } from '../tools/create-event-default-metadata';
 import { isIPv4 } from 'net';
 
 @Injectable()
 export class WriteEventsPrepublishService<
-  T extends IBaseEvent = EventStoreEvent,
+  T extends IBaseEvent = EventStoreEvent
 > implements
     IEventBusPrepublishValidateProvider<T>,
-    IEventBusPrepublishPrepareProvider<T>
-{
+    IEventBusPrepublishPrepareProvider<T> {
   private readonly logger = new Logger(this.constructor.name);
-  constructor(
-    private readonly context: Context,
-    @Inject(WRITE_EVENT_BUS_CONFIG)
-    private readonly config: IWriteEventBusConfig,
-  ) {}
+  constructor(private readonly context: Context) {}
   // errors log
-  async onValidationFail(events: T[], errors: any[]) {
-    for (const error of errors) {
-      this.logger.error(error);
+  async onValidationFail(events: T[], errors: ValidationError[]) {
+    const errorDetails = this.getFlattenErrorsDetails(errors);
+    this.logger.error(
+      `Validation found ${errors.length} errors: ${JSON.stringify(
+        errorDetails,
+      )}`,
+    );
+  }
+  private getErrorDetails(error: ValidationError, parent = null) {
+    const field = parent ? `${parent}.${error.property}` : error.property;
+    const details = [];
+    if (error.constraints) {
+      for (const [issue, description] of Object.entries(error.constraints)) {
+        const errorDetail = {
+          event: error.target.constructor.name,
+          field,
+          value: error.value,
+          issue,
+          description,
+        };
+        details.push(errorDetail);
+      }
+    } else {
+      // we should never arrive here
+      details.push({
+        field,
+        value: error.value,
+        issue: 'unknown',
+        description: '',
+      });
     }
+    return details;
+  }
+  private getFlattenErrorsDetails(
+    validationErrors: ValidationError[],
+    parent = null,
+  ) {
+    return validationErrors
+      .map((validationError) => {
+        if (validationError.children.length) {
+          return this.getFlattenErrorsDetails(
+            validationError.children,
+            parent
+              ? `${parent}.${validationError.property}`
+              : validationError.property,
+          );
+        } else {
+          return {
+            ...this.getErrorDetails(validationError, parent),
+            event: validationError.target.constructor.name,
+          };
+        }
+      })
+      .flat();
   }
 
   // transform to dto each event and validate it
@@ -45,8 +88,6 @@ export class WriteEventsPrepublishService<
     let errors = [];
     for (const event of events) {
       this.logger.debug(`Validating ${event.constructor.name}`);
-      // @todo JDM class-transformer is not converting data property !
-      //    (metadata is working, so it might be related to inheritance)
       const validateEvent: any = plainToClass(event.constructor as any, event);
       errors = [...errors, ...(await validate(validateEvent))];
     }
@@ -64,9 +105,7 @@ export class WriteEventsPrepublishService<
       const hostnameArr = hostname.split('.');
       const eventType = `${hostnameArr[1] ? hostnameArr[1] + '.' : ''}${
         hostnameArr[0]
-      }.${this.config.serviceName ?? this.context.get(CONTEXT_BIN)}.${
-        event.eventType
-      }.${version}`;
+      }.${this.context.get(CONTEXT_BIN)}.${event.eventType}.${version}`;
       const source = `${hostname}${this.context.get(CONTEXT_PATH)}`;
       return {
         specversion: 1,

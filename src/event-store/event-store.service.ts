@@ -187,7 +187,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
   async onEvent(subscription, payload) {
     // use configured onEvent
     if (this.config.onEvent) {
-      return await this.onEvent(subscription, payload);
+      return this.config.onEvent(subscription, payload);
     }
     // do nothing, as we have not defined an event bus
     if (!this.eventBus) {

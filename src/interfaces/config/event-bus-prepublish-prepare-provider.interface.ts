@@ -3,7 +3,7 @@ import { EventBusPrepublishPrepareCallbackType } from './event-bus-prepublish-pr
 
 export interface IEventBusPrepublishPrepareProvider<
   T extends IBaseEvent,
-  K extends IBaseEvent = T
+  K extends IBaseEvent = T,
 > {
   prepare: EventBusPrepublishPrepareCallbackType<T, K>;
 }

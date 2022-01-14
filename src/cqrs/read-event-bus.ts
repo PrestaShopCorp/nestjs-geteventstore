@@ -13,7 +13,7 @@ import { EventBusPrepublishService } from './event-bus-prepublish.service';
 
 @Injectable()
 export class ReadEventBus<
-  EventBase extends IReadEvent = IReadEvent
+  EventBase extends IReadEvent = IReadEvent,
 > extends Parent<EventBase> {
   private logger = new Logger(this.constructor.name);
   constructor(

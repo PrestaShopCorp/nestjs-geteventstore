@@ -195,16 +195,7 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     }
     // use default onEvent
     const { event } = payload;
-    // TODO allow unresolved event
-    if (!payload.isResolved) {
-      this.logger.warn(
-        `Ignore unresolved event from stream ${payload.originalStreamId}[${event.eventNumber.low}] with ID ${payload.originalEvent.eventId}`,
-      );
-      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
-        await subscription.acknowledge([payload]);
-      }
-      return;
-    }
+    
     // TODO handle not JSON
     if (!event.isJson) {
       // TODO add info on error not coded

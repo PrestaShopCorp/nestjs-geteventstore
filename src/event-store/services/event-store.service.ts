@@ -2,6 +2,7 @@ import {
   Inject,
   Injectable,
   Logger,
+  OnModuleDestroy,
   OnModuleInit,
   Optional,
 } from '@nestjs/common';
@@ -59,9 +60,12 @@ import IEventsAndMetadatasStacker, {
 import EventBatch from '../reliability/interface/event-batch';
 import { EventStoreHealthIndicator } from '../health';
 import MetadatasContextDatas from '../reliability/interface/metadatas-context-datas';
+import Timeout = NodeJS.Timeout;
 
 @Injectable()
-export class EventStoreService implements OnModuleInit, IEventStoreService {
+export class EventStoreService
+  implements OnModuleInit, OnModuleDestroy, IEventStoreService
+{
   private logger: Logger = new Logger(this.constructor.name);
   private persistentSubscriptions: PersistentSubscription[];
 
@@ -70,6 +74,7 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
   private isTryingToWriteEvents = false;
   private isTryingToWriteMetadatas = false;
 
+  private connectionRetryFallback: Timeout;
   constructor(
     @Inject(EVENT_STORE_CONNECTOR)
     private readonly eventStore: Client,
@@ -85,6 +90,10 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
     return await this.connect();
   }
 
+  public onModuleDestroy(): void {
+    clearTimeout(this.connectionRetryFallback);
+  }
+
   private async connect(): Promise<void> {
     try {
       if (this.subsystems.subscriptions)
@@ -93,7 +102,9 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
             this.subsystems.subscriptions.persistent,
           );
       if (this.subsystems.projections)
-        this.upsertProjections(this.subsystems.projections).then(() => {});
+        await this.upsertProjections(this.subsystems.projections).catch((e) =>
+          this.logger.error(e),
+        );
 
       this.isOnError = false;
       this.isTryingToConnect = false;
@@ -116,7 +127,10 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
 
   private async retryToConnect(): Promise<void> {
     this.logger.log(`EventStore connection failed : trying to reconnect`);
-    setTimeout(async () => await this.connect(), RECONNECTION_TRY_DELAY_IN_MS);
+    this.connectionRetryFallback = setTimeout(
+      async () => await this.connect(),
+      RECONNECTION_TRY_DELAY_IN_MS,
+    );
   }
 
   public async createProjection(
@@ -206,7 +220,6 @@ export class EventStoreService implements OnModuleInit, IEventStoreService {
       },
     ).catch(async (e) => {
       if (EventStoreService.isNotAProjectionAlreadyExistsError(e)) {
-        this.logger.error(e);
         throw Error(e);
       }
       await this.updateProjection(projection, content);

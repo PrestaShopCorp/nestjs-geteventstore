@@ -34,14 +34,14 @@ export class WriteEventsPrepublishService<
     private readonly config: IWriteEventBusConfig,
   ) {}
   // errors log
-  async onValidationFail(events: T[], errors: any[]) {
+  async onValidationFail(events: T[], errors: any[]): Promise<any> {
     for (const error of errors) {
       this.logger.error(error);
     }
   }
 
   // transform to dto each event and validate it
-  async validate(events: T[]) {
+  async validate(events: T[]): Promise<any[]> {
     let errors = [];
     for (const event of events) {
       this.logger.debug(`Validating ${event.constructor.name}`);
@@ -83,7 +83,7 @@ export class WriteEventsPrepublishService<
   }
 
   // add cloud events metadata
-  async prepare(events: T[]) {
+  async prepare(events: T[]): Promise<any[]> {
     const preparedEvents = [];
     for (const event of events) {
       this.logger.debug(`Preparing ${event.constructor.name}`);

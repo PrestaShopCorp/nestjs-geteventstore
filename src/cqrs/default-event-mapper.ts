@@ -3,9 +3,9 @@ import { ReadEventBusConfigType, ReadEventOptionsType } from '../interfaces';
 
 export const defaultEventMapper = (
   allEvents: ReadEventBusConfigType['allowedEvents'],
-) => {
+): ReadEventBusConfigType['eventMapper'] => {
   const logger = new Logger('Default Event Mapper');
-  return ((data, options: ReadEventOptionsType) => {
+  return ((data: any, options: ReadEventOptionsType) => {
     const className = `${options.eventType}`;
     if (allEvents[className]) {
       logger.log(

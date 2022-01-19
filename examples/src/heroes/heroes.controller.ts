@@ -13,7 +13,10 @@ export class HeroesGameController {
   ) {}
 
   @Put(':id/kill')
-  async killDragon(@Param('id') id: string, @Body() dto: KillDragonDto) {
+  async killDragon(
+    @Param('id') id: string,
+    @Body() dto: KillDragonDto,
+  ): Promise<any> {
     return this.commandBus
       .execute(new KillDragonCommand(id, dto.dragonId))
       .catch((e) => console.log('e : ', e));

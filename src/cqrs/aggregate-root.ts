@@ -22,7 +22,7 @@ export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
   addPublisher<T extends Function | object = Function>(
     publisher: T,
     method: keyof T = 'publishAll' as keyof T,
-  ) {
+  ): AggregateRoot<EventBase> {
     const objectPublisher = publisher?.[method];
     const addedPublisher =
       !!objectPublisher && typeof objectPublisher === 'function'
@@ -35,21 +35,23 @@ export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
     throw new InvalidPublisherException(publisher, method);
   }
 
-  get publishers() {
+  get publishers(): Function[] {
     return this._publishers;
   }
 
-  protected addEvent<T extends EventBase = EventBase>(event: T) {
+  protected addEvent<T extends EventBase = EventBase>(
+    event: T,
+  ): AggregateRoot<EventBase> {
     this[INTERNAL_EVENTS].push(event);
     return this;
   }
 
-  protected clearEvents() {
+  protected clearEvents(): AggregateRoot<EventBase> {
     this[INTERNAL_EVENTS].length = 0;
     return this;
   }
 
-  async commit() {
+  async commit(): Promise<AggregateRoot<EventBase>> {
     this.logger.debug(
       `Aggregate will commit ${this.getUncommittedEvents().length} in ${
         this.publishers.length
@@ -70,7 +72,7 @@ export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
     return this;
   }
 
-  uncommit() {
+  uncommit(): AggregateRoot<EventBase> {
     this.clearEvents();
     return this;
   }
@@ -79,14 +81,15 @@ export abstract class AggregateRoot<EventBase extends IEvent = IEvent> {
     return this[INTERNAL_EVENTS];
   }
 
-  loadFromHistory(history: EventBase[]) {
+  // @TODO: fix this sync function calling a loop on async method!
+  loadFromHistory(history: EventBase[]): void {
     history.forEach((event) => this.apply(event, true));
   }
 
   async apply<T extends EventBase = EventBase>(
     event: T,
     isFromHistory = false,
-  ) {
+  ): Promise<void> {
     this.logger.debug(
       `Applying ${event.constructor.name} with${
         this.autoCommit ? '' : 'out'

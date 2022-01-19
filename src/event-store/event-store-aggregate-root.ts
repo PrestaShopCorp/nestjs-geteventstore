@@ -35,7 +35,7 @@ export abstract class EventStoreAggregateRoot<
   public async commit(
     expectedRevision: AppendExpectedRevision = constants.ANY,
     expectedMetadataRevision: AppendExpectedRevision = constants.ANY,
-  ) {
+  ): Promise<any> {
     this.logger.debug(
       `Aggregate will commit ${this.getUncommittedEvents().length} events in ${
         this.publishers.length

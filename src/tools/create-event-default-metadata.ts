@@ -1,6 +1,6 @@
 import { EventMetadataDto } from '../dto';
 
-export const createEventDefaultMetadata = () =>
+export const createEventDefaultMetadata = (): Partial<EventMetadataDto> =>
   ({
     time: new Date().toISOString(),
     version: 1,

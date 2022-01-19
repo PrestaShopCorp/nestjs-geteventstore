@@ -11,6 +11,7 @@ export abstract class EventStoreEvent
   public readonly eventNumber: IReadEvent['eventNumber'] | undefined;
   public readonly originalEventId: IReadEvent['originalEventId'] | undefined;
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   constructor(public data: any, options?: EventOptionsType) {
     super();
     // metadata is added automatically in write events, so we cast to any

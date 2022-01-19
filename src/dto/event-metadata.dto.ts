@@ -4,9 +4,9 @@ import {
   IsOptional,
   IsPositive,
   IsRFC3339,
-  Matches,
-  IsUrl,
   IsString,
+  IsUrl,
+  Matches,
 } from 'class-validator';
 
 /**

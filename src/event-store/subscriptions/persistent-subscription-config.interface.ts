@@ -1,7 +1,7 @@
-import { DuplexOptions } from 'stream';
-import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils';
 import { ConnectToPersistentSubscriptionOptions } from '@eventstore/db-client/dist/persistentSubscription';
 import { BaseOptions } from '@eventstore/db-client/dist/types';
+import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils';
+import { DuplexOptions } from 'stream';
 
 export interface IPersistentSubscriptionConfig {
   stream: string;

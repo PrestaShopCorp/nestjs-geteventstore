@@ -1,7 +1,7 @@
-import { IAcknowledgeableEvent } from '../../interfaces';
 import { Logger } from '@nestjs/common';
-import { PersistentSubscriptionNakEventAction } from '../../interfaces/events/persistent-subscription-nak-event-action.enum';
 import { ReadEventBus } from '../../cqrs';
+import { IAcknowledgeableEvent } from '../../interfaces';
+import { PersistentSubscriptionNakEventAction } from '../../interfaces/events/persistent-subscription-nak-event-action.enum';
 
 export default class EventHandlerHelper {
   public static async onEvent(

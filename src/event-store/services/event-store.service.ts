@@ -1,4 +1,33 @@
 import {
+  PersistentSubscription,
+  persistentSubscriptionSettingsFromDefaults,
+  ResolvedEvent,
+} from '@eventstore/db-client';
+import { Client } from '@eventstore/db-client/dist/Client';
+import * as constants from '@eventstore/db-client/dist/constants';
+import { DeletePersistentSubscriptionOptions } from '@eventstore/db-client/dist/persistentSubscription';
+import {
+  CreateContinuousProjectionOptions,
+  CreateOneTimeProjectionOptions,
+  CreateTransientProjectionOptions,
+  GetProjectionStateOptions,
+} from '@eventstore/db-client/dist/projections';
+import {
+  AppendToStreamOptions,
+  GetStreamMetadataResult,
+  ReadStreamOptions,
+  SetStreamMetadataOptions,
+} from '@eventstore/db-client/dist/streams';
+import {
+  AppendResult,
+  BaseOptions,
+  Credentials,
+  StreamingRead,
+} from '@eventstore/db-client/dist/types';
+import { EventData } from '@eventstore/db-client/dist/types/events';
+import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils';
+import { StreamMetadata } from '@eventstore/db-client/dist/utils/streamMetadata';
+import {
   Inject,
   Injectable,
   Logger,
@@ -6,60 +35,31 @@ import {
   OnModuleInit,
   Optional,
 } from '@nestjs/common';
+import { isNil } from '@nestjs/common/utils/shared.utils';
 import { readFileSync } from 'fs';
-
+import { ReadableOptions } from 'stream';
+import { EVENT_STORE_SUBSYSTEMS } from '../../constants';
+import { ReadEventBus } from '../../cqrs';
 import {
   EventStoreProjection,
   IPersistentSubscriptionConfig,
 } from '../../interfaces';
-import { ReadEventBus } from '../../cqrs';
-import { EVENT_STORE_SUBSYSTEMS } from '../../constants';
 import { IEventStoreSubsystems } from '../config';
-import {
-  AppendResult,
-  BaseOptions,
-  Credentials,
-  StreamingRead,
-} from '@eventstore/db-client/dist/types';
-import { IEventStoreService } from './event-store.service.interface';
-import * as constants from '@eventstore/db-client/dist/constants';
-import { EventData } from '@eventstore/db-client/dist/types/events';
-import {
-  AppendToStreamOptions,
-  GetStreamMetadataResult,
-  ReadStreamOptions,
-  SetStreamMetadataOptions,
-} from '@eventstore/db-client/dist/streams';
-import { ReadableOptions } from 'stream';
-import {
-  PersistentSubscription,
-  persistentSubscriptionSettingsFromDefaults,
-  ResolvedEvent,
-} from '@eventstore/db-client';
-import { StreamMetadata } from '@eventstore/db-client/dist/utils/streamMetadata';
-import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils';
-import { isNil } from '@nestjs/common/utils/shared.utils';
-import { Client } from '@eventstore/db-client/dist/Client';
-import { EVENT_STORE_CONNECTOR } from './event-store.constants';
-import {
-  CreateContinuousProjectionOptions,
-  CreateOneTimeProjectionOptions,
-  CreateTransientProjectionOptions,
-  GetProjectionStateOptions,
-} from '@eventstore/db-client/dist/projections';
-import { DeletePersistentSubscriptionOptions } from '@eventstore/db-client/dist/persistentSubscription';
+import { EventStoreHealthIndicator } from '../health';
+import EventBatch from '../reliability/interface/event-batch';
+import IEventsAndMetadatasStacker, {
+  EVENTS_AND_METADATAS_STACKER,
+} from '../reliability/interface/events-and-metadatas-stacker';
+import MetadatasContextDatas from '../reliability/interface/metadatas-context-datas';
 import {
   PERSISTENT_SUBSCRIPTION_ALREADY_EXIST_ERROR_CODE,
   PROJECTION_ALREADY_EXIST_ERROR_CODE,
   RECONNECTION_TRY_DELAY_IN_MS,
 } from './errors.constant';
+import { EVENT_STORE_CONNECTOR } from './event-store.constants';
+import { IEventStoreService } from './event-store.service.interface';
 import EventHandlerHelper from './event.handler.helper';
-import IEventsAndMetadatasStacker, {
-  EVENTS_AND_METADATAS_STACKER,
-} from '../reliability/interface/events-and-metadatas-stacker';
-import EventBatch from '../reliability/interface/event-batch';
-import { EventStoreHealthIndicator } from '../health';
-import MetadatasContextDatas from '../reliability/interface/metadatas-context-datas';
+
 import Timeout = NodeJS.Timeout;
 
 @Injectable()

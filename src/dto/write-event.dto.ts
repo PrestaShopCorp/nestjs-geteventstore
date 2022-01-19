@@ -1,5 +1,5 @@
-import { ValidateNested, IsNotEmpty, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsNotEmpty, IsString, ValidateNested } from 'class-validator';
 import { EventMetadataDto } from './event-metadata.dto';
 
 export class WriteEventDto {

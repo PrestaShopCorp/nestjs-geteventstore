@@ -1,8 +1,8 @@
 import { Type } from '@nestjs/common';
 import { IBaseEvent } from '../events';
-import { IEventBusPrepublishValidateProvider } from './event-bus-prepublish-validate-provider.interface';
-import { IEventBusPrepublishPrepareProvider } from './event-bus-prepublish-prepare-provider.interface';
 import { EventBusPrepublishPrepareCallbackType } from './event-bus-prepublish-prepare-callback.type';
+import { IEventBusPrepublishPrepareProvider } from './event-bus-prepublish-prepare-provider.interface';
+import { IEventBusPrepublishValidateProvider } from './event-bus-prepublish-validate-provider.interface';
 
 export interface IEventBusPrepublishConfig<T extends IBaseEvent = IBaseEvent> {
   validate?:

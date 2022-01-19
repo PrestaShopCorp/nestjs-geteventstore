@@ -1,5 +1,5 @@
-import IEventsAndMetadatasStacker from '../../interface/events-and-metadatas-stacker';
 import EventBatch from '../../interface/event-batch';
+import IEventsAndMetadatasStacker from '../../interface/events-and-metadatas-stacker';
 import MetadatasContextDatas from '../../interface/metadatas-context-datas';
 
 export default class InMemoryEventsAndMetadatasStacker

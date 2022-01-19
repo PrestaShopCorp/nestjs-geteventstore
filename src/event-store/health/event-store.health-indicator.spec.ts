@@ -1,7 +1,7 @@
-import { EventStoreHealthIndicator } from './event-store.health-indicator';
-import EventStoreHealthStatus from './event-store-health.status';
-import { HealthIndicatorResult } from '@nestjs/terminus';
 import { Logger as logger } from '@nestjs/common';
+import { HealthIndicatorResult } from '@nestjs/terminus';
+import EventStoreHealthStatus from './event-store-health.status';
+import { EventStoreHealthIndicator } from './event-store.health-indicator';
 
 describe('EventStoreHealthIndicator', () => {
   let service: EventStoreHealthIndicator;

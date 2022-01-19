@@ -1,5 +1,5 @@
-import { Credentials } from '@eventstore/db-client/dist/types';
 import { ChannelCredentialOptions } from '@eventstore/db-client/dist/Client';
+import { Credentials } from '@eventstore/db-client/dist/types';
 import Connector from './connector';
 
 export interface EventStoreConnectionConfig {

@@ -1,4 +1,4 @@
-import { ReadEventOptionsType, IReadEvent } from '../events';
+import { IReadEvent, ReadEventOptionsType } from '../events';
 import { IEventBusPrepublishConfig } from './event-bus-prepublish-config.interface';
 
 type EventMapperType = (

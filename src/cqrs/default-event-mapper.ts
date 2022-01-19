@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { ReadEventOptionsType, ReadEventBusConfigType } from '../interfaces';
+import { ReadEventBusConfigType, ReadEventOptionsType } from '../interfaces';
 
 export const defaultEventMapper = (
   allEvents: ReadEventBusConfigType['allowedEvents'],

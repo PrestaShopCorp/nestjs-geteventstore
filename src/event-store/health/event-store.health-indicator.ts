@@ -1,5 +1,5 @@
-import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
 import { Injectable } from '@nestjs/common';
+import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
 import EventStoreHealthStatus from './event-store-health.status';
 
 @Injectable()

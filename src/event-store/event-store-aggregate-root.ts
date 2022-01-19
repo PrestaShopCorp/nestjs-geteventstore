@@ -1,8 +1,8 @@
-import { AggregateRoot as Parent } from '../cqrs';
-import { IBaseEvent, PublicationContextInterface } from '../interfaces';
 import * as constants from '@eventstore/db-client/dist/constants';
 import { AppendExpectedRevision } from '@eventstore/db-client/dist/types';
 import { StreamMetadata } from '@eventstore/db-client/dist/utils/streamMetadata';
+import { AggregateRoot as Parent } from '../cqrs';
+import { IBaseEvent, PublicationContextInterface } from '../interfaces';
 
 export abstract class EventStoreAggregateRoot<
   EventBase extends IBaseEvent = IBaseEvent,

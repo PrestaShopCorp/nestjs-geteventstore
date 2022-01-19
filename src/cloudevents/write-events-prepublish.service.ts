@@ -1,4 +1,4 @@
-import { Logger, Injectable, Inject } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
 import {
@@ -8,17 +8,17 @@ import {
   CONTEXT_HOSTNAME,
   CONTEXT_PATH,
 } from 'nestjs-context';
+import { isIPv4 } from 'net';
+import { WRITE_EVENT_BUS_CONFIG } from '../constants';
+import { EventMetadataDto } from '../dto';
+import { EventStoreEvent } from '../event-store/events';
 import {
   IBaseEvent,
   IEventBusPrepublishPrepareProvider,
   IEventBusPrepublishValidateProvider,
   IWriteEventBusConfig,
 } from '../interfaces';
-import { EventStoreEvent } from '../event-store/events';
-import { EventMetadataDto } from '../dto';
-import { WRITE_EVENT_BUS_CONFIG } from '../constants';
 import { createEventDefaultMetadata } from '../tools/create-event-default-metadata';
-import { isIPv4 } from 'net';
 
 @Injectable()
 export class WriteEventsPrepublishService<

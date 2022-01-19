@@ -1,18 +1,18 @@
-import { EventStorePublisher } from './event-store.publisher';
+import { Client } from '@eventstore/db-client/dist/Client';
+import * as constants from '@eventstore/db-client/dist/constants';
+import { AppendExpectedRevision } from '@eventstore/db-client/dist/types';
+import { StreamMetadata } from '@eventstore/db-client/dist/utils/streamMetadata';
+import { Logger as logger } from '@nestjs/common';
+import { of } from 'rxjs';
 import {
   IWriteEvent,
   IWriteEventBusConfig,
   PublicationContextInterface,
 } from '../../interfaces';
-import { of } from 'rxjs';
-import { EventStoreService } from '../services/event-store.service';
-import * as constants from '@eventstore/db-client/dist/constants';
-import { AppendExpectedRevision } from '@eventstore/db-client/dist/types';
-import { StreamMetadata } from '@eventstore/db-client/dist/utils/streamMetadata';
-import { Logger as logger } from '@nestjs/common';
-import InMemoryEventsAndMetadatasStacker from '../reliability/implementations/in-memory/in-memory-events-and-metadatas-stacker';
-import { Client } from '@eventstore/db-client/dist/Client';
 import { EventStoreHealthIndicator } from '../health';
+import InMemoryEventsAndMetadatasStacker from '../reliability/implementations/in-memory/in-memory-events-and-metadatas-stacker';
+import { EventStoreService } from '../services/event-store.service';
+import { EventStorePublisher } from './event-store.publisher';
 import spyOn = jest.spyOn;
 
 describe('EventStorePublisher', () => {

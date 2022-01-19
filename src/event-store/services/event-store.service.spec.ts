@@ -164,11 +164,11 @@ describe('EventStoreService', () => {
     });
 
     it('should try to create projection at first', async () => {
-      spyOn(service, 'createProjection').mockImplementationOnce(() => {
+      spyOn(service, 'createProjection').mockImplementationOnce(async () => {
         throw { code: PROJECTION_ALREADY_EXIST_ERROR_CODE };
       });
 
-      await service.onModuleInit();
+      await service.onModuleInit().catch((e) => console.log('e : ', e));
 
       expect(service.createProjection).toHaveBeenCalled();
     });
@@ -188,29 +188,25 @@ describe('EventStoreService', () => {
     });
 
     it('should not try to update when projection does not already exist and creation raises error', async () => {
-      spyOn(service, 'createProjection').mockImplementationOnce(() => {
+      spyOn(service, 'createProjection').mockImplementationOnce(async () => {
         const UNKNOWN_ERROR = -666;
         throw { code: UNKNOWN_ERROR };
       });
       spyOn(service, 'updateProjection');
 
-      try {
-        await service.onModuleInit();
-      } catch (e) {
-        // e
-      }
+      await service.onModuleInit();
 
       expect(service.updateProjection).not.toHaveBeenCalled();
     });
 
     it('should raise an error when created has failed and does not already exist', async () => {
-      spyOn(service, 'createProjection').mockImplementationOnce(() => {
+      spyOn(service, 'createProjection').mockImplementationOnce(async () => {
         const UNKNOWN_ERROR = -666;
         throw { code: UNKNOWN_ERROR };
       });
 
       try {
-        await service.onModuleInit();
+        await service.onModuleInit().catch((e) => console.log('e : ', e));
       } catch (e) {
         // e
       }

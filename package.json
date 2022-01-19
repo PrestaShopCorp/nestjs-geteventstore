@@ -20,8 +20,18 @@
     "dist/**/*",
     "*.md"
   ],
+  "keywords": [
+    "nestjs",
+    "eventstore"
+  ],
+  "repository": "git@github.com:PrestaShopCorp/nestjs-eventstore.git",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bugs": "https://github.com/prestashopCorp/nestjs-eventstore/issues",
   "scripts": {
     "start:dev": "tsc -w",
+    "prebuild": "rimraf dist/",
     "build": "tsc",
     "prepare": "npm run build && husky install",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -33,15 +43,6 @@
     "test:cov": "jest --coverage",
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
-  "keywords": [
-    "nestjs",
-    "eventstore"
-  ],
-  "repository": "git@github.com:PrestaShopCorp/nestjs-eventstore.git",
-  "publishConfig": {
-    "access": "public"
-  },
-  "bugs": "https://github.com/prestashopCorp/nestjs-eventstore/issues",
   "dependencies": {
     "@eventstore/db-client": "^2.1.1",
     "lodash": "^4.17.21",
@@ -85,6 +86,7 @@
     "prettier": "^2.5.1",
     "pretty-quick": "^3.1.3",
     "reflect-metadata": "^0.1.13",
+    "rimraf": "^3.0.2",
     "rxjs": "^7.5.2",
     "supertest": "6.2.1",
     "ts-jest": "^27.1.3",

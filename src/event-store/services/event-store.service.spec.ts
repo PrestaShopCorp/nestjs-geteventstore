@@ -629,6 +629,10 @@ describe('EventStoreService', () => {
           throw Error();
         },
       );
+      spyOn(
+        eventsStackerMock,
+        'getEventBatchesWaitingLineLength',
+      ).mockReturnValueOnce(1);
 
       await service.writeEvents('test', []);
 

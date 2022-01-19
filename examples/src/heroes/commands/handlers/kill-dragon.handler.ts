@@ -1,10 +1,10 @@
+import * as constants from '@eventstore/db-client/dist/constants';
+import { WriteEventBus } from '@nestjs-geteventstore/cqrs';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import * as clc from 'cli-color';
+import { Hero } from '../../aggregates/hero.aggregate';
 import { HeroRepository } from '../../repository/hero.repository';
 import { KillDragonCommand } from '../impl/kill-dragon.command';
-import { WriteEventBus } from '@nestjs-geteventstore/cqrs';
-import * as constants from '@eventstore/db-client/dist/constants';
-import { Hero } from '../../aggregates/hero.aggregate';
 
 @CommandHandler(KillDragonCommand)
 export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
@@ -26,7 +26,7 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     //   this.publisher.publishAll.bind(this.publisher),
     // );
     const hero: Hero = (
-      await this.repository.findOneById(+heroId)
+      await this.repository.findOneById(heroId)
     ).addPublisher<WriteEventBus>(this.publisher);
 
     await hero.damageEnemy(dragonId, 2);

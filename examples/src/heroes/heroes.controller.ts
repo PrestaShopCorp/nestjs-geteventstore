@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Put } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { Hero } from './aggregates/hero.aggregate';
 import { KillDragonCommand } from './commands/impl/kill-dragon.command';
 import { KillDragonDto } from './interfaces/kill-dragon-dto.interface';
-import { Hero } from './aggregates/hero.aggregate';
 import { GetHeroesQuery } from './queries/impl';
 
 @Controller('hero')

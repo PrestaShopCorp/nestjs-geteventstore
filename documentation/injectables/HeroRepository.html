@@ -462,7 +462,7 @@
                                         <span class="modifier-icon method fa fa-play ">
                                             <span class="fa fa-"></span>
                                         </span>
-                                    <code>findOneById(id: number)</code>
+                                    <code>findOneById(id: string)</code>
                                 </td>
                             </tr>
             
@@ -513,7 +513,7 @@ import { userHero } from &#x27;./fixtures/user&#x27;;
 
 @Injectable()
 export class HeroRepository {
-  async findOneById(id: number): Promise&lt;Hero&gt; {
+  async findOneById(id: string): Promise&lt;Hero&gt; {
     return new Hero(id);
   }
 

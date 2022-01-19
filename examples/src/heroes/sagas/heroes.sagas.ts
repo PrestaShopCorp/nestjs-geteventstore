@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ICommand, Saga } from '@nestjs/cqrs';
 import * as clc from 'cli-color';
-import { v4 } from 'uuid';
 import { Context, CONTEXT_CORRELATION_ID } from 'nestjs-context';
 import { Observable } from 'rxjs';
 import { delay, filter, map } from 'rxjs/operators';
+import { v4 } from 'uuid';
 import { DropAncientItemCommand } from '../commands/impl/drop-ancient-item.command';
 import { HeroKilledDragonEvent } from '../events/impl/hero-killed-dragon.event';
 

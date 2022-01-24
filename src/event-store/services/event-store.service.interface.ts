@@ -1,31 +1,31 @@
-import {
-  EventStoreProjection,
-  IPersistentSubscriptionConfig,
-} from '../../interfaces';
+import { PersistentSubscription, ResolvedEvent } from '@eventstore/db-client';
+import { DeletePersistentSubscriptionOptions } from '@eventstore/db-client/dist/persistentSubscription';
 import {
   CreateContinuousProjectionOptions,
   CreateOneTimeProjectionOptions,
   CreateTransientProjectionOptions,
   GetProjectionStateOptions,
 } from '@eventstore/db-client/dist/projections';
-import { DeletePersistentSubscriptionOptions } from '@eventstore/db-client/dist/persistentSubscription';
-import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils';
-import {
-  AppendResult,
-  BaseOptions,
-  Credentials,
-  StreamingRead,
-} from '@eventstore/db-client/dist/types';
 import {
   AppendToStreamOptions,
   GetStreamMetadataResult,
   ReadStreamOptions,
   SetStreamMetadataOptions,
 } from '@eventstore/db-client/dist/streams';
+import {
+  AppendResult,
+  BaseOptions,
+  Credentials,
+  StreamingRead,
+} from '@eventstore/db-client/dist/types';
+import { EventData } from '@eventstore/db-client/dist/types/events';
+import { PersistentSubscriptionSettings } from '@eventstore/db-client/dist/utils';
 import { StreamMetadata } from '@eventstore/db-client/dist/utils/streamMetadata';
 import { ReadableOptions } from 'stream';
-import { PersistentSubscription, ResolvedEvent } from '@eventstore/db-client';
-import { EventData } from '@eventstore/db-client/dist/types/events';
+import {
+  EventStoreProjection,
+  IPersistentSubscriptionConfig,
+} from '../../interfaces';
 
 export const EVENT_STORE_SERVICE = Symbol();
 

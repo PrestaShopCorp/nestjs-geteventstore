@@ -1,5 +1,5 @@
-import { IWriteEvent } from './write-event.interface';
 import { ReadEventOptionsType } from './read-event-options.type';
+import { IWriteEvent } from './write-event.interface';
 
 type WriteEventOptionsType = Omit<IWriteEvent, 'data'> & {
   eventStreamId?: never;

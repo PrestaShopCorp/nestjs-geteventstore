@@ -1,17 +1,17 @@
+import { EventStoreAggregateRoot } from '../../../../src';
+import { HeroDamagedEnemyEvent } from '../events/impl/hero-damaged-enemy.event';
+import { HeroDropItemEvent } from '../events/impl/hero-drop-item.event';
 import { HeroFoundItemEvent } from '../events/impl/hero-found-item.event';
 import { HeroKilledDragonEvent } from '../events/impl/hero-killed-dragon.event';
-import { HeroDropItemEvent } from '../events/impl/hero-drop-item.event';
-import { HeroDamagedEnemyEvent } from '../events/impl/hero-damaged-enemy.event';
-import { EventStoreAggregateRoot } from '../../../../src';
 
 export class Hero extends EventStoreAggregateRoot {
-  constructor(private readonly id) {
+  constructor(private readonly id: string) {
     super();
     // comment this line to test correlation-id auto-generated stream
     this.streamName = `hero-${id}`;
   }
 
-  damageEnemy(dragonId: string, hitPoint: number) {
+  damageEnemy(dragonId: string, hitPoint: number): Promise<void> {
     return this.apply(
       new HeroDamagedEnemyEvent({
         heroId: this.id,
@@ -22,7 +22,7 @@ export class Hero extends EventStoreAggregateRoot {
     );
   }
 
-  killEnemy(dragonId: string) {
+  killEnemy(dragonId: string): Promise<void> {
     // logic
     return this.apply(
       new HeroKilledDragonEvent({
@@ -32,7 +32,7 @@ export class Hero extends EventStoreAggregateRoot {
     );
   }
 
-  addItem(itemId: string) {
+  addItem(itemId: string): Promise<void> {
     // logic
     return this.apply(
       new HeroFoundItemEvent({
@@ -42,7 +42,7 @@ export class Hero extends EventStoreAggregateRoot {
     );
   }
 
-  dropItem(itemId: string) {
+  dropItem(itemId: string): Promise<void> {
     return this.apply(
       new HeroDropItemEvent({
         heroId: this.id,

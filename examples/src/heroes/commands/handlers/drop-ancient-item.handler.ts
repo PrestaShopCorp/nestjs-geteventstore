@@ -1,8 +1,8 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import * as clc from 'cli-color';
+import { WriteEventBus } from '../../../../../src/';
 import { HeroRepository } from '../../repository/hero.repository';
 import { DropAncientItemCommand } from '../impl/drop-ancient-item.command';
-import { WriteEventBus } from '../../../../../src/';
 
 @CommandHandler(DropAncientItemCommand)
 export class DropAncientItemHandler
@@ -13,11 +13,11 @@ export class DropAncientItemHandler
     private readonly publisher: WriteEventBus,
   ) {}
 
-  async execute(command: DropAncientItemCommand) {
+  async execute(command: DropAncientItemCommand): Promise<void> {
     console.log(clc.yellowBright('Async DropAncientItemCommand...'));
 
     const { heroId, itemId } = command;
-    const hero = await this.repository.findOneById(+heroId);
+    const hero = await this.repository.findOneById(heroId);
     hero.autoCommit = true;
     hero.maxAge = 600; // 10 min
     hero.addPublisher((events, context) =>

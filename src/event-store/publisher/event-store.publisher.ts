@@ -1,8 +1,11 @@
-import { hostname } from 'os';
-import { IEventPublisher } from '@nestjs/cqrs';
+import { jsonEvent } from '@eventstore/db-client';
+import * as constants from '@eventstore/db-client/dist/constants';
+import { AppendResult } from '@eventstore/db-client/dist/types';
+import { EventData } from '@eventstore/db-client/dist/types/events';
 import { Inject, Logger } from '@nestjs/common';
+import { IEventPublisher } from '@nestjs/cqrs';
+import { hostname } from 'os';
 import { basename, extname } from 'path';
-
 import {
   IWriteEvent,
   IWriteEventBusConfig,
@@ -12,10 +15,6 @@ import {
   EVENT_STORE_SERVICE,
   IEventStoreService,
 } from '../services/event-store.service.interface';
-import { AppendResult } from '@eventstore/db-client/dist/types';
-import { EventData } from '@eventstore/db-client/dist/types/events';
-import { jsonEvent } from '@eventstore/db-client';
-import * as constants from '@eventstore/db-client/dist/constants';
 
 export class EventStorePublisher<EventBase extends IWriteEvent = IWriteEvent>
   implements IEventPublisher<EventBase>

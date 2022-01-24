@@ -1,12 +1,14 @@
-import { IAcknowledgeableEvent } from '../../interfaces';
 import { Logger } from '@nestjs/common';
-import { PersistentSubscriptionNakEventAction } from '../../interfaces/events/persistent-subscription-nak-event-action.enum';
 import { ReadEventBus } from '../../cqrs';
+import { IAcknowledgeableEvent } from '../../interfaces';
+import { PersistentSubscriptionNakEventAction } from '../../interfaces/events/persistent-subscription-nak-event-action.enum';
 
 export default class EventHandlerHelper {
   public static async onEvent(
     logger: Logger,
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     subscription: any,
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     payload: any,
     eventBus?: ReadEventBus,
   ): Promise<any> {
@@ -22,7 +24,10 @@ export default class EventHandlerHelper {
       logger.warn(
         `Ignore unresolved event from stream ${payload.originalStreamId} with ID ${payload.originalEvent.eventId}`,
       );
-      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
+      if (
+        !subscription._autoAck &&
+        Object.prototype.hasOwnProperty.call(subscription, '_autoAck')
+      ) {
         await subscription.acknowledge([payload]);
       }
       return;
@@ -33,7 +38,10 @@ export default class EventHandlerHelper {
       logger.warn(
         `Received event that could not be resolved! stream ${event.eventStreamId} type ${event.eventType} id ${event.eventId} `,
       );
-      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
+      if (
+        !subscription._autoAck &&
+        Object.prototype.hasOwnProperty.call(subscription, '_autoAck')
+      ) {
         await subscription.acknowledge([payload]);
       }
       return;
@@ -47,7 +55,10 @@ export default class EventHandlerHelper {
       logger.warn(
         `Received event of type ${event.eventType} with shitty data acknowledge`,
       );
-      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
+      if (
+        !subscription._autoAck &&
+        Object.prototype.hasOwnProperty.call(subscription, '_autoAck')
+      ) {
         await subscription.acknowledge([payload]);
       }
       return;
@@ -74,14 +85,17 @@ export default class EventHandlerHelper {
       logger.warn(
         `Received event of type ${event.eventType} with no declared handler acknowledge`,
       );
-      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
+      if (
+        !subscription._autoAck &&
+        Object.prototype.hasOwnProperty.call(subscription, '_autoAck')
+      ) {
         await subscription.acknowledge([payload]);
       }
       return;
     }
     // If event wants to handle ack/nack
     // only for persistent
-    if (subscription.hasOwnProperty('_autoAck')) {
+    if (Object.prototype.hasOwnProperty.call(subscription, '_autoAck')) {
       if (
         typeof finalEvent.ack == 'function' &&
         typeof finalEvent.nack == 'function'

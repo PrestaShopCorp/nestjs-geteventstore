@@ -1,15 +1,15 @@
+import { EventStoreDBClient } from '@eventstore/db-client';
+import { Client } from '@eventstore/db-client/dist/Client';
 import { DynamicModule, Module, Provider } from '@nestjs/common';
-import { EventStoreService } from './index';
-import { EventStoreHealthIndicator } from './health';
 import { EVENT_STORE_SUBSYSTEMS } from '../constants';
 import { IEventStoreSubsystems } from './config';
 import { EventStoreConnectionConfig } from './config/event-store-connection-config';
-import { EVENT_STORE_SERVICE } from './services/event-store.service.interface';
-import { Client } from '@eventstore/db-client/dist/Client';
-import { EventStoreDBClient } from '@eventstore/db-client';
-import { EVENT_STORE_CONNECTOR } from './services/event-store.constants';
-import { EVENTS_AND_METADATAS_STACKER } from './reliability/interface/events-and-metadatas-stacker';
+import { EventStoreHealthIndicator } from './health';
+import { EventStoreService } from './index';
 import InMemoryEventsAndMetadatasStacker from './reliability/implementations/in-memory/in-memory-events-and-metadatas-stacker';
+import { EVENTS_AND_METADATAS_STACKER } from './reliability/interface/events-and-metadatas-stacker';
+import { EVENT_STORE_CONNECTOR } from './services/event-store.constants';
+import { EVENT_STORE_SERVICE } from './services/event-store.service.interface';
 
 @Module({
   providers: [

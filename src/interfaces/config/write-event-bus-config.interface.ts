@@ -1,9 +1,9 @@
 import { IEvent } from '@nestjs/cqrs';
-import { Observable } from 'rxjs';
 import { ContextName } from 'nestjs-context';
+import { Observable } from 'rxjs';
 import { EventStorePublisher } from '../../event-store';
-import { IEventBusPrepublishConfig } from './event-bus-prepublish-config.interface';
 import { IWriteEvent } from '../events';
+import { IEventBusPrepublishConfig } from './event-bus-prepublish-config.interface';
 
 export interface IWriteEventBusConfig<T extends IWriteEvent = IWriteEvent>
   extends IEventBusPrepublishConfig<T> {

@@ -1,4 +1,4 @@
-import { EventStoreEvent } from '../../../../../src';
+import { EventOptionsType, EventStoreEvent } from '../../../../../src';
 
 export class HeroDropItemEvent extends EventStoreEvent {
   constructor(
@@ -6,7 +6,7 @@ export class HeroDropItemEvent extends EventStoreEvent {
       heroId: string;
       itemId: string;
     },
-    options?,
+    options?: EventOptionsType,
   ) {
     super(data, options);
   }

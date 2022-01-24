@@ -1,4 +1,4 @@
-import { Logger, Injectable, Inject } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
 import {
@@ -8,17 +8,17 @@ import {
   CONTEXT_HOSTNAME,
   CONTEXT_PATH,
 } from 'nestjs-context';
+import { isIPv4 } from 'net';
+import { WRITE_EVENT_BUS_CONFIG } from '../constants';
+import { EventMetadataDto } from '../dto';
+import { EventStoreEvent } from '../event-store/events';
 import {
   IBaseEvent,
   IEventBusPrepublishPrepareProvider,
   IEventBusPrepublishValidateProvider,
   IWriteEventBusConfig,
 } from '../interfaces';
-import { EventStoreEvent } from '../event-store/events';
-import { EventMetadataDto } from '../dto';
-import { WRITE_EVENT_BUS_CONFIG } from '../constants';
 import { createEventDefaultMetadata } from '../tools/create-event-default-metadata';
-import { isIPv4 } from 'net';
 
 @Injectable()
 export class WriteEventsPrepublishService<
@@ -34,14 +34,14 @@ export class WriteEventsPrepublishService<
     private readonly config: IWriteEventBusConfig,
   ) {}
   // errors log
-  async onValidationFail(events: T[], errors: any[]) {
+  async onValidationFail(events: T[], errors: any[]): Promise<any> {
     for (const error of errors) {
       this.logger.error(error);
     }
   }
 
   // transform to dto each event and validate it
-  async validate(events: T[]) {
+  async validate(events: T[]): Promise<any[]> {
     let errors = [];
     for (const event of events) {
       this.logger.debug(`Validating ${event.constructor.name}`);
@@ -83,7 +83,7 @@ export class WriteEventsPrepublishService<
   }
 
   // add cloud events metadata
-  async prepare(events: T[]) {
+  async prepare(events: T[]): Promise<any[]> {
     const preparedEvents = [];
     for (const event of events) {
       this.logger.debug(`Preparing ${event.constructor.name}`);

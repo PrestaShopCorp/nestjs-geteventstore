@@ -1,9 +1,12 @@
+import { CqrsEventStoreModule } from '@nestjs-geteventstore/cqrs-event-store.module';
+import { IEventStoreSubsystems } from '@nestjs-geteventstore/event-store/config';
+import { EventStoreConnectionConfig } from '@nestjs-geteventstore/event-store/config/event-store-connection-config';
+import { EventBusConfigType } from '@nestjs-geteventstore/interfaces';
 import { Module } from '@nestjs/common';
 import { TerminusModule } from '@nestjs/terminus';
 import { ContextModule } from 'nestjs-context';
-import { LoggerModule } from 'nestjs-pino-stackdriver/dist';
+import { LoggerModule } from 'nestjs-pino-stackdriver';
 import { resolve } from 'path';
-
 import { CommandHandlers } from './commands/handlers';
 import { EventHandlers } from './events/handlers';
 import { heroesEvents } from './events/impl';
@@ -12,10 +15,6 @@ import { HeroesGameController } from './heroes.controller';
 import { QueryHandlers } from './queries/handlers';
 import { HeroRepository } from './repository/hero.repository';
 import { HeroesGameSagas } from './sagas/heroes.sagas';
-import { CqrsEventStoreModule } from '@nestjs-geteventstore/cqrs-event-store.module';
-import { IEventStoreSubsystems } from '@nestjs-geteventstore/event-store/config';
-import { EventStoreConnectionConfig } from '@nestjs-geteventstore/event-store/config/event-store-connection-config';
-import { EventBusConfigType } from '@nestjs-geteventstore/interfaces';
 
 const eventStoreConnectionConfig: EventStoreConnectionConfig = {
   connectionSettings: {

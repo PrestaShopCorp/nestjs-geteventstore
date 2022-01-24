@@ -1,5 +1,5 @@
-import { HealthCheck, HealthIndicatorResult } from '@nestjs/terminus';
 import { Controller, Get } from '@nestjs/common';
+import { HealthCheck, HealthIndicatorResult } from '@nestjs/terminus';
 import { EventStoreHealthIndicator } from '../../../src';
 
 @Controller('health')

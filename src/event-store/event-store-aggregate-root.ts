@@ -1,8 +1,8 @@
-import { AggregateRoot as Parent } from '../cqrs';
-import { IBaseEvent, PublicationContextInterface } from '../interfaces';
 import * as constants from '@eventstore/db-client/dist/constants';
 import { AppendExpectedRevision } from '@eventstore/db-client/dist/types';
 import { StreamMetadata } from '@eventstore/db-client/dist/utils/streamMetadata';
+import { AggregateRoot as Parent } from '../cqrs';
+import { IBaseEvent, PublicationContextInterface } from '../interfaces';
 
 export abstract class EventStoreAggregateRoot<
   EventBase extends IBaseEvent = IBaseEvent,
@@ -35,7 +35,7 @@ export abstract class EventStoreAggregateRoot<
   public async commit(
     expectedRevision: AppendExpectedRevision = constants.ANY,
     expectedMetadataRevision: AppendExpectedRevision = constants.ANY,
-  ) {
+  ): Promise<any> {
     this.logger.debug(
       `Aggregate will commit ${this.getUncommittedEvents().length} events in ${
         this.publishers.length

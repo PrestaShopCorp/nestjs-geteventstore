@@ -1,19 +1,19 @@
-import { EventStoreService } from './event-store.service';
-import { IEventStoreSubsystems } from '../config';
-import { Client } from '@eventstore/db-client/dist/Client';
 import { ANY, PersistentSubscription } from '@eventstore/db-client';
+import { Client } from '@eventstore/db-client/dist/Client';
+import { AppendResult } from '@eventstore/db-client/dist/types';
+import { EventData } from '@eventstore/db-client/dist/types/events';
+import { Logger as logger } from '@nestjs/common';
+import { IEventStoreSubsystems } from '../config';
+import { EventStoreHealthIndicator } from '../health';
+import InMemoryEventsAndMetadatasStacker from '../reliability/implementations/in-memory/in-memory-events-and-metadatas-stacker';
+import MetadatasContextDatas from '../reliability/interface/metadatas-context-datas';
+import { IPersistentSubscriptionConfig } from '../subscriptions';
 import {
   PERSISTENT_SUBSCRIPTION_ALREADY_EXIST_ERROR_CODE,
   PROJECTION_ALREADY_EXIST_ERROR_CODE,
   RECONNECTION_TRY_DELAY_IN_MS,
 } from './errors.constant';
-import { IPersistentSubscriptionConfig } from '../subscriptions';
-import { Logger as logger } from '@nestjs/common';
-import { EventData } from '@eventstore/db-client/dist/types/events';
-import InMemoryEventsAndMetadatasStacker from '../reliability/implementations/in-memory/in-memory-events-and-metadatas-stacker';
-import { AppendResult } from '@eventstore/db-client/dist/types';
-import MetadatasContextDatas from '../reliability/interface/metadatas-context-datas';
-import { EventStoreHealthIndicator } from '../health';
+import { EventStoreService } from './event-store.service';
 import spyOn = jest.spyOn;
 
 describe('EventStoreService', () => {
@@ -629,6 +629,10 @@ describe('EventStoreService', () => {
           throw Error();
         },
       );
+      spyOn(
+        eventsStackerMock,
+        'getEventBatchesWaitingLineLength',
+      ).mockReturnValueOnce(1);
 
       await service.writeEvents('test', []);
 

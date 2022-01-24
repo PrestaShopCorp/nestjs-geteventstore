@@ -1,5 +1,5 @@
-import EventHandlerHelper from './event.handler.helper';
 import { Logger, Logger as logger } from '@nestjs/common';
+import EventHandlerHelper from './event.handler.helper';
 
 describe('EventHandlerHelper', () => {
   jest.mock('@nestjs/common');

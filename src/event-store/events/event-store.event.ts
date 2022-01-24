@@ -1,7 +1,6 @@
 import { v4 } from 'uuid';
-
-import { EventOptionsType, IReadEvent, IWriteEvent } from '../../interfaces';
 import { WriteEventDto } from '../../dto/write-event.dto';
+import { EventOptionsType, IReadEvent, IWriteEvent } from '../../interfaces';
 
 export abstract class EventStoreEvent
   extends WriteEventDto
@@ -12,6 +11,7 @@ export abstract class EventStoreEvent
   public readonly eventNumber: IReadEvent['eventNumber'] | undefined;
   public readonly originalEventId: IReadEvent['originalEventId'] | undefined;
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   constructor(public data: any, options?: EventOptionsType) {
     super();
     // metadata is added automatically in write events, so we cast to any

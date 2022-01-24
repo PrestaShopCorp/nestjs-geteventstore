@@ -1,10 +1,10 @@
-import InMemoryEventsAndMetadatasStacker from './in-memory-events-and-metadatas-stacker';
-import EventBatch from '../../interface/event-batch';
-import { EventData } from '@eventstore/db-client/dist/types/events';
-import MetadatasContextDatas from '../../interface/metadatas-context-datas';
-import { AppendToStreamOptions } from '@eventstore/db-client/dist/streams';
 import { ANY } from '@eventstore/db-client';
+import { AppendToStreamOptions } from '@eventstore/db-client/dist/streams';
+import { EventData } from '@eventstore/db-client/dist/types/events';
 import { Logger as logger } from '@nestjs/common';
+import EventBatch from '../../interface/event-batch';
+import MetadatasContextDatas from '../../interface/metadatas-context-datas';
+import InMemoryEventsAndMetadatasStacker from './in-memory-events-and-metadatas-stacker';
 
 describe('InMemoryEventsAndMetadatasStacker', () => {
   let service: InMemoryEventsAndMetadatasStacker;

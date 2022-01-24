@@ -1,1 +1,4 @@
-*.js
+index.js
+examples/**/*.js
+dist/
+documentation/

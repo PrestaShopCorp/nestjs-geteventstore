@@ -1,6 +1,13 @@
-import { CommandBus, CqrsModule, EventBus, QueryBus } from '@nestjs/cqrs';
 import { DynamicModule, Module } from '@nestjs/common';
-
+import { CommandBus, CqrsModule, EventBus, QueryBus } from '@nestjs/cqrs';
+import { ExplorerService } from '@nestjs/cqrs/dist/services/explorer.service';
+import { ContextName } from 'nestjs-context';
+import { WriteEventsPrepublishService } from './cloudevents';
+import { READ_EVENT_BUS_CONFIG, WRITE_EVENT_BUS_CONFIG } from './constants';
+import { ReadEventBus, WriteEventBus } from './cqrs';
+import { EventBusPrepublishService } from './cqrs/event-bus-prepublish.service';
+import { IEventStoreSubsystems } from './event-store/config';
+import { EventStoreConnectionConfig } from './event-store/config/event-store-connection-config';
 import { EventStoreModule } from './event-store/event-store.module';
 import {
   EventBusConfigType,
@@ -8,14 +15,6 @@ import {
   IWriteEventBusConfig,
   ReadEventBusConfigType,
 } from './interfaces';
-import { ReadEventBus, WriteEventBus } from './cqrs';
-import { READ_EVENT_BUS_CONFIG, WRITE_EVENT_BUS_CONFIG } from './constants';
-import { EventBusPrepublishService } from './cqrs/event-bus-prepublish.service';
-import { WriteEventsPrepublishService } from './cloudevents';
-import { ContextName } from 'nestjs-context';
-import { IEventStoreSubsystems } from './event-store/config';
-import { EventStoreConnectionConfig } from './event-store/config/event-store-connection-config';
-import { ExplorerService } from '@nestjs/cqrs/dist/services/explorer.service';
 
 const getDefaultEventBusConfiguration: IWriteEventBusConfig = {
   context: ContextName.HTTP,

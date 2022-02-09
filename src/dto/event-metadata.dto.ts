@@ -1,6 +1,5 @@
 import {
   Equals,
-  IsDate,
   IsNotEmpty,
   IsOptional,
   IsPositive,
@@ -93,11 +92,4 @@ export class EventMetadataDto {
   @IsString()
   @IsNotEmpty()
   correlation_id: string;
-
-  /**
-   * Business process unique id
-   * @example 15d5f8d5-869e-4107-9961-5035495fe416
-   */
-  @IsDate()
-  created_at?: Date;
 }

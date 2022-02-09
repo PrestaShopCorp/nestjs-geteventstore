@@ -75,6 +75,7 @@ export class WriteEventsPrepublishService<
         correlation_id: this.context.get(CONTEXT_CORRELATION_ID),
         type: eventType,
         source,
+        created_at: new Date().toISOString(),
       };
     } catch (e) {
       this.logger.error(e);

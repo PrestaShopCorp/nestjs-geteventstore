@@ -99,5 +99,5 @@ export class EventMetadataDto {
    * @example 15d5f8d5-869e-4107-9961-5035495fe416
    */
   @IsDate()
-  created_at?: string;
+  created_at?: Date;
 }

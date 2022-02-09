@@ -4,9 +4,9 @@ import {
   IsOptional,
   IsPositive,
   IsRFC3339,
-  Matches,
-  IsUrl,
   IsString,
+  IsUrl,
+  Matches,
 } from 'class-validator';
 
 /**
@@ -92,4 +92,11 @@ export class EventMetadataDto {
   @IsString()
   @IsNotEmpty()
   correlation_id: string;
+
+  /**
+   * The event creation date (IsoString formatted)
+   * @example '2022-02-09T17:16:52.305Z'
+   */
+  @IsString()
+  created_at: string;
 }

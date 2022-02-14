@@ -4,7 +4,6 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { EventStoreModule } from './event-store/event-store.module';
 import {
   EventBusConfigType,
-  IPersistentSubscriptionConfig,
   IWriteEventBusConfig,
   ReadEventBusConfigType,
 } from './interfaces';
@@ -16,6 +15,7 @@ import { ContextName } from 'nestjs-context';
 import { IEventStoreSubsystems } from './event-store/config';
 import { EventStoreConnectionConfig } from './event-store/config/event-store-connection-config';
 import { ExplorerService } from '@nestjs/cqrs/dist/services/explorer.service';
+import { IPersistentSubscriptionConfig } from './event-store';
 
 const getDefaultEventBusConfiguration: IWriteEventBusConfig = {
   context: ContextName.HTTP,

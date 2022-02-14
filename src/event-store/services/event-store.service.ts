@@ -8,10 +8,7 @@ import {
 } from '@nestjs/common';
 import { readFileSync } from 'fs';
 
-import {
-  EventStoreProjection,
-  IPersistentSubscriptionConfig,
-} from '../../interfaces';
+import { EventStoreProjection } from '../../interfaces';
 import { ReadEventBus } from '../../cqrs';
 import { EVENT_STORE_SUBSYSTEMS } from '../../constants';
 import { IEventStoreSubsystems } from '../config';
@@ -61,6 +58,7 @@ import EventBatch from '../reliability/interface/event-batch';
 import { EventStoreHealthIndicator } from '../health';
 import MetadatasContextDatas from '../reliability/interface/metadatas-context-datas';
 import Timeout = NodeJS.Timeout;
+import { IPersistentSubscriptionConfig } from '../subscriptions';
 
 @Injectable()
 export class EventStoreService

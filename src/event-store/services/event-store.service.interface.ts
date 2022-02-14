@@ -1,7 +1,4 @@
-import {
-  EventStoreProjection,
-  IPersistentSubscriptionConfig,
-} from '../../interfaces';
+import { EventStoreProjection } from '../../interfaces';
 import {
   CreateContinuousProjectionOptions,
   CreateOneTimeProjectionOptions,
@@ -26,6 +23,7 @@ import { StreamMetadata } from '@eventstore/db-client/dist/utils/streamMetadata'
 import { ReadableOptions } from 'stream';
 import { PersistentSubscription, ResolvedEvent } from '@eventstore/db-client';
 import { EventData } from '@eventstore/db-client/dist/types/events';
+import { IPersistentSubscriptionConfig } from '../subscriptions';
 
 export const EVENT_STORE_SERVICE = Symbol();
 

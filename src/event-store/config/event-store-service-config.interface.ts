@@ -1,7 +1,5 @@
-import {
-  EventStoreProjection,
-  IPersistentSubscriptionConfig,
-} from '../../interfaces';
+import { EventStoreProjection } from '../../interfaces';
+import { IPersistentSubscriptionConfig } from '../subscriptions';
 
 export interface IEventStoreSubsystems {
   projections?: EventStoreProjection[];

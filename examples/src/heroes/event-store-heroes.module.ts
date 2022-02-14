@@ -12,10 +12,10 @@ import { HeroesGameController } from './heroes.controller';
 import { QueryHandlers } from './queries/handlers';
 import { HeroRepository } from './repository/hero.repository';
 import { HeroesGameSagas } from './sagas/heroes.sagas';
-import { CqrsEventStoreModule } from '@nestjs-geteventstore/cqrs-event-store.module';
-import { IEventStoreSubsystems } from '@nestjs-geteventstore/event-store/config';
-import { EventStoreConnectionConfig } from '@nestjs-geteventstore/event-store/config/event-store-connection-config';
-import { EventBusConfigType } from '@nestjs-geteventstore/interfaces';
+import { CqrsEventStoreModule } from 'nestjs-geteventstore/cqrs-event-store.module';
+import { IEventStoreSubsystems } from 'nestjs-geteventstore/event-store/config';
+import { EventStoreConnectionConfig } from 'nestjs-geteventstore/event-store/config/event-store-connection-config';
+import { EventBusConfigType } from 'nestjs-geteventstore/interfaces';
 
 const eventStoreConnectionConfig: EventStoreConnectionConfig = {
   connectionSettings: {

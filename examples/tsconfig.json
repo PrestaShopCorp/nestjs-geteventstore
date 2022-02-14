@@ -16,7 +16,7 @@
     "outDir": "./dist",
     "composite": false,
     "paths": {
-      "@nestjs-geteventstore/*": ["../src/*"]
+      "nestjs-geteventstore/*": ["../src/*"]
     }
   }
 }

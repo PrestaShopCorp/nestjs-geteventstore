@@ -1,6 +1,6 @@
 {
   "name": "nestjs-geteventstore",
-  "version": "5.0.17π",
+  "version": "5.0.17",
   "description": "Event Store connector for NestJS-Cqrs",
   "author": "Vincent Vermersch <vincent.vermersch@prestashop.com >",
   "contributors": [

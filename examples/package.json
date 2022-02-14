@@ -8,9 +8,6 @@
     "start": "yarn start:heroes:cqrs:eventstore",
     "start:heroes:cqrs:eventstore": "ts-node-dev src/bin/runner.ts"
   },
-  "_moduleAliases": {
-    "@nestjs-geteventstore": "../src"
-  },
   "dependencies": {
     "@godaddy/terminus": "^4.4.1",
     "@nestjs/common": "^7.0.0",
@@ -23,7 +20,7 @@
     "cli-color": "^1.4.0",
     "global": "^4.4.0",
     "nestjs-context": "^0.12.0",
-    "nestjs-geteventstore": "^5.0.10",
+    "nestjs-geteventstore": "^5.0.11",
     "nestjs-pino-stackdriver": "^2.1.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.0.0"

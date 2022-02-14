@@ -7305,10 +7305,10 @@ nestjs-context@^0.12.0:
     rxjs "^6.6.3"
     short-uuid "^4.1.0"
 
-nestjs-geteventstore@^5.0.10:
-  version "5.0.10"
-  resolved "https://registry.yarnpkg.com/nestjs-geteventstore/-/nestjs-geteventstore-5.0.10.tgz#fec563f7b06706de530a7611d12eaa6cbd88fc48"
-  integrity sha512-09fdiWjXCRiO8HAufedzDupXUqdNLJZsHDrQ2PsbMXrw8n8lxWWcxiyh7TvqjastpEnsMFC9CABcr/k1ANhY7Q==
+nestjs-geteventstore@^5.0.11:
+  version "5.0.11"
+  resolved "https://registry.yarnpkg.com/nestjs-geteventstore/-/nestjs-geteventstore-5.0.11.tgz#d25c6a801a3d12cdf9ee2d767ccd059f4e65ef56"
+  integrity sha512-yIsKkEjInpbtRDwrxJk3mlK5Jdp58gRw9yF4dDuZWz76aF4zC9X0ghXaeR/nFYuG1h00DNXsRPeBgH8+Y73H8w==
   dependencies:
     "@eventstore/db-client" "^2.1.0"
     lodash "^4.17.20"

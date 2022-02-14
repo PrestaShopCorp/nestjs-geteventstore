@@ -2,7 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import * as clc from 'cli-color';
 import { HeroRepository } from '../../repository/hero.repository';
 import { KillDragonCommand } from '../impl/kill-dragon.command';
-import { WriteEventBus } from 'nestjs-geteventstore/cqrs';
+import { WriteEventBus } from 'nestjs-geteventstore';
 import * as constants from '@eventstore/db-client/dist/constants';
 import { Hero } from '../../aggregates/hero.aggregate';
 

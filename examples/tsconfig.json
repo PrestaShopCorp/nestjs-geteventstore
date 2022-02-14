@@ -14,9 +14,6 @@
     "sourceMap": true,
     "allowJs": true,
     "outDir": "./dist",
-    "composite": false,
-    "paths": {
-      "nestjs-geteventstore/*": ["../src/*"]
-    }
+    "composite": false
   }
 }

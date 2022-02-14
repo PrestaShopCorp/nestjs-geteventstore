@@ -12,15 +12,17 @@ import { HeroesGameController } from './heroes.controller';
 import { QueryHandlers } from './queries/handlers';
 import { HeroRepository } from './repository/hero.repository';
 import { HeroesGameSagas } from './sagas/heroes.sagas';
-import { CqrsEventStoreModule } from 'nestjs-geteventstore/cqrs-event-store.module';
-import { IEventStoreSubsystems } from 'nestjs-geteventstore/event-store/config';
-import { EventStoreConnectionConfig } from 'nestjs-geteventstore/event-store/config/event-store-connection-config';
-import { EventBusConfigType } from 'nestjs-geteventstore/interfaces';
+import {
+  CqrsEventStoreModule,
+  EventBusConfigType,
+  EventStoreConnectionConfig,
+  IEventStoreSubsystems,
+} from 'nestjs-geteventstore';
 
 const eventStoreConnectionConfig: EventStoreConnectionConfig = {
   connectionSettings: {
     connectionString:
-      process.env.CONNECTION_STRING || 'esdb://localhost:20113?tls=false',
+      process.env.CONNECTION_STRING || 'esdb://localhost:2113?tls=false',
   },
   defaultUserCredentials: {
     username: process.env.EVENTSTORE_CREDENTIALS_USERNAME || 'admin',

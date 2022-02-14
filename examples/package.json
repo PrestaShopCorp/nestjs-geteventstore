@@ -20,7 +20,7 @@
     "cli-color": "^1.4.0",
     "global": "^4.4.0",
     "nestjs-context": "^0.12.0",
-    "nestjs-geteventstore": "^5.0.11",
+    "nestjs-geteventstore": "^5.0.19",
     "nestjs-pino-stackdriver": "^2.1.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.0.0"

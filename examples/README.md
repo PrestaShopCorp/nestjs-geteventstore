@@ -16,7 +16,7 @@ You have to run a eventstore container with correct ports. You can put the ports
 
 ```
 docker run --name esdb-node -d \
-    -it -p 20113:2113 -p 10113:1113 \
+    -it -p 2113:2113 -p 1113:1113 \
     eventstore/eventstore:latest \
     --insecure \
     --run-projections=All \

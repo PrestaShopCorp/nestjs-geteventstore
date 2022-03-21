@@ -53,7 +53,7 @@ export class WriteEventBus<
       throw new InvalidEventException(validated);
     }
     return await this.publisher.publish<T>(
-      preparedEvents,
+      preparedEvents[0],
       // @ts-ignore
       context,
     );

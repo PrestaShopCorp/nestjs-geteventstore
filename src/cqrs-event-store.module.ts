@@ -62,7 +62,10 @@ export class CqrsEventStoreModule extends CqrsModule {
         { provide: READ_EVENT_BUS_CONFIG, useValue: eventBusConfig.read },
         {
           provide: WRITE_EVENT_BUS_CONFIG,
-          useValue: { ...getDefaultEventBusConfiguration, ...eventBusConfig },
+          useValue: {
+            ...getDefaultEventBusConfiguration,
+            ...eventBusConfig.write,
+          },
         },
       ],
       exports: [EventStoreModule],

@@ -26,7 +26,7 @@ export class KillDragonHandler implements ICommandHandler<KillDragonCommand> {
     //   this.publisher.publishAll.bind(this.publisher),
     // );
     const hero: Hero = (
-      await this.repository.findOneById(+heroId)
+      await this.repository.findOneById(heroId)
     ).addPublisher<WriteEventBus>(this.publisher);
 
     await hero.damageEnemy(dragonId, 2);

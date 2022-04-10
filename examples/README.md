@@ -61,7 +61,7 @@ You can see how the import is done in the [EventStoreHeroesModule](./src/heroes/
 Once the API is running, you only have to run this REST request :
 
 ```
-curl -XPUT localhost:3000/hero/200/kill -d'{ "dragonId" : "test3" }'
+curl -H "Content-Type: application/json" -XPUT localhost:3000/hero/200/kill -d'{ "dragonId" : "test3" }'
 ```
 
 All the events emitted by the example will be stored in the event store.

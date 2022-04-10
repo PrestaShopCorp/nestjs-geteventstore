@@ -17,7 +17,7 @@ export class DropAncientItemHandler
     console.log(clc.yellowBright('Async DropAncientItemCommand...'));
 
     const { heroId, itemId } = command;
-    const hero = await this.repository.findOneById(+heroId);
+    const hero = await this.repository.findOneById(heroId);
     hero.autoCommit = true;
     hero.maxAge = 600; // 10 min
     hero.addPublisher((events, context) =>

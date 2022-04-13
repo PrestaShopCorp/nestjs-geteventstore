@@ -196,6 +196,16 @@ export class EventStoreService implements OnModuleDestroy, OnModuleInit {
     // use default onEvent
     const { event } = payload;
     
+    if (!event) {
+      this.logger.warn(
+        `Received empty event that could not be resolved!`,
+      );
+      if (!subscription._autoAck && subscription.hasOwnProperty('_autoAck')) {
+        await subscription.acknowledge([payload]);
+      }
+      return;
+    }
+    
     // TODO handle not JSON
     if (!event.isJson) {
       // TODO add info on error not coded

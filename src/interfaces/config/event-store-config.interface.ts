@@ -13,4 +13,5 @@ export interface IEventStoreConfig {
   options?: ConnectionSettings;
   onTcpConnected?: (eventStore: EventStore) => void;
   onTcpDisconnected?: (eventStore: EventStore) => void;
+  onTcpErrored?: (eventStore: EventStore, error: Error) => void;
 }
